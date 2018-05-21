@@ -2,18 +2,8 @@ package controllers
 
 import (
 	"rz/middleware/notifycenter/web"
+	"rz/middleware/notifycenter/models"
 )
-
-type messageController struct {
-	baseController
-
-	SendMailControllerPack *web.ControllerPack
-	SendSmsControllerPack  *web.ControllerPack
-}
-
-func (messageController *messageController) Enable() {
-	messageController.enable(Controller)
-}
 
 var (
 	Controller = messageController{
@@ -32,10 +22,25 @@ var (
 	}
 )
 
+type messageController struct {
+	baseController
+
+	SendMailControllerPack *web.ControllerPack
+	SendSmsControllerPack  *web.ControllerPack
+}
+
+func (messageController *messageController) Enable() {
+	messageController.enable(Controller)
+}
+
 func sendMail(dto interface{}) (interface{}, error) {
-	return dto, nil
+	mailMessageDto := dto.(*models.MailMessageDto)
+
+	return mailMessageDto, nil
 }
 
 func sendSms(dto interface{}) (interface{}, error) {
-	return dto, nil
+	smsMessageDto := dto.(*models.SmsMessageDto)
+
+	return smsMessageDto, nil
 }
