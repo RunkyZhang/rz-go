@@ -4,17 +4,10 @@ import (
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/exceptions"
 	"rz/middleware/notifycenter/common"
+	"fmt"
 )
 
-func verifyMessageDto(dto interface{}) (error) {
-	if nil == dto {
-		return exceptions.DtoNull
-	}
-	messageDto, ok := dto.(*models.MessageDto)
-	if !ok {
-		return exceptions.InvalidDtoType
-	}
-
+func verifyMessageDto(messageDto *models.MessageDto) (error) {
 	if 0 == len(messageDto.Tos) {
 		return exceptions.ErrorTosEmpty
 	}
@@ -23,14 +16,19 @@ func verifyMessageDto(dto interface{}) (error) {
 }
 
 func verifyMailMessageDto(dto interface{}) (error) {
-	exception := verifyMessageDto(dto)
-	if nil != exception {
-		return exception
+	if nil == dto {
+		return exceptions.DtoNull
 	}
 
+	fmt.Println(&dto)
 	mailMessageDto, ok := dto.(*models.MailMessageDto)
 	if !ok {
 		return exceptions.InvalidDtoType
+	}
+
+	exception := verifyMessageDto(&mailMessageDto.MessageDto)
+	if nil != exception {
+		return exception
 	}
 
 	if common.IsStringBlank(mailMessageDto.Subject) {
@@ -41,14 +39,18 @@ func verifyMailMessageDto(dto interface{}) (error) {
 }
 
 func verifySmsMessageDto(dto interface{}) (error) {
-	exception := verifyMessageDto(dto)
-	if nil != exception {
-		return exception
+	if nil == dto {
+		return exceptions.DtoNull
 	}
 
-	_, ok := dto.(*models.SmsMessageDto)
+	smsMessageDto, ok := dto.(*models.SmsMessageDto)
 	if !ok {
 		return exceptions.InvalidDtoType
+	}
+
+	exception := verifyMessageDto(&smsMessageDto.MessageDto)
+	if nil != exception {
+		return exception
 	}
 
 	return nil

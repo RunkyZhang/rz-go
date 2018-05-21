@@ -15,7 +15,7 @@ func convertToMailMessageDto(body io.ReadCloser) (interface{}, error) {
 	if nil != exception {
 		return nil, exceptions.InvalidDtoType
 	} else {
-		return mailMessageDto, nil
+		return &mailMessageDto, nil
 	}
 }
 
@@ -27,6 +27,6 @@ func convertToSmsMessageDto(body io.ReadCloser) (interface{}, error) {
 	if nil != exception {
 		return nil, exceptions.InvalidDtoType
 	} else {
-		return smsMessageDto, nil
+		return &smsMessageDto, nil
 	}
 }
