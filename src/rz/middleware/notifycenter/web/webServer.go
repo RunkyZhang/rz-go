@@ -5,11 +5,12 @@ import (
 	"net/http"
 	s_context "context"
 	"time"
-	"fmt"
 	"io"
 
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/exceptions"
+	"rz/middleware/notifycenter/global"
+	"errors"
 )
 
 type ConvertToDtoFunc func(body io.ReadCloser) (interface{}, error)
@@ -33,25 +34,25 @@ func RegisterController(controllerPack *ControllerPack) {
 	http.HandleFunc(controllerPack.Pattern, func(responseWriter http.ResponseWriter, request *http.Request) {
 		var requestDto models.ResponseDto
 
-		dto, exception := controllerPack.ConvertToDtoFunc(request.Body)
-		if nil != exception {
-			requestDto = exceptions.ToResponseDto(exception)
+		dto, err := controllerPack.ConvertToDtoFunc(request.Body)
+		if nil != err {
+			requestDto = exceptions.ToResponseDto(err)
 			wrapResponseWriter(responseWriter, &requestDto)
 
 			return
 		}
 
-		exception = controllerPack.VerifyFunc(dto)
-		if nil != exception {
-			requestDto = exceptions.ToResponseDto(exception)
+		err = controllerPack.VerifyFunc(dto)
+		if nil != err {
+			requestDto = exceptions.ToResponseDto(err)
 			wrapResponseWriter(responseWriter, &requestDto)
 
 			return
 		}
 
-		result, exception := controllerPack.ControllerFunc(dto)
-		if nil != exception {
-			requestDto = exceptions.ToResponseDto(exception)
+		result, err := controllerPack.ControllerFunc(dto)
+		if nil != err {
+			requestDto = exceptions.ToResponseDto(err)
 			wrapResponseWriter(responseWriter, &requestDto)
 
 			return
@@ -70,21 +71,19 @@ func Start() {
 	go start()
 }
 
-func Stop() {
+func Stop() (error) {
 	if nil == server {
-		return
+		return errors.New("the server is not started")
 	}
 
 	context, _ := s_context.WithTimeout(s_context.Background(), 5*time.Second)
-	exception := server.Shutdown(context)
-
-	fmt.Println("failed to shutdown web server: ", exception)
+	return server.Shutdown(context)
 }
 
 func wrapResponseWriter(responseWriter http.ResponseWriter, requestDto *models.ResponseDto) {
-	bytes, exception := json.Marshal(requestDto)
-	if nil != exception {
-		http.Error(responseWriter, exception.Error(), http.StatusInternalServerError)
+	bytes, err := json.Marshal(requestDto)
+	if nil != err {
+		http.Error(responseWriter, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -92,16 +91,16 @@ func wrapResponseWriter(responseWriter http.ResponseWriter, requestDto *models.R
 	responseWriter.Write(bytes)
 }
 
-func start() {
+func start() (error) {
 	http.HandleFunc("/health", func(responseWriter http.ResponseWriter, request *http.Request) {
 		responseWriter.Write([]byte("ok"))
 	})
 
 	server = &http.Server{
-		Addr: "0.0.0.0:3030",
+		Addr: global.Config.Web.Listen,
 		// 1 << 10 = 1024, 1 << 20 = 1024 * 1024
 		MaxHeaderBytes: 1 << 20,
 	}
 	server.SetKeepAlivesEnabled(true)
-	fmt.Println(server.ListenAndServe())
+	return server.ListenAndServe()
 }

@@ -7,19 +7,24 @@ import (
 
 	"rz/middleware/notifycenter/controllers"
 	"rz/middleware/notifycenter/web"
+	"rz/middleware/notifycenter/global"
 )
 
 // http://work.weixin.qq.com/api/doc
 func main() {
-	fmt.Println("starting...")
+	fmt.Println("start listening", global.Config.Web.Listen, "...")
 	controllers.Controller.Enable()
 
 	web.Start()
+
 	exit := make(chan os.Signal)
 	signal.Notify(exit, os.Interrupt, os.Kill)
-	test := <-exit
-	fmt.Println(test)
-	web.Stop()
+	<-exit
+
+	err := web.Stop()
+	if nil != err {
+		fmt.Println("Failed to shutdown web server. error:", err, ".")
+	}
 
 	fmt.Println("stoped...")
 }

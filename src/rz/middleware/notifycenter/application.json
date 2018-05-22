@@ -8,7 +8,13 @@
       "10.0.30.29:26379",
       "10.0.30.51:26379"
     ],
+    "databaseId": 0,
     "password": "Tzdyu1bMcq",
     "master": "mymaster"
+  },
+  "qyWeixin": {
+    "corpId": "ww88ab4482196f4543",
+    "corpSecret": "Itg-tBARZhy3Iep2GO-u6vMGmVp45Iyktxtsq58cJW0",
+    "agentId": 1000027
   }
 }

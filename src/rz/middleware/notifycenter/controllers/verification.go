@@ -4,7 +4,6 @@ import (
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/exceptions"
 	"rz/middleware/notifycenter/common"
-	"fmt"
 )
 
 func verifyMessageDto(messageDto *models.MessageDto) (error) {
@@ -20,15 +19,14 @@ func verifyMailMessageDto(dto interface{}) (error) {
 		return exceptions.DtoNull
 	}
 
-	fmt.Println(&dto)
 	mailMessageDto, ok := dto.(*models.MailMessageDto)
 	if !ok {
 		return exceptions.InvalidDtoType
 	}
 
-	exception := verifyMessageDto(&mailMessageDto.MessageDto)
-	if nil != exception {
-		return exception
+	err := verifyMessageDto(&mailMessageDto.MessageDto)
+	if nil != err {
+		return err
 	}
 
 	if common.IsStringBlank(mailMessageDto.Subject) {
@@ -48,9 +46,9 @@ func verifySmsMessageDto(dto interface{}) (error) {
 		return exceptions.InvalidDtoType
 	}
 
-	exception := verifyMessageDto(&smsMessageDto.MessageDto)
-	if nil != exception {
-		return exception
+	err := verifyMessageDto(&smsMessageDto.MessageDto)
+	if nil != err {
+		return err
 	}
 
 	return nil

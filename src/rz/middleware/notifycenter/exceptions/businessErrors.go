@@ -11,8 +11,8 @@ var (
 	SubjectBlank        = newBusinessError("The subject is blank", 30004)
 )
 
-func ToResponseDto(exception error) models.ResponseDto {
-	businessError, ok := exception.(*BusinessError)
+func ToResponseDto(err error) models.ResponseDto {
+	businessError, ok := err.(*BusinessError)
 	if ok {
 		return models.ResponseDto{
 			Code:    businessError.Code,

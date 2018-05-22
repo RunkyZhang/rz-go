@@ -24,4 +24,5 @@ type QYWeixinMessageType int
 
 const (
 	Text QYWeixinMessageType = iota
+	TextCard
 )
