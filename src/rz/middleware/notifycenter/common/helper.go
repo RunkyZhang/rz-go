@@ -2,8 +2,10 @@ package common
 
 import (
 	"strings"
-	"bytes"
+	s_bytes "bytes"
 	"io"
+	"os"
+	"io/ioutil"
 )
 
 func IsStringBlank(value string) (bool) {
@@ -11,8 +13,22 @@ func IsStringBlank(value string) (bool) {
 }
 
 func ReaderToString(reader io.Reader) (string) {
-	buffer := new(bytes.Buffer)
+	buffer := new(s_bytes.Buffer)
 	buffer.ReadFrom(reader)
 
 	return buffer.String()
+}
+
+func IsExistPath(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil || os.IsExist(err)
+}
+
+func ReadFileContent(filePath string) (string, error) {
+	bytes, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return "", err
+	}
+
+	return string(bytes), nil
 }

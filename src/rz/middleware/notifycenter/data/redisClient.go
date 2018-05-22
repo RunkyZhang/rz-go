@@ -38,6 +38,7 @@ func NewRedisClient(redisClientSettings *RedisClientSettings) (*RedisClient) {
 	}
 
 	lock.Lock()
+	defer lock.Unlock()
 
 	if nil == redisClient {
 		if nil == redisClientSettings {
@@ -77,7 +78,6 @@ func NewRedisClient(redisClientSettings *RedisClientSettings) (*RedisClient) {
 		}
 	}
 
-	defer lock.Unlock()
 	return redisClient
 }
 
@@ -89,26 +89,30 @@ func (redisClient *RedisClient) StringSet(key string, value string) (error) {
 	return err
 }
 
-func (redisClient *RedisClient) StringGet(key string) (*string, error) {
+func (redisClient *RedisClient) StringGet(key string) (string, error) {
 	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("GET", key)
 	})
 
-	if nil == err {
-		return nil, err
-	}
-
-	value, ok := result.(*string)
-	if !ok {
-		return nil, errors.New("cannot convert to string")
-	}
-
-	return value, nil
+	return redisClient.resultToString(result, err)
 }
 
 func (redisClient *RedisClient) safeDo(doFunc doFunc) (interface{}, error) {
 	conn := redisClient.redisPool.Get()
-
 	defer conn.Close()
+
 	return doFunc(conn)
+}
+
+func (*RedisClient) resultToString(result interface{}, err error) (string, error) {
+	if nil != err {
+		return "", err
+	}
+
+	value, ok := result.(string)
+	if !ok {
+		return "", errors.New("cannot convert to string")
+	}
+
+	return value, nil
 }

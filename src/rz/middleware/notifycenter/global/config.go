@@ -1,10 +1,10 @@
 package global
 
 import (
-	"github.com/toolkits/file"
 	"os"
 	"fmt"
 	"encoding/json"
+	"rz/middleware/notifycenter/common"
 )
 
 var (
@@ -22,7 +22,7 @@ type web struct {
 }
 
 type redis struct {
-	Sentinels  []string `json:"sentinels"`
+	Addresses  []string `json:"addresses"`
 	DatabaseId int      `json:"databaseId"`
 	Password   string   `json:"password"`
 	Master     string   `json:"master"`
@@ -37,12 +37,12 @@ type qyWeixin struct {
 func getConfiguration() (Configuration) {
 	filePath := Arguments[ArgumentNameConfig]
 
-	if !file.IsExist(filePath) {
+	if !common.IsExistPath(filePath) {
 		fmt.Println("Cannot find config file path[", filePath, "].")
 		os.Exit(0)
 	}
 
-	content, err := file.ToTrimString(filePath)
+	content, err := common.ReadFileContent(filePath)
 	if nil != err {
 		fmt.Println("Failed to get config file content[", content, "]. error: ", err.Error(), ".")
 		os.Exit(0)
