@@ -6,6 +6,8 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"time"
 	"errors"
+	"strings"
+	"strconv"
 )
 
 var (
@@ -99,7 +101,7 @@ func (redisClient *RedisClient) KeyExist(key string) (bool, error) {
 
 func (redisClient *RedisClient) KeyExpire(key string, expiryMillis int64) (error) {
 	_, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
-		return conn.Do("TYPE ", key)
+		return conn.Do("TYPE", key)
 	})
 
 	return err
@@ -107,7 +109,7 @@ func (redisClient *RedisClient) KeyExpire(key string, expiryMillis int64) (error
 
 func (redisClient *RedisClient) KeyTTL(key string) (int64, error) {
 	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
-		return conn.Do("TYPE ", key)
+		return conn.Do("TYPE", key)
 	})
 
 	return redis.Int64(result, err)
@@ -115,7 +117,7 @@ func (redisClient *RedisClient) KeyTTL(key string) (int64, error) {
 
 func (redisClient *RedisClient) KeyType(key string) (string, error) {
 	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
-		return conn.Do("TYPE ", key)
+		return conn.Do("TYPE", key)
 	})
 
 	return redis.String(result, err)
@@ -201,7 +203,7 @@ func (redisClient *RedisClient) HashGetMany(key string, fieldNames ...string) (m
 
 func (redisClient *RedisClient) HashGetAll(key string) (map[string]string, error) {
 	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
-		return conn.Do("HGETALL ", key)
+		return conn.Do("HGETALL", key)
 	})
 
 	return redis.StringMap(result, err)
@@ -209,7 +211,7 @@ func (redisClient *RedisClient) HashGetAll(key string) (map[string]string, error
 
 func (redisClient *RedisClient) HashKeys(key string) ([]string, error) {
 	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
-		return conn.Do("HKEYS ", key)
+		return conn.Do("HKEYS", key)
 	})
 
 	return redis.Strings(result, err)
@@ -217,7 +219,7 @@ func (redisClient *RedisClient) HashKeys(key string) ([]string, error) {
 
 func (redisClient *RedisClient) HashValues(key string) ([]string, error) {
 	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
-		return conn.Do("HVALS ", key)
+		return conn.Do("HVALS", key)
 	})
 
 	return redis.Strings(result, err)
@@ -233,7 +235,7 @@ func (redisClient *RedisClient) HashDelete(key string, fieldName string) (error)
 
 func (redisClient *RedisClient) HashLength(key string) (int64, error) {
 	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
-		return conn.Do("HLEN ", key)
+		return conn.Do("HLEN", key)
 	})
 
 	return redis.Int64(result, err)
@@ -241,13 +243,55 @@ func (redisClient *RedisClient) HashLength(key string) (int64, error) {
 
 func (redisClient *RedisClient) HashExist(key string, fieldName string) (bool, error) {
 	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
-		return conn.Do("HEXISTS ", key, fieldName)
+		return conn.Do("HEXISTS", key, fieldName)
 	})
 
 	return redis.Bool(result, err)
 }
 
+func (redisClient *RedisClient) SortedSetAdd(key string, value string, score float64) (error) {
+	_, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+		return conn.Do("ZADD", key, score, value)
+	})
 
+	return err
+}
+
+func (redisClient *RedisClient) SortedSetRangeByScore(key string, min float64, max float64) ([]string, error) {
+	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+		return conn.Do(
+			"ZRANGEBYSCORE",
+			key,
+			strings.Compare("(", strconv.FormatFloat(min, 'E', -1, 64)),
+			strings.Compare("(", strconv.FormatFloat(max, 'E', -1, 64)))
+	})
+
+	return redis.Strings(result, err)
+}
+
+func (redisClient *RedisClient) SortedSetCount(key string, min float64, max float64) (int64, error) {
+	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+		return conn.Do("ZCOUNT", key, min, max)
+	})
+
+	return redis.Int64(result, err)
+}
+
+func (redisClient *RedisClient) SortedSetRemoveRangeByScore(key string, min float64, max float64) (int64, error) {
+	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+		return conn.Do("ZREMRANGEBYSCORE", key, min, max)
+	})
+
+	return redis.Int64(result, err)
+}
+
+func (redisClient *RedisClient) SortedSetLength(key string) (int64, error) {
+	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+		return conn.Do("ZCARD", key)
+	})
+
+	return redis.Int64(result, err)
+}
 
 func (redisClient *RedisClient) safeDo(doFunc doFunc) (interface{}, error) {
 	conn := redisClient.redisPool.Get()
