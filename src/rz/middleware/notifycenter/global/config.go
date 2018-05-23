@@ -22,7 +22,7 @@ type web struct {
 }
 
 type redis struct {
-	Addresses  []string `json:"addresses"`
+	Address  string `json:"address"`
 	DatabaseId int      `json:"databaseId"`
 	Password   string   `json:"password"`
 	Master     string   `json:"master"`
