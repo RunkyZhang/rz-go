@@ -17,13 +17,10 @@ type ConvertToDtoFunc func(body io.ReadCloser) (interface{}, error)
 
 type ControllerFunc func(interface{}) (interface{}, error)
 
-type VerifyFunc func(interface{}) (error)
-
 type ControllerPack struct {
 	Pattern          string
 	ControllerFunc   ControllerFunc
 	ConvertToDtoFunc ConvertToDtoFunc
-	VerifyFunc       VerifyFunc
 }
 
 var (
@@ -35,14 +32,6 @@ func RegisterController(controllerPack *ControllerPack) {
 		var requestDto models.ResponseDto
 
 		dto, err := controllerPack.ConvertToDtoFunc(request.Body)
-		if nil != err {
-			requestDto = exceptions.ToResponseDto(err)
-			wrapResponseWriter(responseWriter, &requestDto)
-
-			return
-		}
-
-		err = controllerPack.VerifyFunc(dto)
 		if nil != err {
 			requestDto = exceptions.ToResponseDto(err)
 			wrapResponseWriter(responseWriter, &requestDto)

@@ -2,8 +2,9 @@ package controllers
 
 import (
 	"io"
-	"rz/middleware/notifycenter/models"
 	"encoding/json"
+
+	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/exceptions"
 )
 

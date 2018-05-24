@@ -13,7 +13,7 @@ import (
 // http://work.weixin.qq.com/api/doc
 func main() {
 	fmt.Println("start listening", global.Config.Web.Listen, "...")
-	controllers.Controller.Enable()
+	controllers.MessageController.Enable()
 
 	web.Start()
 

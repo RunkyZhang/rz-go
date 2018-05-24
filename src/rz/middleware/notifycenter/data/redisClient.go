@@ -1,18 +1,12 @@
 package data
 
 import (
-	"sync"
-
-	"github.com/garyburd/redigo/redis"
 	"time"
 	"errors"
 	"strings"
 	"strconv"
-)
 
-var (
-	redisClient *RedisClient = nil
-	lock        sync.Mutex
+	"github.com/garyburd/redigo/redis"
 )
 
 type doFunc func(redis.Conn) (interface{}, error)
@@ -34,53 +28,35 @@ type RedisClientSettings struct {
 	Address         string
 }
 
-func NewRedisClient(redisClientSettings *RedisClientSettings) (*RedisClient) {
-	if nil != redisClient {
-		return redisClient
-	}
+func (redisClient *RedisClient) Init() {
+	redisClient.redisPool = &redis.Pool{
+		MaxActive:   redisClient.RedisClientSettings.PoolMaxActive,
+		MaxIdle:     redisClient.RedisClientSettings.PoolMaxIdle,
+		Wait:        redisClient.RedisClientSettings.PoolWait,
+		IdleTimeout: redisClient.RedisClientSettings.PoolIdleTimeout,
 
-	lock.Lock()
-	defer lock.Unlock()
-
-	if nil == redisClient {
-		if nil == redisClientSettings {
-			redisClientSettings = &RedisClientSettings{
-				PoolMaxActive:   10,
-				PoolMaxIdle:     1,
-				PoolWait:        true,
-				PoolIdleTimeout: 180 * time.Second,
-				DatabaseId:      0,
-				ConnectTimeout:  2000 * time.Second,
+		Dial: func() (redis.Conn, error) {
+			conn, err := redis.Dial(
+				"tcp",
+				redisClient.RedisClientSettings.Address,
+				redis.DialDatabase(redisClient.RedisClientSettings.DatabaseId),
+				redis.DialPassword(redisClient.RedisClientSettings.Password),
+				redis.DialConnectTimeout(redisClient.RedisClientSettings.ConnectTimeout))
+			if nil != err {
+				return nil, err
 			}
-		}
 
-		redisClient = &RedisClient{
-			RedisClientSettings: *redisClientSettings,
-		}
-
-		redisClient.redisPool = &redis.Pool{
-			MaxActive:   redisClientSettings.PoolMaxActive,
-			MaxIdle:     redisClientSettings.PoolMaxIdle,
-			Wait:        redisClientSettings.PoolWait,
-			IdleTimeout: redisClientSettings.PoolIdleTimeout,
-
-			Dial: func() (redis.Conn, error) {
-				conn, err := redis.Dial(
-					"tcp",
-					redisClientSettings.Address,
-					redis.DialDatabase(redisClientSettings.DatabaseId),
-					redis.DialPassword(redisClientSettings.Password),
-					redis.DialConnectTimeout(redisClientSettings.ConnectTimeout))
-				if nil != err {
-					return nil, err
-				}
-
-				return conn, nil
-			},
-		}
+			return conn, nil
+		},
 	}
+}
 
-	return redisClient
+func (redisClient *RedisClient) Ping() (string, error) {
+	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+		return conn.Do("PING")
+	})
+
+	return redis.String(result, err)
 }
 
 func (redisClient *RedisClient) KeyDelete(key string) (error) {

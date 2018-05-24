@@ -3,7 +3,7 @@
     "listen": "0.0.0.0:3030"
   },
   "redis": {
-    "addresses": "10.0.30.52:26379",
+    "address": "10.0.30.52:26379",
     "databaseId": 0,
     "password": "Tzdyu1bMcq",
     "master": "mymaster"

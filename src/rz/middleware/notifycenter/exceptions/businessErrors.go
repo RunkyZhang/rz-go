@@ -9,6 +9,7 @@ var (
 	InvalidDtoType      = newBusinessError("Invalid [Dto] type", 30002)
 	ErrorTosEmpty       = newBusinessError("[Tos] is empty", 30003)
 	SubjectBlank        = newBusinessError("The subject is blank", 30004)
+	InvalidSendChannel  = newBusinessError("Invalid send channel number", 30005)
 )
 
 func ToResponseDto(err error) models.ResponseDto {

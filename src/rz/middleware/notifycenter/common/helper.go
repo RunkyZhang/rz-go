@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"io/ioutil"
+	"encoding/json"
 )
 
 func IsStringBlank(value string) (bool) {
@@ -27,6 +28,15 @@ func IsExistPath(path string) bool {
 func ReadFileContent(filePath string) (string, error) {
 	bytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
+		return "", err
+	}
+
+	return string(bytes), nil
+}
+
+func ObjectToJsonString(value interface{}) (string, error) {
+	bytes, err := json.Marshal(value)
+	if nil == err {
 		return "", err
 	}
 

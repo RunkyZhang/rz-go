@@ -1,23 +1,35 @@
 package controllers
 
 import (
-	"rz/middleware/notifycenter/web"
 	"rz/middleware/notifycenter/models"
+	"rz/middleware/notifycenter/web"
+	"rz/middleware/notifycenter/services"
 )
 
+func sendMail(dto interface{}) (interface{}, error) {
+	mailMessageDto := dto.(*models.MailMessageDto)
+
+	return services.MailService.SendMail(mailMessageDto)
+}
+
+func sendSms(dto interface{}) (interface{}, error) {
+	smsMessageDto := dto.(*models.SmsMessageDto)
+
+	return services.SmsService.SendSms(smsMessageDto)
+}
+
+// MVC structure
 var (
-	Controller = messageController{
+	MessageController = messageController{
 		SendMailControllerPack: &web.ControllerPack{
 			Pattern:          "/message/send-mail",
 			ControllerFunc:   sendMail,
 			ConvertToDtoFunc: convertToMailMessageDto,
-			VerifyFunc:       verifyMailMessageDto,
 		},
 		SendSmsControllerPack: &web.ControllerPack{
 			Pattern:          "/message/send-sms",
 			ControllerFunc:   sendSms,
 			ConvertToDtoFunc: convertToSmsMessageDto,
-			VerifyFunc:       verifySmsMessageDto,
 		},
 	}
 )
@@ -30,17 +42,5 @@ type messageController struct {
 }
 
 func (messageController *messageController) Enable() {
-	messageController.enable(Controller)
-}
-
-func sendMail(dto interface{}) (interface{}, error) {
-	mailMessageDto := dto.(*models.MailMessageDto)
-
-	return mailMessageDto, nil
-}
-
-func sendSms(dto interface{}) (interface{}, error) {
-	smsMessageDto := dto.(*models.SmsMessageDto)
-
-	return smsMessageDto, nil
+	messageController.enable(MessageController)
 }
