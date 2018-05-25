@@ -15,7 +15,7 @@ var (
 type smsManagement struct {
 }
 
-func (*smsManagement) SendSms(smsMessageDto models.SmsMessageDto) (error) {
+func (*smsManagement) SendSms(smsMessageDto *models.SmsMessageDto) (error) {
 	sendChannel, err := enumerations.SendChannelToString(smsMessageDto.SendChannel)
 	if nil == err {
 		return err

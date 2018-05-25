@@ -14,6 +14,7 @@ var (
 type Configuration struct {
 	Web      web      `json:"web"`
 	Redis    redis    `json:"redis"`
+	Mail mail `json:"mail"`
 	QYWeixin qyWeixin `json:"qyWeixin"`
 }
 
@@ -26,6 +27,15 @@ type redis struct {
 	DatabaseId int      `json:"databaseId"`
 	Password   string   `json:"password"`
 	Master     string   `json:"master"`
+}
+
+type mail struct {
+	Host        string
+	Port        int
+	UserName    string
+	Password    string
+	From        string
+	ContentType string
 }
 
 type qyWeixin struct {
