@@ -1,4 +1,4 @@
-package management
+package managements
 
 import (
 	"rz/middleware/notifycenter/global"
@@ -9,13 +9,14 @@ import (
 )
 
 var (
-	SmsManagement = smsManagement{}
+	SmsMessageManagement = smsMessageManagement{}
 )
 
-type smsManagement struct {
+type smsMessageManagement struct {
+	baseMessageManagement
 }
 
-func (*smsManagement) SendSms(smsMessageDto *models.SmsMessageDto) (error) {
+func (*smsMessageManagement) AddSmsMessage(smsMessageDto *models.SmsMessageDto) (error) {
 	sendChannel, err := enumerations.SendChannelToString(smsMessageDto.SendChannel)
 	if nil == err {
 		return err

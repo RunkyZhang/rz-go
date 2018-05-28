@@ -23,9 +23,9 @@ func convertToSmsMessageDto(body io.ReadCloser) (interface{}, error) {
 func convertToMessageDto(body io.ReadCloser, messageDto interface{}) (interface{}, error) {
 	decoder := json.NewDecoder(body)
 	err := decoder.Decode(&messageDto)
-	if nil != err {
-		return nil, exceptions.InvalidDtoType
-	} else {
+	if nil == err {
 		return messageDto, nil
 	}
+
+	return nil, exceptions.InvalidDtoType
 }

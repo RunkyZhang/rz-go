@@ -3,7 +3,7 @@ package models
 import "rz/middleware/notifycenter/enumerations"
 
 type MessageDto struct {
-	//Id string `json:"id"`
+	Id           string                   `json:"id"`
 	Content      string                   `json:"content"`
 	SendChannel  enumerations.SendChannel `json:"sendChannel"`
 	Tos          []string                 `json:"tos"`
@@ -12,4 +12,5 @@ type MessageDto struct {
 	ExpireTime   int64                    `json:"expireTime"`
 	Extra        string                   `json:"extra"`
 	SystemAlias  string                   `json:"systemAlias"`
+	CreatedTime  int64                    `json:"createdTime"`
 }

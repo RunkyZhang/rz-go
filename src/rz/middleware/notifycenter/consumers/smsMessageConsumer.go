@@ -16,35 +16,40 @@ import (
 	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/models/external"
 	"rz/middleware/notifycenter/models"
+	"rz/middleware/notifycenter/enumerations"
 )
 
 var (
-	SmsConsumer *smsConsumer
+	SmsMessageConsumer *smsMessageConsumer
 )
 
 func init() {
-	SmsConsumer = &smsConsumer{
+	SmsMessageConsumer = &smsMessageConsumer{
 		Url:               global.Config.Sms.Url,
 		AppId:             global.Config.Sms.AppId,
 		AppKey:            global.Config.Sms.AppKey,
 		DefaultNationCode: global.Config.Sms.DefaultNationCode,
 	}
+
+	SmsMessageConsumer.SendChannel = enumerations.Sms
 }
 
-type smsConsumer struct {
+type smsMessageConsumer struct {
+	baseMessageConsumer
+
 	Url               string
 	AppKey            string
 	AppId             string
 	DefaultNationCode int
 }
 
-func (smsConsumer *smsConsumer) Send(smsMessageDto models.SmsMessageDto) error {
+func (smsMessageConsumer *smsMessageConsumer) Send(smsMessageDto models.SmsMessageDto) error {
 	var randomNumber = strconv.Itoa(rand.Intn(1024))
 	var smsMessageRequestExternalDto = &external.SmsMessageRequestExternalDto{}
 	smsMessageRequestExternalDto.Time = time.Now().Unix()
 	var sig = fmt.Sprintf(
 		"appkey=%s&random=%s&time=%s&mobile=%s",
-		smsConsumer.AppKey,
+		smsMessageConsumer.AppKey,
 		randomNumber,
 		strconv.FormatInt(smsMessageRequestExternalDto.Time, 10),
 		strings.Join(smsMessageDto.Tos, ","))
@@ -53,7 +58,7 @@ func (smsConsumer *smsConsumer) Send(smsMessageDto models.SmsMessageDto) error {
 	smsMessageRequestExternalDto.Tel = []external.PhoneNumberExternalDto{}
 	for _, phoneNumber := range smsMessageDto.Tos {
 		phoneNumberExternalDto := external.PhoneNumberExternalDto{
-			Nationcode: string(smsConsumer.DefaultNationCode),
+			Nationcode: strconv.Itoa(smsMessageConsumer.DefaultNationCode),
 			Mobile:     phoneNumber,
 		}
 		smsMessageRequestExternalDto.Tel = append(smsMessageRequestExternalDto.Tel, phoneNumberExternalDto)
@@ -63,7 +68,7 @@ func (smsConsumer *smsConsumer) Send(smsMessageDto models.SmsMessageDto) error {
 	smsMessageRequestExternalDto.Ext = ""
 	smsMessageRequestExternalDto.Extend = ""
 
-	bytes, err := httplib.Post(smsConsumer.Url+"?sdkappid="+smsConsumer.AppId+"&random="+randomNumber, smsMessageRequestExternalDto)
+	bytes, err := httplib.Post(smsMessageConsumer.Url+"?sdkappid="+smsMessageConsumer.AppId+"&random="+randomNumber, smsMessageRequestExternalDto)
 	if nil != err {
 		return err
 	}

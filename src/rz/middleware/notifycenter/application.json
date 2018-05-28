@@ -3,10 +3,9 @@
     "listen": "0.0.0.0:3030"
   },
   "redis": {
-    "address": "10.0.30.52:26379",
+    "address": "10.0.52.105:6379",
     "databaseId": 0,
-    "password": "Tzdyu1bMcq",
-    "master": "mymaster"
+    "password": ""
   },
   "sms": {
     "url": "https://yun.tim.qq.com/v5/tlssmssvr/sendmultisms2",

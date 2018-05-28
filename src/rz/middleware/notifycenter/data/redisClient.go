@@ -51,12 +51,17 @@ func (redisClient *RedisClient) Init() {
 	}
 }
 
-func (redisClient *RedisClient) Ping() (string, error) {
+func (redisClient *RedisClient) Ping() (bool, error) {
 	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("PING")
 	})
 
-	return redis.String(result, err)
+	value, err := redis.String(result, err)
+	if nil != err {
+		return false, err
+	}
+
+	return 0 == strings.Compare("PONG", value), nil
 }
 
 func (redisClient *RedisClient) KeyDelete(key string) (error) {

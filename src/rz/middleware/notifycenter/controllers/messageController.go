@@ -9,13 +9,13 @@ import (
 func sendMail(dto interface{}) (interface{}, error) {
 	mailMessageDto := dto.(*models.MailMessageDto)
 
-	return services.MailService.SendMail(mailMessageDto)
+	return services.MailMessageService.SendMail(mailMessageDto)
 }
 
 func sendSms(dto interface{}) (interface{}, error) {
 	smsMessageDto := dto.(*models.SmsMessageDto)
 
-	return services.SmsService.SendSms(smsMessageDto)
+	return services.SmsMessageService.SendSms(smsMessageDto)
 }
 
 // MVC structure

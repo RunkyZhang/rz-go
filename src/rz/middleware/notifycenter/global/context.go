@@ -26,8 +26,10 @@ func GetRedisClient() (*data.RedisClient) {
 			PoolMaxIdle:     1,
 			PoolWait:        true,
 			PoolIdleTimeout: 180 * time.Second,
-			DatabaseId:      0,
+			DatabaseId:      Config.Redis.DatabaseId,
 			ConnectTimeout:  2000 * time.Second,
+			Address:         Config.Redis.Address,
+			Password:        Config.Redis.Password,
 		}
 
 		redisClient = &data.RedisClient{

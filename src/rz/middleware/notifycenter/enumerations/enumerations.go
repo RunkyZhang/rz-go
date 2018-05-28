@@ -5,7 +5,7 @@ import "rz/middleware/notifycenter/exceptions"
 type SendChannel int
 
 const (
-	Email    SendChannel = iota
+	Mail    SendChannel = iota
 	Sms
 	QYWeixin
 	Weixin
@@ -14,8 +14,8 @@ const (
 )
 
 func SendChannelToString(sendChannel SendChannel) (string, error) {
-	if Email == sendChannel {
-		return "Email", nil
+	if Mail == sendChannel {
+		return "Mail", nil
 	} else if Sms == sendChannel {
 		return "Sms", nil
 	} else if QYWeixin == sendChannel {
@@ -35,9 +35,9 @@ type ToType int
 
 const (
 	Auto   ToType = iota
-	Phone
+	PhoneNumber
 	UserId
-	Mail
+	MailAddress
 )
 
 type QYWeixinMessageType int

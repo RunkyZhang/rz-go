@@ -64,12 +64,12 @@ func toResponseDto(err error) models.ResponseDto {
 			Message: businessError.Message,
 			Data:    nil,
 		}
-	} else {
-		return models.ResponseDto{
-			Code:    exceptions.InternalServerError.Code,
-			Message: exceptions.InternalServerError.Message,
-			Data:    nil,
-		}
+	}
+
+	return models.ResponseDto{
+		Code:    exceptions.InternalServerError.Code,
+		Message: exceptions.InternalServerError.Message,
+		Data:    nil,
 	}
 }
 
