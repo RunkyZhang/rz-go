@@ -33,7 +33,7 @@ func RegisterController(controllerPack *ControllerPack) {
 
 		dto, err := controllerPack.ConvertToDtoFunc(request.Body)
 		if nil != err {
-			requestDto = exceptions.ToResponseDto(err)
+			requestDto = toResponseDto(err)
 			wrapResponseWriter(responseWriter, &requestDto)
 
 			return
@@ -41,7 +41,7 @@ func RegisterController(controllerPack *ControllerPack) {
 
 		result, err := controllerPack.ControllerFunc(dto)
 		if nil != err {
-			requestDto = exceptions.ToResponseDto(err)
+			requestDto = toResponseDto(err)
 			wrapResponseWriter(responseWriter, &requestDto)
 
 			return
@@ -54,6 +54,23 @@ func RegisterController(controllerPack *ControllerPack) {
 		}
 		wrapResponseWriter(responseWriter, &requestDto)
 	})
+}
+
+func toResponseDto(err error) models.ResponseDto {
+	businessError, ok := err.(*exceptions.BusinessError)
+	if ok {
+		return models.ResponseDto{
+			Code:    businessError.Code,
+			Message: businessError.Message,
+			Data:    nil,
+		}
+	} else {
+		return models.ResponseDto{
+			Code:    exceptions.InternalServerError.Code,
+			Message: exceptions.InternalServerError.Message,
+			Data:    nil,
+		}
+	}
 }
 
 func Start() {

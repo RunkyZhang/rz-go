@@ -2,7 +2,6 @@ package services
 
 import (
 	"rz/middleware/notifycenter/models"
-	"rz/middleware/notifycenter/exceptions"
 )
 
 var (
@@ -13,7 +12,7 @@ type mailService struct {
 }
 
 func (*mailService) SendMail(mailMessageDto *models.MailMessageDto) (string, error) {
-	exceptions.VerifyMailMessageDto(mailMessageDto)
+	VerifyMailMessageDto(mailMessageDto)
 
 
 

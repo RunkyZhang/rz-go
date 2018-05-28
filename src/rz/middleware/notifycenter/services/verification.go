@@ -1,13 +1,14 @@
-package exceptions
+package services
 
 import (
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/common"
+	"rz/middleware/notifycenter/exceptions"
 )
 
 func verifyMessageDto(messageDto *models.MessageDto) (error) {
 	if 0 == len(messageDto.Tos) {
-		return ErrorTosEmpty
+		return exceptions.ErrorTosEmpty
 	}
 
 	return nil
@@ -15,7 +16,7 @@ func verifyMessageDto(messageDto *models.MessageDto) (error) {
 
 func VerifyMailMessageDto(mailMessageDto *models.MailMessageDto) (error) {
 	if nil == mailMessageDto {
-		return DtoNull
+		return exceptions.DtoNull
 	}
 
 	err := verifyMessageDto(&mailMessageDto.MessageDto)
@@ -24,7 +25,7 @@ func VerifyMailMessageDto(mailMessageDto *models.MailMessageDto) (error) {
 	}
 
 	if common.IsStringBlank(mailMessageDto.Subject) {
-		return SubjectBlank
+		return exceptions.SubjectBlank
 	}
 
 	return nil
@@ -32,7 +33,7 @@ func VerifyMailMessageDto(mailMessageDto *models.MailMessageDto) (error) {
 
 func VerifySmsMessageDto(smsMessageDto *models.SmsMessageDto) (error) {
 	if nil == smsMessageDto {
-		return DtoNull
+		return exceptions.DtoNull
 	}
 
 	err := verifyMessageDto(&smsMessageDto.MessageDto)

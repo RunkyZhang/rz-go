@@ -2,7 +2,6 @@ package services
 
 import (
 	"rz/middleware/notifycenter/models"
-	"rz/middleware/notifycenter/exceptions"
 	"rz/middleware/notifycenter/management"
 )
 
@@ -14,7 +13,7 @@ type smsService struct {
 }
 
 func (*smsService) SendSms(smsMessageDto *models.SmsMessageDto) (string, error) {
-	exceptions.VerifySmsMessageDto(smsMessageDto)
+	VerifySmsMessageDto(smsMessageDto)
 
 	management.SmsManagement.SendSms(smsMessageDto)
 

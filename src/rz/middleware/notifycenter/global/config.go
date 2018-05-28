@@ -14,7 +14,8 @@ var (
 type Configuration struct {
 	Web      web      `json:"web"`
 	Redis    redis    `json:"redis"`
-	Mail mail `json:"mail"`
+	Sms      sms      `json:"sms"`
+	Mail     mail     `json:"mail"`
 	QYWeixin qyWeixin `json:"qyWeixin"`
 }
 
@@ -23,10 +24,17 @@ type web struct {
 }
 
 type redis struct {
-	Address  string `json:"address"`
-	DatabaseId int      `json:"databaseId"`
-	Password   string   `json:"password"`
-	Master     string   `json:"master"`
+	Address    string `json:"address"`
+	DatabaseId int    `json:"databaseId"`
+	Password   string `json:"password"`
+	Master     string `json:"master"`
+}
+
+type sms struct {
+	Url               string `json:"url"`
+	AppKey            string `json:"appKey"`
+	AppId             string `json:"appId"`
+	DefaultNationCode int    `json:"defaultNationCode"`
 }
 
 type mail struct {
