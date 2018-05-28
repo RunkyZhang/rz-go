@@ -4,9 +4,10 @@ import (
 	"gopkg.in/gomail.v2"
 	"net/smtp"
 	"rz/middleware/notifycenter/global"
-	"git.zhaogangren.com/cloud/cloud.appgov.notifycenter.service/model"
 	"rz/middleware/notifycenter/enumerations"
 	"errors"
+	"rz/middleware/notifycenter/models"
+	"encoding/json"
 )
 
 var (
@@ -24,6 +25,8 @@ func init() {
 	}
 
 	MailMessageConsumer.SendChannel = enumerations.Mail
+	MailMessageConsumer.consumeFunc = MailMessageConsumer.consume
+	MailMessageConsumer.handleErrorFunc = MailMessageConsumer.handleError
 	MailMessageConsumer.dialer = gomail.NewDialer(MailMessageConsumer.Host, MailMessageConsumer.Port, MailMessageConsumer.UserName, MailMessageConsumer.password)
 	MailMessageConsumer.dialer.Auth = &unencryptedAuth{
 		smtp.PlainAuth(
@@ -48,7 +51,7 @@ type mailMessageConsumer struct {
 	dialer *gomail.Dialer
 }
 
-func (mailMessageConsumer *mailMessageConsumer) Send(mailMessageDto *model.MailMessageDto) error {
+func (mailMessageConsumer *mailMessageConsumer) Send(mailMessageDto *models.MailMessageDto) error {
 	message := gomail.NewMessage()
 	message.SetHeader("From", mailMessageConsumer.From)
 	message.SetHeader("To", mailMessageDto.Tos...)
@@ -57,6 +60,40 @@ func (mailMessageConsumer *mailMessageConsumer) Send(mailMessageDto *model.MailM
 	//	m.Attach("/home/Alex/lolcat.jpg")
 
 	return mailMessageConsumer.dialer.DialAndSend(message)
+}
+
+func (mailMessageConsumer *mailMessageConsumer) consume(jsonString string) (interface{}, error) {
+	mailMessageDto := &models.MailMessageDto{}
+
+	err := json.Unmarshal([]byte(jsonString), mailMessageDto)
+	if nil != err {
+		return mailMessageDto, nil
+	}
+
+	return mailMessageDto, mailMessageConsumer.Send(mailMessageDto)
+}
+
+func (*mailMessageConsumer) handleError(messageDto interface{}, err error) (error) {
+	mailMessageDto := messageDto.(*models.MailMessageDto)
+
+	sendChannel, err := enumerations.SendChannelToString(MailMessageConsumer.SendChannel)
+	if nil != err {
+		return err
+	}
+	messageState, err := enumerations.MessageStateToString(enumerations.Error)
+	if nil != err {
+		messageState = "Unknown"
+	}
+
+	mailMessageDto.States = mailMessageDto.States + ">" + messageState
+	mailMessageDto.Exception = err.Error()
+
+	bytes, err := json.Marshal(mailMessageDto)
+	if nil != err {
+		return err
+	}
+
+	return global.GetRedisClient().HashSet(global.RedisKeyMessageValues+sendChannel, mailMessageDto.Id, string(bytes))
 }
 
 type unencryptedAuth struct {

@@ -15,13 +15,10 @@ func (*baseMessageManagement) addMessage(messageDto *models.MessageDto, jsonStri
 		return err
 	}
 
-	key := global.RedisKeyMessage + sendChannel
-	score := messageDto.CreatedTime
-
-	err = global.GetRedisClient().HashSet(key+"_values", messageDto.Id, jsonString)
+	err = global.GetRedisClient().HashSet(global.RedisKeyMessageValues+sendChannel, messageDto.Id, jsonString)
 	if nil != err {
 		return err
 	}
 
-	return global.GetRedisClient().SortedSetAdd(key+"_keys", messageDto.Id, float64(score))
+	return global.GetRedisClient().SortedSetAdd(global.RedisKeyMessageKeys+sendChannel, messageDto.Id, float64(messageDto.CreatedTime))
 }

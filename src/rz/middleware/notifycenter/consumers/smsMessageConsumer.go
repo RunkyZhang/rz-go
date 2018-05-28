@@ -32,6 +32,8 @@ func init() {
 	}
 
 	SmsMessageConsumer.SendChannel = enumerations.Sms
+	SmsMessageConsumer.consumeFunc = SmsMessageConsumer.consume
+	SmsMessageConsumer.handleErrorFunc = SmsMessageConsumer.handleError
 }
 
 type smsMessageConsumer struct {
@@ -43,7 +45,7 @@ type smsMessageConsumer struct {
 	DefaultNationCode int
 }
 
-func (smsMessageConsumer *smsMessageConsumer) Send(smsMessageDto models.SmsMessageDto) error {
+func (smsMessageConsumer *smsMessageConsumer) Send(smsMessageDto *models.SmsMessageDto) error {
 	var randomNumber = strconv.Itoa(rand.Intn(1024))
 	var smsMessageRequestExternalDto = &external.SmsMessageRequestExternalDto{}
 	smsMessageRequestExternalDto.Time = time.Now().Unix()
@@ -82,4 +84,38 @@ func (smsMessageConsumer *smsMessageConsumer) Send(smsMessageDto models.SmsMessa
 	}
 
 	return errors.New(smsMessageResponseExternalDto.Errmsg)
+}
+
+func (smsMessageConsumer *smsMessageConsumer) consume(jsonString string) (interface{}, error) {
+	smsMessageDto := &models.SmsMessageDto{}
+
+	err := json.Unmarshal([]byte(jsonString), smsMessageDto)
+	if nil != err {
+		return smsMessageDto, nil
+	}
+
+	return smsMessageDto, smsMessageConsumer.Send(smsMessageDto)
+}
+
+func (*smsMessageConsumer) handleError(messageDto interface{}, err error) (error) {
+	smsMessageDto := messageDto.(*models.SmsMessageDto)
+
+	sendChannel, err := enumerations.SendChannelToString(SmsMessageConsumer.SendChannel)
+	if nil != err {
+		return err
+	}
+	messageState, err := enumerations.MessageStateToString(enumerations.Error)
+	if nil != err {
+		messageState = "Unknown"
+	}
+
+	smsMessageDto.States = smsMessageDto.States + ">" + messageState
+	smsMessageDto.Exception = err.Error()
+
+	bytes, err := json.Marshal(smsMessageDto)
+	if nil != err {
+		return err
+	}
+
+	return global.GetRedisClient().HashSet(global.RedisKeyMessageValues+sendChannel, smsMessageDto.Id, string(bytes))
 }

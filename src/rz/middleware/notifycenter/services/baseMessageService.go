@@ -23,6 +23,7 @@ func (baseMessageService *baseMessageService) setMessageDto(messageDto *models.M
 	messageDto.CreatedTime = now.Unix()
 	messageDto.Id = baseMessageService.Prefix + now.Format("20060102") + strconv.FormatInt(increasing, 10)
 	messageDto.SendChannel = baseMessageService.SendChannel
+	messageDto.States, err = enumerations.MessageStateToString(enumerations.Initial)
 
-	return nil
+	return err
 }

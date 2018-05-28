@@ -8,4 +8,5 @@ var (
 	ErrorTosEmpty       = newBusinessError("[Tos] is empty", 30003)
 	SubjectBlank        = newBusinessError("The subject is blank", 30004)
 	InvalidSendChannel  = newBusinessError("Invalid send channel number", 30005)
+	InvalidMessageState  = newBusinessError("Invalid message state", 30006)
 )

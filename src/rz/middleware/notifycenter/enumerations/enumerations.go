@@ -5,7 +5,7 @@ import "rz/middleware/notifycenter/exceptions"
 type SendChannel int
 
 const (
-	Mail    SendChannel = iota
+	Mail     SendChannel = iota
 	Sms
 	QYWeixin
 	Weixin
@@ -34,7 +34,7 @@ func SendChannelToString(sendChannel SendChannel) (string, error) {
 type ToType int
 
 const (
-	Auto   ToType = iota
+	Auto        ToType = iota
 	PhoneNumber
 	UserId
 	MailAddress
@@ -46,3 +46,35 @@ const (
 	Text     QYWeixinMessageType = iota
 	TextCard
 )
+
+type MessageState int
+
+const (
+	Initial      MessageState = iota
+	Consuming
+	Sent
+	AppCallback
+	UserCallback
+	BothCallback
+	Error
+)
+
+func MessageStateToString(messageState MessageState) (string, error) {
+	if Initial == messageState {
+		return "Initial", nil
+	} else if Consuming == messageState {
+		return "Consuming", nil
+	} else if Sent == messageState {
+		return "Sent", nil
+	} else if AppCallback == messageState {
+		return "AppCallback", nil
+	} else if UserCallback == messageState {
+		return "UserCallback", nil
+	} else if BothCallback == messageState {
+		return "BothCallback", nil
+	} else if Error == messageState {
+		return "Error", nil
+	}
+
+	return "", exceptions.InvalidMessageState
+}

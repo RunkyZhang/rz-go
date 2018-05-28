@@ -7,6 +7,7 @@
 /.project
 /*.iml
 /github.com
+/gopkg.in
 
 */target/
 */.settings/
