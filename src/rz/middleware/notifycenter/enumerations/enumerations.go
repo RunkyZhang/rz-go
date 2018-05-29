@@ -56,6 +56,7 @@ const (
 	AppCallback
 	UserCallback
 	BothCallback
+	Expire
 	Error
 )
 
@@ -72,6 +73,8 @@ func MessageStateToString(messageState MessageState) (string, error) {
 		return "UserCallback", nil
 	} else if BothCallback == messageState {
 		return "BothCallback", nil
+	} else if Expire == messageState {
+		return "Expire", nil
 	} else if Error == messageState {
 		return "Error", nil
 	}

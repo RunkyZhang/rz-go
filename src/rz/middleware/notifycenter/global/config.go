@@ -12,11 +12,12 @@ var (
 )
 
 type Configuration struct {
-	Web      web      `json:"web"`
-	Redis    redis    `json:"redis"`
-	Sms      sms      `json:"sms"`
-	Mail     mail     `json:"mail"`
-	QYWeixin qyWeixin `json:"qyWeixin"`
+	ConsumingInterval int      `json:"consumingInterval"`
+	Web               web      `json:"web"`
+	Redis             redis    `json:"redis"`
+	Sms               sms      `json:"sms"`
+	Mail              mail     `json:"mail"`
+	QYWeixin          qyWeixin `json:"qyWeixin"`
 }
 
 type web struct {

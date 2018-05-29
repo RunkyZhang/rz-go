@@ -3,11 +3,14 @@ package consumers
 import (
 	"gopkg.in/gomail.v2"
 	"net/smtp"
+	"errors"
+	"encoding/json"
+	"time"
+
+	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/enumerations"
-	"errors"
-	"rz/middleware/notifycenter/models"
-	"encoding/json"
+	"rz/middleware/notifycenter/exceptions"
 )
 
 var (
@@ -70,7 +73,13 @@ func (mailMessageConsumer *mailMessageConsumer) consume(jsonString string) (inte
 		return mailMessageDto, nil
 	}
 
-	return mailMessageDto, mailMessageConsumer.Send(mailMessageDto)
+	if time.Now().Unix() > mailMessageDto.ExpireTime {
+		return mailMessageDto, exceptions.MessageExpire
+	}
+
+	//return mailMessageDto, mailMessageConsumer.Send(mailMessageDto)
+
+	return mailMessageDto, nil
 }
 
 func (*mailMessageConsumer) handleError(messageDto interface{}, err error) (error) {
@@ -80,7 +89,13 @@ func (*mailMessageConsumer) handleError(messageDto interface{}, err error) (erro
 	if nil != err {
 		return err
 	}
-	messageState, err := enumerations.MessageStateToString(enumerations.Error)
+
+	var messageState string
+	if err == exceptions.MessageExpire {
+		messageState, err = enumerations.MessageStateToString(enumerations.Expire)
+	} else {
+		messageState, err = enumerations.MessageStateToString(enumerations.Error)
+	}
 	if nil != err {
 		messageState = "Unknown"
 	}

@@ -1,11 +1,9 @@
-package data
+package common
 
 import (
 	"time"
 	"errors"
 	"strings"
-	"strconv"
-
 	"github.com/garyburd/redigo/redis"
 )
 
@@ -64,9 +62,16 @@ func (redisClient *RedisClient) Ping() (bool, error) {
 	return 0 == strings.Compare("PONG", value), nil
 }
 
-func (redisClient *RedisClient) KeyDelete(key string) (error) {
+func (redisClient *RedisClient) KeyDelete(keys ...string) (error) {
 	_, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
-		return conn.Do("DEL", key)
+		var args []interface{}
+		if nil != keys {
+			for _, key := range keys {
+				args = append(args, key)
+			}
+		}
+
+		return conn.Do("DEL", args...)
 	})
 
 	return err
@@ -120,9 +125,16 @@ func (redisClient *RedisClient) StringGet(key string) (string, error) {
 	return redis.String(result, err)
 }
 
-func (redisClient *RedisClient) StringGetMany(key ... string) ([]string, error) {
+func (redisClient *RedisClient) StringGetMany(keys ... string) ([]string, error) {
 	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
-		return conn.Do("GET", key)
+		var args []interface{}
+		if nil != keys {
+			for _, key := range keys {
+				args = append(args, key)
+			}
+		}
+
+		return conn.Do("GET", args...)
 	})
 
 	return redis.Strings(result, err)
@@ -154,13 +166,14 @@ func (redisClient *RedisClient) HashSet(key string, fieldName string, value stri
 
 func (redisClient *RedisClient) HashSetMap(key string, fieldNameValues map[string]string) (error) {
 	_, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
-		var args []string
-		for key, value := range fieldNameValues {
-			args = append(args, key)
+		var args []interface{}
+		args = append(args, key)
+		for fieldName, value := range fieldNameValues {
+			args = append(args, fieldName)
 			args = append(args, value)
 		}
 
-		return conn.Do("HSET", key, args)
+		return conn.Do("HSET", args...)
 	})
 
 	return err
@@ -174,12 +187,19 @@ func (redisClient *RedisClient) HashGet(key string, fieldName string) (string, e
 	return redis.String(result, err)
 }
 
-func (redisClient *RedisClient) HashGetMany(key string, fieldNames ...string) (map[string]string, error) {
+func (redisClient *RedisClient) HashGetMany(key string, fieldNames ...string) ([]string, error) {
 	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
-		return conn.Do("HGET", key, fieldNames)
+		var args []interface{}
+		args = append(args, key)
+		if nil != fieldNames {
+			for _, fieldName := range fieldNames {
+				args = append(args, fieldName)
+			}
+		}
+		return conn.Do("HMGET", args...)
 	})
 
-	return redis.StringMap(result, err)
+	return redis.Strings(result, err)
 }
 
 func (redisClient *RedisClient) HashGetAll(key string) (map[string]string, error) {
@@ -206,12 +226,20 @@ func (redisClient *RedisClient) HashValues(key string) ([]string, error) {
 	return redis.Strings(result, err)
 }
 
-func (redisClient *RedisClient) HashDelete(key string, fieldName string) (error) {
-	_, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
-		return conn.Do("HDEL", key, fieldName)
+func (redisClient *RedisClient) HashDelete(key string, fieldNames ...string) (int64, error) {
+	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+		var args []interface{}
+		args = append(args, key)
+		if nil != fieldNames {
+			for _, fieldName := range fieldNames {
+				args = append(args, fieldName)
+			}
+		}
+
+		return conn.Do("HDEL", args...)
 	})
 
-	return err
+	return redis.Int64(result, err)
 }
 
 func (redisClient *RedisClient) HashLength(key string) (int64, error) {
@@ -240,11 +268,7 @@ func (redisClient *RedisClient) SortedSetAdd(key string, value string, score flo
 
 func (redisClient *RedisClient) SortedSetRangeByScore(key string, min float64, max float64) ([]string, error) {
 	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
-		return conn.Do(
-			"ZRANGEBYSCORE",
-			key,
-			strings.Compare("(", strconv.FormatFloat(min, 'E', -1, 64)),
-			strings.Compare("(", strconv.FormatFloat(max, 'E', -1, 64)))
+		return conn.Do("ZRANGEBYSCORE", key, min, max)
 	})
 
 	return redis.Strings(result, err)
@@ -261,6 +285,22 @@ func (redisClient *RedisClient) SortedSetCount(key string, min float64, max floa
 func (redisClient *RedisClient) SortedSetRemoveRangeByScore(key string, min float64, max float64) (int64, error) {
 	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("ZREMRANGEBYSCORE", key, min, max)
+	})
+
+	return redis.Int64(result, err)
+}
+
+func (redisClient *RedisClient) SortedSetRemoveByValue(key string, values ...string) (int64, error) {
+	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+		var args []interface{}
+		args = append(args, key)
+		if nil != values {
+			for _, value := range values {
+				args = append(args, value)
+			}
+		}
+
+		return conn.Do("ZREM", args...)
 	})
 
 	return redis.Int64(result, err)

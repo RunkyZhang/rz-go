@@ -3,9 +3,9 @@ package services
 import (
 	"rz/middleware/notifycenter/models"
 	"time"
-	"strconv"
 	"rz/middleware/notifycenter/enumerations"
 	"rz/middleware/notifycenter/managements"
+	"rz/middleware/notifycenter/common"
 )
 
 type baseMessageService struct {
@@ -21,7 +21,7 @@ func (baseMessageService *baseMessageService) setMessageDto(messageDto *models.M
 
 	now := time.Now()
 	messageDto.CreatedTime = now.Unix()
-	messageDto.Id = baseMessageService.Prefix + now.Format("20060102") + strconv.FormatInt(increasing, 10)
+	messageDto.Id = baseMessageService.Prefix + now.Format("20060102") + common.Int64ToString(increasing)
 	messageDto.SendChannel = baseMessageService.SendChannel
 	messageDto.States, err = enumerations.MessageStateToString(enumerations.Initial)
 

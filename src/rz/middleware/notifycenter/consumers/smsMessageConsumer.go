@@ -1,7 +1,6 @@
 package consumers
 
 import (
-	"strconv"
 	"math/rand"
 	"time"
 	"fmt"
@@ -17,6 +16,8 @@ import (
 	"rz/middleware/notifycenter/models/external"
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/enumerations"
+	"rz/middleware/notifycenter/exceptions"
+	"rz/middleware/notifycenter/common"
 )
 
 var (
@@ -46,21 +47,21 @@ type smsMessageConsumer struct {
 }
 
 func (smsMessageConsumer *smsMessageConsumer) Send(smsMessageDto *models.SmsMessageDto) error {
-	var randomNumber = strconv.Itoa(rand.Intn(1024))
+	var randomNumber = common.Int32ToString(rand.Intn(1024))
 	var smsMessageRequestExternalDto = &external.SmsMessageRequestExternalDto{}
 	smsMessageRequestExternalDto.Time = time.Now().Unix()
 	var sig = fmt.Sprintf(
 		"appkey=%s&random=%s&time=%s&mobile=%s",
 		smsMessageConsumer.AppKey,
 		randomNumber,
-		strconv.FormatInt(smsMessageRequestExternalDto.Time, 10),
+		common.Int64ToString(smsMessageRequestExternalDto.Time),
 		strings.Join(smsMessageDto.Tos, ","))
 	var sigsha256 = sha256.Sum256([]byte(sig))
 	smsMessageRequestExternalDto.Sig = hex.EncodeToString(sigsha256[:])
 	smsMessageRequestExternalDto.Tel = []external.PhoneNumberExternalDto{}
 	for _, phoneNumber := range smsMessageDto.Tos {
 		phoneNumberExternalDto := external.PhoneNumberExternalDto{
-			Nationcode: strconv.Itoa(smsMessageConsumer.DefaultNationCode),
+			Nationcode: common.Int32ToString(smsMessageConsumer.DefaultNationCode),
 			Mobile:     phoneNumber,
 		}
 		smsMessageRequestExternalDto.Tel = append(smsMessageRequestExternalDto.Tel, phoneNumberExternalDto)
@@ -94,23 +95,36 @@ func (smsMessageConsumer *smsMessageConsumer) consume(jsonString string) (interf
 		return smsMessageDto, nil
 	}
 
-	return smsMessageDto, smsMessageConsumer.Send(smsMessageDto)
+	if time.Now().Unix() > smsMessageDto.ExpireTime {
+		return smsMessageDto, exceptions.MessageExpire
+	}
+
+	//return smsMessageDto, smsMessageConsumer.Send(smsMessageDto)
+
+	return smsMessageDto, nil
 }
 
 func (*smsMessageConsumer) handleError(messageDto interface{}, err error) (error) {
 	smsMessageDto := messageDto.(*models.SmsMessageDto)
 
-	sendChannel, err := enumerations.SendChannelToString(SmsMessageConsumer.SendChannel)
-	if nil != err {
-		return err
+	errorString := err.Error()
+	var messageState string
+	if err == exceptions.MessageExpire {
+		messageState, err = enumerations.MessageStateToString(enumerations.Expire)
+	} else {
+		messageState, err = enumerations.MessageStateToString(enumerations.Error)
 	}
-	messageState, err := enumerations.MessageStateToString(enumerations.Error)
 	if nil != err {
 		messageState = "Unknown"
 	}
 
-	smsMessageDto.States = smsMessageDto.States + ">" + messageState
-	smsMessageDto.Exception = err.Error()
+	sendChannel, err := enumerations.SendChannelToString(SmsMessageConsumer.SendChannel)
+	if nil != err {
+		return err
+	}
+
+	smsMessageDto.States = smsMessageDto.States + "+" + messageState
+	smsMessageDto.Exception = errorString
 
 	bytes, err := json.Marshal(smsMessageDto)
 	if nil != err {

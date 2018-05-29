@@ -4,15 +4,15 @@ import (
 	"sync"
 	"time"
 
-	"rz/middleware/notifycenter/data"
+	"rz/middleware/notifycenter/common"
 )
 
 var (
-	redisClient *data.RedisClient = nil
+	redisClient *common.RedisClient = nil
 	redisLock   sync.Mutex
 )
 
-func GetRedisClient() (*data.RedisClient) {
+func GetRedisClient() (*common.RedisClient) {
 	if nil != redisClient {
 		return redisClient
 	}
@@ -21,7 +21,7 @@ func GetRedisClient() (*data.RedisClient) {
 	defer redisLock.Unlock()
 
 	if nil == redisClient {
-		redisClientSettings := data.RedisClientSettings{
+		redisClientSettings := common.RedisClientSettings{
 			PoolMaxActive:   10,
 			PoolMaxIdle:     1,
 			PoolWait:        true,
@@ -32,7 +32,7 @@ func GetRedisClient() (*data.RedisClient) {
 			Password:        Config.Redis.Password,
 		}
 
-		redisClient = &data.RedisClient{
+		redisClient = &common.RedisClient{
 			RedisClientSettings: redisClientSettings,
 		}
 		redisClient.Init()

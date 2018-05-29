@@ -7,6 +7,7 @@ import (
 	"os"
 	"io/ioutil"
 	"encoding/json"
+	"strconv"
 )
 
 func IsStringBlank(value string) (bool) {
@@ -41,4 +42,21 @@ func ObjectToJsonString(value interface{}) (string, error) {
 	}
 
 	return string(bytes), nil
+}
+
+func Float64ToString(value float64) (string) {
+	// -1 保留小数点几位
+	return strconv.FormatFloat(value, 'f', -1, 64)
+}
+
+func Float32ToString(value float32) (string) {
+	return strconv.FormatFloat(float64(value), 'f', -1, 64)
+}
+
+func Int32ToString(value int) (string) {
+	return strconv.Itoa(value)
+}
+
+func Int64ToString(value int64) (string) {
+	return strconv.FormatInt(value, 10)
 }
