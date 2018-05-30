@@ -1,7 +1,7 @@
 package models
 
 type MailMessageDto struct {
-	MessageDto
+	BaseMessageDto
 
 	Subject string `json:"subject"`
 }

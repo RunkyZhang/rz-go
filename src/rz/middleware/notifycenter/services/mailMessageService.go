@@ -25,7 +25,7 @@ func (mailMessageService *mailMessageService) SendMail(mailMessageDto *models.Ma
 		return "", err
 	}
 
-	err = mailMessageService.setMessageDto(&mailMessageDto.MessageDto)
+	err = mailMessageService.setMessageDto(&mailMessageDto.BaseMessageDto)
 	if nil != err {
 		return "", err
 	}

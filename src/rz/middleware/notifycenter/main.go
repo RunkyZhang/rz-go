@@ -14,8 +14,6 @@ import (
 // http://work.weixin.qq.com/api/doc
 // https://cloud.tencent.com/document/product/382/5976
 func main() {
-	//fmt.Println(global.GetRedisClient().SortedSetRangeByScore("middleware_notifyCenter_Sms_keys", 0, 1527570777))
-
 	consumers.ConsumerStart()
 
 	fmt.Println("start listening", global.Config.Web.Listen, "...")
@@ -29,7 +27,7 @@ func main() {
 
 	err := web.Stop()
 	if nil != err {
-		fmt.Println("Failed to shutdown web server. error:", err, ".")
+		fmt.Println("Failed to shutdown web server. error: ", err, ".")
 	}
 
 	fmt.Println("stoped...")

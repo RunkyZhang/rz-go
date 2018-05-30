@@ -19,5 +19,5 @@ func (mailMessageManagement *mailMessageManagement) AddMailMessage(mailMessageDt
 		return err
 	}
 
-	return mailMessageManagement.addMessage(&mailMessageDto.MessageDto, string(bytes))
+	return mailMessageManagement.addMessage(&mailMessageDto.BaseMessageDto, string(bytes))
 }

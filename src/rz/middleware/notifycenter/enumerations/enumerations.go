@@ -60,24 +60,24 @@ const (
 	Error
 )
 
-func MessageStateToString(messageState MessageState) (string, error) {
+func MessageStateToString(messageState MessageState) (string) {
 	if Initial == messageState {
-		return "Initial", nil
+		return "Initial"
 	} else if Consuming == messageState {
-		return "Consuming", nil
+		return "Consuming"
 	} else if Sent == messageState {
-		return "Sent", nil
+		return "Sent"
 	} else if AppCallback == messageState {
-		return "AppCallback", nil
+		return "AppCallback"
 	} else if UserCallback == messageState {
-		return "UserCallback", nil
+		return "UserCallback"
 	} else if BothCallback == messageState {
-		return "BothCallback", nil
+		return "BothCallback"
 	} else if Expire == messageState {
-		return "Expire", nil
+		return "Expire"
 	} else if Error == messageState {
-		return "Error", nil
+		return "Error"
+	} else {
+		return "Unknown"
 	}
-
-	return "", exceptions.InvalidMessageState
 }

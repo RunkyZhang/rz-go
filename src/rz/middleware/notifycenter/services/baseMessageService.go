@@ -13,17 +13,18 @@ type baseMessageService struct {
 	Prefix      string
 }
 
-func (baseMessageService *baseMessageService) setMessageDto(messageDto *models.MessageDto) (error) {
+func (baseMessageService *baseMessageService) setMessageDto(baseMessageDto *models.BaseMessageDto) (error) {
 	increasing, err := managements.IncreasingManagement.Increase()
 	if nil != err {
 		return err
 	}
 
 	now := time.Now()
-	messageDto.CreatedTime = now.Unix()
-	messageDto.Id = baseMessageService.Prefix + now.Format("20060102") + common.Int64ToString(increasing)
-	messageDto.SendChannel = baseMessageService.SendChannel
-	messageDto.States, err = enumerations.MessageStateToString(enumerations.Initial)
+	baseMessageDto.Finished = false
+	baseMessageDto.CreatedTime = now.Unix()
+	baseMessageDto.Id = baseMessageService.Prefix + now.Format("20060102") + common.Int64ToString(increasing)
+	baseMessageDto.SendChannel = baseMessageService.SendChannel
+	baseMessageDto.States = enumerations.MessageStateToString(enumerations.Initial)
 
 	return err
 }

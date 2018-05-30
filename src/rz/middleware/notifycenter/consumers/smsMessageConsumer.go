@@ -16,7 +16,6 @@ import (
 	"rz/middleware/notifycenter/models/external"
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/enumerations"
-	"rz/middleware/notifycenter/exceptions"
 	"rz/middleware/notifycenter/common"
 )
 
@@ -32,9 +31,12 @@ func init() {
 		DefaultNationCode: global.Config.Sms.DefaultNationCode,
 	}
 
+	var err error
 	SmsMessageConsumer.SendChannel = enumerations.Sms
-	SmsMessageConsumer.consumeFunc = SmsMessageConsumer.consume
-	SmsMessageConsumer.handleErrorFunc = SmsMessageConsumer.handleError
+	SmsMessageConsumer.keySuffix, err = enumerations.SendChannelToString(SmsMessageConsumer.SendChannel)
+	common.Assert.IsNilError(err, "")
+	SmsMessageConsumer.convertFunc = SmsMessageConsumer.convert
+	SmsMessageConsumer.sendFunc = SmsMessageConsumer.Send
 }
 
 type smsMessageConsumer struct {
@@ -46,7 +48,11 @@ type smsMessageConsumer struct {
 	DefaultNationCode int
 }
 
-func (smsMessageConsumer *smsMessageConsumer) Send(smsMessageDto *models.SmsMessageDto) error {
+func (smsMessageConsumer *smsMessageConsumer) Send(messageDto interface{}) (error) {
+	smsMessageDto := messageDto.(*models.SmsMessageDto)
+
+	return nil
+
 	var randomNumber = common.Int32ToString(rand.Intn(1024))
 	var smsMessageRequestExternalDto = &external.SmsMessageRequestExternalDto{}
 	smsMessageRequestExternalDto.Time = time.Now().Unix()
@@ -87,49 +93,13 @@ func (smsMessageConsumer *smsMessageConsumer) Send(smsMessageDto *models.SmsMess
 	return errors.New(smsMessageResponseExternalDto.Errmsg)
 }
 
-func (smsMessageConsumer *smsMessageConsumer) consume(jsonString string) (interface{}, error) {
+func (smsMessageConsumer *smsMessageConsumer) convert(jsonString string) (interface{}, *models.BaseMessageDto, error) {
 	smsMessageDto := &models.SmsMessageDto{}
 
 	err := json.Unmarshal([]byte(jsonString), smsMessageDto)
 	if nil != err {
-		return smsMessageDto, nil
+		return nil, nil, err
 	}
 
-	if time.Now().Unix() > smsMessageDto.ExpireTime {
-		return smsMessageDto, exceptions.MessageExpire
-	}
-
-	//return smsMessageDto, smsMessageConsumer.Send(smsMessageDto)
-
-	return smsMessageDto, nil
-}
-
-func (*smsMessageConsumer) handleError(messageDto interface{}, err error) (error) {
-	smsMessageDto := messageDto.(*models.SmsMessageDto)
-
-	errorString := err.Error()
-	var messageState string
-	if err == exceptions.MessageExpire {
-		messageState, err = enumerations.MessageStateToString(enumerations.Expire)
-	} else {
-		messageState, err = enumerations.MessageStateToString(enumerations.Error)
-	}
-	if nil != err {
-		messageState = "Unknown"
-	}
-
-	sendChannel, err := enumerations.SendChannelToString(SmsMessageConsumer.SendChannel)
-	if nil != err {
-		return err
-	}
-
-	smsMessageDto.States = smsMessageDto.States + "+" + messageState
-	smsMessageDto.Exception = errorString
-
-	bytes, err := json.Marshal(smsMessageDto)
-	if nil != err {
-		return err
-	}
-
-	return global.GetRedisClient().HashSet(global.RedisKeyMessageValues+sendChannel, smsMessageDto.Id, string(bytes))
+	return smsMessageDto, &smsMessageDto.BaseMessageDto, nil
 }

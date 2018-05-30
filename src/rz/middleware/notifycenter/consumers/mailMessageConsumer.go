@@ -3,14 +3,11 @@ package consumers
 import (
 	"gopkg.in/gomail.v2"
 	"net/smtp"
-	"errors"
 	"encoding/json"
-	"time"
-
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/enumerations"
-	"rz/middleware/notifycenter/exceptions"
+	"rz/middleware/notifycenter/common"
 )
 
 var (
@@ -27,9 +24,12 @@ func init() {
 		ContentType: global.Config.Mail.ContentType,
 	}
 
+	var err error
 	MailMessageConsumer.SendChannel = enumerations.Mail
-	MailMessageConsumer.consumeFunc = MailMessageConsumer.consume
-	MailMessageConsumer.handleErrorFunc = MailMessageConsumer.handleError
+	MailMessageConsumer.keySuffix, err = enumerations.SendChannelToString(MailMessageConsumer.SendChannel)
+	common.Assert.IsNilError(err, "")
+	MailMessageConsumer.convertFunc = MailMessageConsumer.convert
+	MailMessageConsumer.sendFunc = MailMessageConsumer.Send
 	MailMessageConsumer.dialer = gomail.NewDialer(MailMessageConsumer.Host, MailMessageConsumer.Port, MailMessageConsumer.UserName, MailMessageConsumer.password)
 	MailMessageConsumer.dialer.Auth = &unencryptedAuth{
 		smtp.PlainAuth(
@@ -54,7 +54,11 @@ type mailMessageConsumer struct {
 	dialer *gomail.Dialer
 }
 
-func (mailMessageConsumer *mailMessageConsumer) Send(mailMessageDto *models.MailMessageDto) error {
+func (mailMessageConsumer *mailMessageConsumer) Send(messageDto interface{}) error {
+	mailMessageDto := messageDto.(*models.MailMessageDto)
+
+	return nil
+
 	message := gomail.NewMessage()
 	message.SetHeader("From", mailMessageConsumer.From)
 	message.SetHeader("To", mailMessageDto.Tos...)
@@ -65,66 +69,13 @@ func (mailMessageConsumer *mailMessageConsumer) Send(mailMessageDto *models.Mail
 	return mailMessageConsumer.dialer.DialAndSend(message)
 }
 
-func (mailMessageConsumer *mailMessageConsumer) consume(jsonString string) (interface{}, error) {
+func (mailMessageConsumer *mailMessageConsumer) convert(jsonString string) (interface{}, *models.BaseMessageDto, error) {
 	mailMessageDto := &models.MailMessageDto{}
 
 	err := json.Unmarshal([]byte(jsonString), mailMessageDto)
 	if nil != err {
-		return mailMessageDto, nil
+		return nil, nil, err
 	}
 
-	if time.Now().Unix() > mailMessageDto.ExpireTime {
-		return mailMessageDto, exceptions.MessageExpire
-	}
-
-	//return mailMessageDto, mailMessageConsumer.Send(mailMessageDto)
-
-	return mailMessageDto, nil
-}
-
-func (*mailMessageConsumer) handleError(messageDto interface{}, err error) (error) {
-	mailMessageDto := messageDto.(*models.MailMessageDto)
-
-	sendChannel, err := enumerations.SendChannelToString(MailMessageConsumer.SendChannel)
-	if nil != err {
-		return err
-	}
-
-	var messageState string
-	if err == exceptions.MessageExpire {
-		messageState, err = enumerations.MessageStateToString(enumerations.Expire)
-	} else {
-		messageState, err = enumerations.MessageStateToString(enumerations.Error)
-	}
-	if nil != err {
-		messageState = "Unknown"
-	}
-
-	mailMessageDto.States = mailMessageDto.States + ">" + messageState
-	mailMessageDto.Exception = err.Error()
-
-	bytes, err := json.Marshal(mailMessageDto)
-	if nil != err {
-		return err
-	}
-
-	return global.GetRedisClient().HashSet(global.RedisKeyMessageValues+sendChannel, mailMessageDto.Id, string(bytes))
-}
-
-type unencryptedAuth struct {
-	smtp.Auth
-}
-
-func (unencryptedAuth *unencryptedAuth) Start(serverInfo *smtp.ServerInfo) (string, []byte, error) {
-	(*serverInfo).TLS = true
-	return unencryptedAuth.Auth.Start(serverInfo)
-}
-
-func (*unencryptedAuth) Next(fromServer []byte, more bool) ([]byte, error) {
-	if more {
-		// We've already sent everything.
-		return nil, errors.New("unexpected server challenge")
-	}
-
-	return nil, nil
+	return mailMessageDto, &mailMessageDto.BaseMessageDto, nil
 }

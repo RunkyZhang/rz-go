@@ -9,16 +9,16 @@ import (
 type baseMessageManagement struct {
 }
 
-func (*baseMessageManagement) addMessage(messageDto *models.MessageDto, jsonString string) (error) {
-	sendChannel, err := enumerations.SendChannelToString(messageDto.SendChannel)
+func (*baseMessageManagement) addMessage(baseMessageDto *models.BaseMessageDto, jsonString string) (error) {
+	sendChannel, err := enumerations.SendChannelToString(baseMessageDto.SendChannel)
 	if nil != err {
 		return err
 	}
 
-	err = global.GetRedisClient().HashSet(global.RedisKeyMessageValues+sendChannel, messageDto.Id, jsonString)
+	err = global.GetRedisClient().HashSet(global.RedisKeyMessageValues+sendChannel, baseMessageDto.Id, jsonString)
 	if nil != err {
 		return err
 	}
 
-	return global.GetRedisClient().SortedSetAdd(global.RedisKeyMessageKeys+sendChannel, messageDto.Id, float64(messageDto.CreatedTime))
+	return global.GetRedisClient().SortedSetAdd(global.RedisKeyMessageKeys+sendChannel, baseMessageDto.Id, float64(baseMessageDto.CreatedTime))
 }

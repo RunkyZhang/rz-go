@@ -11,8 +11,8 @@ var (
 )
 
 func init() {
-	MailMessageService.SendChannel = enumerations.Sms
-	MailMessageService.Prefix = "S"
+	SmsMessageService.SendChannel = enumerations.Sms
+	SmsMessageService.Prefix = "S"
 }
 
 type smsMessageService struct {
@@ -25,7 +25,7 @@ func (smsMessageService *smsMessageService) SendSms(smsMessageDto *models.SmsMes
 		return "", err
 	}
 
-	err = smsMessageService.setMessageDto(&smsMessageDto.MessageDto)
+	err = smsMessageService.setMessageDto(&smsMessageDto.BaseMessageDto)
 	if nil != err {
 		return "", err
 	}

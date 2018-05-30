@@ -20,5 +20,5 @@ func (smsMessageManagement *smsMessageManagement) AddSmsMessage(smsMessageDto *m
 		return err
 	}
 
-	return smsMessageManagement.addMessage(&smsMessageDto.MessageDto, string(bytes))
+	return smsMessageManagement.addMessage(&smsMessageDto.BaseMessageDto, string(bytes))
 }
