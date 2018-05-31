@@ -3,7 +3,7 @@ package models
 type SmsMessageDto struct {
 	BaseMessageDto
 
-	NationCode   int      `json:"nation_code"`
+	NationCode   string   `json:"nationCode"`
 	CallbackUrls []string `json:"callbackUrls"`
 	CallbackTag  string   `json:"callbackTag"`
 }

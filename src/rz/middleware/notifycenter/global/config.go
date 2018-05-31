@@ -35,7 +35,7 @@ type sms struct {
 	Url               string `json:"url"`
 	AppKey            string `json:"appKey"`
 	AppId             string `json:"appId"`
-	DefaultNationCode int    `json:"defaultNationCode"`
+	DefaultNationCode string    `json:"defaultNationCode"`
 }
 
 type mail struct {
