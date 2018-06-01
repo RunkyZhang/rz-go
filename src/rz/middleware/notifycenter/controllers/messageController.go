@@ -24,23 +24,23 @@ var (
 		SendMailControllerPack: &web.ControllerPack{
 			Pattern:          "/message/send-mail",
 			ControllerFunc:   sendMail,
-			ConvertToDtoFunc: convertToMailMessageDto,
+			ConvertToDtoFunc: ConvertToMailMessageDto,
 		},
 		SendSmsControllerPack: &web.ControllerPack{
 			Pattern:          "/message/send-sms",
 			ControllerFunc:   sendSms,
-			ConvertToDtoFunc: convertToSmsMessageDto,
+			ConvertToDtoFunc: ConvertToSmsMessageDto,
 		},
 	}
 )
 
 type messageController struct {
-	baseController
+	BaseController
 
 	SendMailControllerPack *web.ControllerPack
 	SendSmsControllerPack  *web.ControllerPack
 }
 
 func (messageController *messageController) Enable() {
-	messageController.enable(MessageController)
+	messageController.BaseController.Enable(MessageController)
 }

@@ -6,12 +6,14 @@ type PhoneNumberPackExternalDto struct {
 }
 type SmsMessageRequestExternalDto struct {
 	Tel    []PhoneNumberPackExternalDto `json:"tel"`
-	Type   string                       `json:"type"`
+	//Type   string                       `json:"type"`
 	Msg    string                       `json:"msg"`
 	Sig    string                       `json:"sig"`
 	Time   int64                        `json:"time"`
 	Extend string                       `json:"extend"`
 	Ext    string                       `json:"ext"`
+	TplId  int                          `json:"tpl_id"`
+	Sign   string                       `json:"sign"`
 }
 
 type SmsMessageResponseExternalDto struct {

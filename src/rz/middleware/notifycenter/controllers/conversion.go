@@ -8,13 +8,13 @@ import (
 	"rz/middleware/notifycenter/exceptions"
 )
 
-func convertToMailMessageDto(body io.ReadCloser) (interface{}, error) {
+func ConvertToMailMessageDto(body io.ReadCloser) (interface{}, error) {
 	var mailMessageDto models.MailMessageDto
 
 	return convertToMessageDto(body, &mailMessageDto)
 }
 
-func convertToSmsMessageDto(body io.ReadCloser) (interface{}, error) {
+func ConvertToSmsMessageDto(body io.ReadCloser) (interface{}, error) {
 	var smsMessageDto models.SmsMessageDto
 
 	return convertToMessageDto(body, &smsMessageDto)

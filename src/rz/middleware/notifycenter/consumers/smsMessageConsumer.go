@@ -76,13 +76,14 @@ func (smsMessageConsumer *smsMessageConsumer) buildSmsMessageRequestExternalDto(
 	randomNumber string) (*external.SmsMessageRequestExternalDto) {
 	var smsMessageRequestExternalDto = &external.SmsMessageRequestExternalDto{}
 	now := time.Now()
+	smsMessageRequestExternalDto.TplId = smsMessageDto.TemplateId
 	smsMessageRequestExternalDto.Time = now.Unix()
 	smsMessageRequestExternalDto.Sig = smsMessageConsumer.buildSignature(smsMessageDto, now, randomNumber)
 	smsMessageRequestExternalDto.Tel = smsMessageConsumer.buildPhoneNumberPackExternalDtos(smsMessageDto)
-	smsMessageRequestExternalDto.Type = "0"
+	//smsMessageRequestExternalDto.Type = "0"
 	smsMessageRequestExternalDto.Msg = fmt.Sprintf("[应用告警]%s", smsMessageDto.Content)
 	smsMessageRequestExternalDto.Ext = ""
-	smsMessageRequestExternalDto.Extend = ""
+	smsMessageRequestExternalDto.Extend = common.Int32ToString(smsMessageDto.Extend)
 
 	return smsMessageRequestExternalDto
 }

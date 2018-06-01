@@ -13,6 +13,7 @@ import (
 
 // http://work.weixin.qq.com/api/doc
 // https://cloud.tencent.com/document/product/382/5976
+// 202067351   Zgadmin0719   qcloud.com
 func main() {
 	consumers.ConsumerStart()
 
