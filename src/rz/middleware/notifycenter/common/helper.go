@@ -60,3 +60,7 @@ func Int32ToString(value int) (string) {
 func Int64ToString(value int64) (string) {
 	return strconv.FormatInt(value, 10)
 }
+
+func StringToInt32(value string) (int, error) {
+	return strconv.Atoi(value)
+}

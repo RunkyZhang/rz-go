@@ -1,5 +1,7 @@
 package common
 
+import "errors"
+
 var (
 	Assert = &assert{}
 )
@@ -21,4 +23,8 @@ func (*assert) IsNilError(err error, message string) {
 			panic("the err[" + err.Error() + "] is nil. message: " + message)
 		}
 	}
+}
+
+func (*assert) NewNilParameterError(name string) (error) {
+	return errors.New("the parameter[" + name + "] is nil")
 }

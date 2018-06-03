@@ -17,13 +17,13 @@ type SmsMessageRequestExternalDto struct {
 }
 
 type SmsMessageResponseExternalDto struct {
-	Result int                           `json:"result"`
-	Errmsg string                        `json:"errmsg"`
-	Ext    string                        `json:"ext"`
-	Detail []SmsMessageDetailExternalDto `json:"detail"`
+	Result int                                 `json:"result"`
+	Errmsg string                              `json:"errmsg"`
+	Ext    string                              `json:"ext"`
+	Detail []SmsMessageResultDetailExternalDto `json:"detail"`
 }
 
-type SmsMessageDetailExternalDto struct {
+type SmsMessageResultDetailExternalDto struct {
 	Result     int    `json:"result"`
 	Errmsg     string `json:"errmsg"`
 	Mobile     string `json:"mobile"`

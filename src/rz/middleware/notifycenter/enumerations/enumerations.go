@@ -50,12 +50,10 @@ const (
 type MessageState int
 
 const (
-	Initial      MessageState = iota
+	Initial          MessageState = iota
 	Consuming
 	Sent
-	AppCallback
-	UserCallback
-	BothCallback
+	FinishedCallback
 	Expire
 	Error
 )
@@ -67,12 +65,8 @@ func MessageStateToString(messageState MessageState) (string) {
 		return "Consuming"
 	} else if Sent == messageState {
 		return "Sent"
-	} else if AppCallback == messageState {
-		return "AppCallback"
-	} else if UserCallback == messageState {
-		return "UserCallback"
-	} else if BothCallback == messageState {
-		return "BothCallback"
+	} else if FinishedCallback == messageState {
+		return "FinishedCallback"
 	} else if Expire == messageState {
 		return "Expire"
 	} else if Error == messageState {

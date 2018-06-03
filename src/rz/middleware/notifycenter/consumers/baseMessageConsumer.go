@@ -124,7 +124,7 @@ func (baseMessageConsumer *baseMessageConsumer) handleError(messageDto interface
 	}
 
 	baseMessageDto.States = baseMessageDto.States + "+" + messageState
-	baseMessageDto.Exception = flagError.Error()
+	baseMessageDto.ErrorMessage = flagError.Error()
 	baseMessageDto.Finished = true
 
 	return baseMessageConsumer.updateMessage(messageDto, baseMessageDto.Id)
