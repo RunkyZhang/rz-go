@@ -15,6 +15,13 @@ import (
 // https://cloud.tencent.com/document/product/382/5976
 // 202067351   Zgadmin0719   qcloud.com
 func main() {
+	//ree := managements.SmsTemplateManagement.Set(11722, 3333, nil, "")
+	//fmt.Println(ree)
+	//jsonString, ree := global.GetRedisClient().HashGet(global.RedisKeySmsTemplates, common.Int32ToString(117232))
+	//smsTemplateDto := &models.SmsTemplateDto{}
+	//ree = json.Unmarshal([]byte(""), smsTemplateDto)
+	//fmt.Println(jsonString, ree)
+
 	consumers.ConsumerStart()
 
 	fmt.Println("start listening", global.Config.Web.Listen, "...")

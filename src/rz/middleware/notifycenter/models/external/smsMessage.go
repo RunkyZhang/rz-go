@@ -6,8 +6,8 @@ type PhoneNumberPackExternalDto struct {
 }
 type SmsMessageRequestExternalDto struct {
 	Tel    []PhoneNumberPackExternalDto `json:"tel"`
-	//Type   string                       `json:"type"`
-	Msg    string                       `json:"msg"`
+	Msg    string                       `json:"msg,omitempty"`
+	Params []string                     `json:"params"`
 	Sig    string                       `json:"sig"`
 	Time   int64                        `json:"time"`
 	Extend string                       `json:"extend"`

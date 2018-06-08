@@ -36,8 +36,8 @@ type ToType int
 const (
 	Auto        ToType = iota
 	PhoneNumber
-	UserId
 	MailAddress
+	UserId
 )
 
 type QYWeixinMessageType int

@@ -17,6 +17,7 @@ import (
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/enumerations"
 	"rz/middleware/notifycenter/common"
+	"rz/middleware/notifycenter/managements"
 )
 
 var (
@@ -54,7 +55,8 @@ func (smsMessageConsumer *smsMessageConsumer) Send(messageDto interface{}) (erro
 	var randomNumber = common.Int32ToString(rand.Intn(1024))
 	smsMessageRequestExternalDto := smsMessageConsumer.buildSmsMessageRequestExternalDto(smsMessageDto, randomNumber)
 
-	bytes, err := httplib.Post(smsMessageConsumer.Url+"?sdkappid="+smsMessageConsumer.AppId+"&random="+randomNumber, smsMessageRequestExternalDto)
+	url := fmt.Sprintf("%s?sdkappid=%s&random=%s", smsMessageConsumer.Url, smsMessageConsumer.AppId, randomNumber)
+	bytes, err := httplib.Post(url, smsMessageRequestExternalDto)
 	if nil != err {
 		return err
 	}
@@ -74,16 +76,21 @@ func (smsMessageConsumer *smsMessageConsumer) Send(messageDto interface{}) (erro
 func (smsMessageConsumer *smsMessageConsumer) buildSmsMessageRequestExternalDto(
 	smsMessageDto *models.SmsMessageDto,
 	randomNumber string) (*external.SmsMessageRequestExternalDto) {
-	var smsMessageRequestExternalDto = &external.SmsMessageRequestExternalDto{}
+	smsMessageRequestExternalDto := &external.SmsMessageRequestExternalDto{}
 	now := time.Now()
 	smsMessageRequestExternalDto.TplId = smsMessageDto.TemplateId
 	smsMessageRequestExternalDto.Time = now.Unix()
 	smsMessageRequestExternalDto.Sig = smsMessageConsumer.buildSignature(smsMessageDto, now, randomNumber)
 	smsMessageRequestExternalDto.Tel = smsMessageConsumer.buildPhoneNumberPackExternalDtos(smsMessageDto)
-	//smsMessageRequestExternalDto.Type = "0"
-	smsMessageRequestExternalDto.Msg = fmt.Sprintf("[应用告警]%s", smsMessageDto.Content)
+	smsMessageRequestExternalDto.Params = smsMessageDto.Parameters
+	if !common.IsStringBlank(smsMessageDto.Content) {
+		smsMessageRequestExternalDto.Msg = smsMessageDto.Content
+	}
 	smsMessageRequestExternalDto.Ext = ""
-	smsMessageRequestExternalDto.Extend = common.Int32ToString(smsMessageDto.Extend)
+	smsTemplateDto, err := managements.SmsTemplateManagement.GetByTemplateId(smsMessageDto.TemplateId)
+	if nil == err {
+		smsMessageRequestExternalDto.Extend = common.Int32ToString(smsTemplateDto.Extend)
+	}
 
 	return smsMessageRequestExternalDto
 }

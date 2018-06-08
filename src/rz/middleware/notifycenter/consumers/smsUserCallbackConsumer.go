@@ -85,8 +85,8 @@ func (smsUserCallbackConsumer *smsUserCallbackConsumer) start() {
 			continue
 		}
 
-		regularExpression, err := regularExpressions[smsTemplateDto.Pattern]
-		if nil != err {
+		regularExpression, ok := regularExpressions[smsTemplateDto.Pattern]
+		if !ok {
 			regularExpression, err = regexp.Compile(smsTemplateDto.Pattern)
 			if nil == err {
 				regularExpressions[smsTemplateDto.Pattern] = regularExpression
