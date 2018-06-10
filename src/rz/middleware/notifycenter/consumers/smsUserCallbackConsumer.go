@@ -50,12 +50,9 @@ func (smsUserCallbackConsumer *smsUserCallbackConsumer) start() {
 		}
 
 		ok, err := managements.SmsUserCallbackMessageManagement.RemoveById(smsUserCallbackMessageId)
-		if nil != err {
+		if nil != err || !ok {
 			fmt.Printf("failed to remove [UserCallbackMessage](%s). error: %s", smsUserCallbackMessageId, err.Error())
 
-			continue
-		}
-		if !ok {
 			continue
 		}
 

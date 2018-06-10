@@ -44,44 +44,44 @@ func (baseMessageConsumer *baseMessageConsumer) start() {
 	for _, messageId := range messageIds {
 		jsonString, err := global.GetRedisClient().HashGet(global.RedisKeyMessageValues+baseMessageConsumer.keySuffix, messageId)
 
-		if nil == err {
-			var messageDto interface{}
-			var baseMessageDto *models.BaseMessageDto
-			var flagError error
-
-			count, err := global.GetRedisClient().SortedSetRemoveByValue(global.RedisKeyMessageKeys+baseMessageConsumer.keySuffix, messageId)
-			if nil == err {
-				if 0 < count {
-					messageDto, baseMessageDto, flagError = baseMessageConsumer.convertFunc(jsonString)
-					if nil == flagError {
-						flagError = baseMessageConsumer.consume(messageDto, baseMessageDto)
-						if nil == flagError {
-							fmt.Println("success to consume message[", messageId, "]")
-						}
-					}
-				}
-			} else {
-				fmt.Println("failed to remove message[", messageId, "]. error: ", err)
-			}
-
-			if nil != flagError {
-				fmt.Println("failed to consume message[", messageId, "]. error: ", flagError)
-
-				// when string is error json string
-				if nil != messageDto {
-					err = baseMessageConsumer.handleError(messageDto, baseMessageDto, flagError)
-					if nil != err {
-						fmt.Println("failed to handle error for message[", messageId, "]. error: ", err)
-					}
-				}
-			}
-		} else {
+		if nil != err {
 			// ignore message
-			fmt.Println("failed to get message[", messageId, "] value. error: ", err)
+			fmt.Printf("failed to get message(%s) value. error: %s", messageId, err.Error())
 
 			_, err := global.GetRedisClient().SortedSetRemoveByValue(global.RedisKeyMessageKeys+baseMessageConsumer.keySuffix, messageId)
 			if nil != err {
-				fmt.Println("failed to remove message[", messageId, "]. error: ", err)
+				fmt.Printf("failed to remove message(%s) value. error: %s", messageId, err.Error())
+			}
+
+			continue
+		}
+
+		count, err := global.GetRedisClient().SortedSetRemoveByValue(global.RedisKeyMessageKeys+baseMessageConsumer.keySuffix, messageId)
+		if nil != err || 0 == count {
+			fmt.Println("failed to remove message[", messageId, "]. error: ", err)
+			continue
+		}
+
+		var messageDto interface{}
+		var baseMessageDto *models.BaseMessageDto
+		var flagError error
+		messageDto, baseMessageDto, flagError = baseMessageConsumer.convertFunc(jsonString)
+		if nil == flagError {
+			flagError = baseMessageConsumer.consume(messageDto, baseMessageDto)
+			if nil == flagError {
+				fmt.Printf("success to consume message(%s)", messageId)
+			}
+		}
+
+		if nil != flagError {
+			fmt.Printf("failed to consume message(%s). error: %s", messageId, flagError.Error())
+
+			// when string is error json string
+			if nil != messageDto {
+				err = baseMessageConsumer.handleError(messageDto, baseMessageDto, flagError)
+				if nil != err {
+					fmt.Printf("failed to handle error for message(%s). error: %s", messageId, err.Error())
+				}
 			}
 		}
 	}
