@@ -8,6 +8,7 @@ import (
 	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/enumerations"
 	"rz/middleware/notifycenter/common"
+	"rz/middleware/notifycenter/managements"
 )
 
 var (
@@ -24,12 +25,9 @@ func init() {
 		ContentType: global.Config.Mail.ContentType,
 	}
 
-	var err error
-	MailMessageConsumer.SendChannel = enumerations.Mail
-	MailMessageConsumer.keySuffix, err = enumerations.SendChannelToString(MailMessageConsumer.SendChannel)
-	common.Assert.IsNilError(err, "")
 	MailMessageConsumer.convertFunc = MailMessageConsumer.convert
 	MailMessageConsumer.sendFunc = MailMessageConsumer.Send
+	//MailMessageConsumer.messageManagementBase = manage
 	MailMessageConsumer.dialer = gomail.NewDialer(MailMessageConsumer.Host, MailMessageConsumer.Port, MailMessageConsumer.UserName, MailMessageConsumer.password)
 	MailMessageConsumer.dialer.Auth = &unencryptedAuth{
 		smtp.PlainAuth(
@@ -69,13 +67,11 @@ func (mailMessageConsumer *mailMessageConsumer) Send(messageDto interface{}) err
 	return mailMessageConsumer.dialer.DialAndSend(message)
 }
 
-func (mailMessageConsumer *mailMessageConsumer) convert(jsonString string) (interface{}, *models.MessageBaseDto, error) {
-	mailMessageDto := &models.MailMessageDto{}
-
-	err := json.Unmarshal([]byte(jsonString), mailMessageDto)
+func (mailMessageConsumer *mailMessageConsumer) convert(messageId int) (interface{}, *models.MessageBasePo, error) {
+	mailMessageDto, err := managements.MailMessageManagement.GetById(messageId)
 	if nil != err {
 		return nil, nil, err
 	}
 
-	return mailMessageDto, &mailMessageDto.MessageBaseDto, nil
+	return mailMessageDto, &mailMessageDto.MessageBasePo, nil
 }

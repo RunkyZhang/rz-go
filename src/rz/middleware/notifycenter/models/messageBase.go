@@ -16,14 +16,14 @@ type MessageBaseDto struct {
 	SystemAlias          string              `json:"systemAlias"`
 	FinishedCallbackUrls []string            `json:"finishedCallbackUrls"`
 
-	Id           int                      `json:"id"`
-	SendChannel  enumerations.SendChannel `json:"sendChannel"`
-	Finished     bool                     `json:"finished"`
-	FinishedTime time.Time                `json:"finishedTime"`
-	States       string                   `json:"states"`
-	ErrorMessage string                   `json:"errorMessage"`
-	CreatedTime  int64                    `json:"createdTime"`
-	UpdatedTime  int64                    `json:"updatedTime"`
+	Id            int                      `json:"id"`
+	SendChannel   enumerations.SendChannel `json:"sendChannel"`
+	Finished      bool                     `json:"finished"`
+	FinishedTime  time.Time                `json:"finishedTime"`
+	States        string                   `json:"states"`
+	ErrorMessages string                   `json:"errorMessages"`
+	CreatedTime   int64                    `json:"createdTime"`
+	UpdatedTime   int64                    `json:"updatedTime"`
 }
 
 type MessageBasePo struct {
@@ -38,12 +38,12 @@ type MessageBasePo struct {
 	SystemAlias          string              `gorm:"column:systemAlias"`
 	FinishedCallbackUrls string              `gorm:"column:finishedCallbackUrls"`
 
-	Id           int                      `gorm:"column:id;primary_key;auto_increment"`
-	SendChannel  enumerations.SendChannel `gorm:"column:sendChannel"`
-	Finished     bool                     `gorm:"column:finished"`
-	FinishedTime time.Time                `gorm:"column:finishedTime"`
-	States       string                   `gorm:"column:states"`
-	ErrorMessage string                   `gorm:"column:errorMessage"`
+	Id            int                      `gorm:"column:id;primary_key;auto_increment"`
+	SendChannel   enumerations.SendChannel `gorm:"column:sendChannel"`
+	Finished      bool                     `gorm:"column:finished"`
+	FinishedTime  time.Time                `gorm:"column:finishedTime"`
+	States        string                   `gorm:"column:states"`
+	ErrorMessages string                   `gorm:"column:errorMessages"`
 }
 
 func MessageBaseDtoToPo(messageBaseDto *MessageBaseDto) (*MessageBasePo) {
@@ -75,7 +75,7 @@ func MessageBasePoToDto(messageBasePo *MessageBasePo) (*MessageBaseDto) {
 	messageBaseDto.Finished = messageBasePo.Finished
 	messageBaseDto.FinishedTime = messageBasePo.FinishedTime
 	messageBaseDto.States = messageBasePo.States
-	messageBaseDto.ErrorMessage = messageBasePo.ErrorMessage
+	messageBaseDto.ErrorMessages = messageBasePo.ErrorMessages
 	messageBaseDto.CreatedTime = messageBasePo.CreatedTime.Unix()
 	messageBaseDto.UpdatedTime = messageBasePo.UpdatedTime.Unix()
 

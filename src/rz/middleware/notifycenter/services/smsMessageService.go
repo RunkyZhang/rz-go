@@ -3,19 +3,12 @@ package services
 import (
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/managements"
-	"rz/middleware/notifycenter/enumerations"
 	"fmt"
 )
 
 var (
 	SmsMessageService = smsMessageService{}
 )
-
-func init() {
-	SmsMessageService.SendChannel = enumerations.Sms
-	SmsMessageService.Prefix = "S"
-}
-
 type smsMessageService struct {
 	messageServiceBase
 }

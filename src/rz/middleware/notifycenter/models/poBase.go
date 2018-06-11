@@ -8,4 +8,5 @@ type PoBase struct {
 	CreatedTime   time.Time `gorm:"column:createdTime"`
 	UpdatedTime   time.Time `gorm:"column:updatedTime"`
 	Deleted       bool      `gorm:"column:deleted"`
+	Version       int       `gorm:"column:version"`
 }

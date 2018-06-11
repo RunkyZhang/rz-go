@@ -3,24 +3,22 @@ package consumers
 import (
 	"time"
 	"fmt"
-	"encoding/json"
 	"runtime"
 
 	"rz/middleware/notifycenter/enumerations"
 	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/exceptions"
 	"rz/middleware/notifycenter/models"
-	"rz/middleware/notifycenter/common"
+	"rz/middleware/notifycenter/managements"
 )
 
-type convertFunc func(string) (interface{}, *models.MessageBaseDto, error)
+type convertFunc func(int) (interface{}, *models.MessageBasePo, error)
 type sendFunc func(interface{}) (error)
 
 type messageConsumerBase struct {
-	SendChannel enumerations.SendChannel
-	keySuffix   string
-	convertFunc convertFunc
-	sendFunc    sendFunc
+	convertFunc           convertFunc
+	sendFunc              sendFunc
+	messageManagementBase *managements.MessageManagementBase
 }
 
 func (messageConsumerBase *messageConsumerBase) Start(duration time.Duration) {
@@ -36,108 +34,89 @@ func (messageConsumerBase *messageConsumerBase) Start(duration time.Duration) {
 }
 
 func (messageConsumerBase *messageConsumerBase) start() {
-	messageIds, err := messageConsumerBase.getMessageIds()
+	messageIds, err := messageConsumerBase.messageManagementBase.DequeueMessageIds()
 	if nil != err || nil == messageIds {
 		fmt.Println("failed to get message ids. error: ", err)
 		return
 	}
 
 	for _, messageId := range messageIds {
-		jsonString, err := global.GetRedisClient().HashGet(global.RedisKeyMessageValues+messageConsumerBase.keySuffix, messageId)
-
 		if nil != err {
 			// ignore message
-			fmt.Printf("failed to get message(%s) value. error: %s", messageId, err.Error())
+			fmt.Printf("failed to get message(%d) value. error: %s", messageId, err.Error())
 
-			_, err := global.GetRedisClient().SortedSetRemoveByValue(global.RedisKeyMessageKeys+messageConsumerBase.keySuffix, messageId)
-			if nil != err {
-				fmt.Printf("failed to remove message(%s) value. error: %s", messageId, err.Error())
+			affectedCount, err := messageConsumerBase.messageManagementBase.RemoveMessageId(messageId)
+			if nil != err || 0 == affectedCount {
+				fmt.Println("failed to remove message(", messageId, ") value. error: ", err)
 			}
 
 			continue
 		}
 
-		count, err := global.GetRedisClient().SortedSetRemoveByValue(global.RedisKeyMessageKeys+messageConsumerBase.keySuffix, messageId)
-		if nil != err || 0 == count {
-			fmt.Println("failed to remove message[", messageId, "]. error: ", err)
+		affectedCount, err := messageConsumerBase.messageManagementBase.RemoveMessageId(messageId)
+		if nil != err || 0 == affectedCount {
+			fmt.Println("failed to remove message(", messageId, "). error: ", err)
 			continue
 		}
 
-		var messageDto interface{}
-		var messageBaseDto *models.MessageBaseDto
+		var messagePo interface{}
+		var messageBasePo *models.MessageBasePo
 		var flagError error
-		messageDto, messageBaseDto, flagError = messageConsumerBase.convertFunc(jsonString)
+		messagePo, messageBasePo, flagError = messageConsumerBase.convertFunc(messageId)
 		if nil == flagError {
-			flagError = messageConsumerBase.consume(messageDto, messageBaseDto)
+			flagError = messageConsumerBase.consume(messagePo, messageBasePo)
 			if nil == flagError {
-				fmt.Printf("success to consume message(%s)", messageId)
+				fmt.Printf("success to consume message(%d)", messageId)
 			}
 		}
 
 		if nil != flagError {
-			fmt.Printf("failed to consume message(%s). error: %s", messageId, flagError.Error())
+			fmt.Printf("failed to consume message(%d). error: %s", messageId, flagError.Error())
 
 			// when string is error json string
-			if nil != messageDto {
-				err = messageConsumerBase.handleError(messageDto, messageBaseDto, flagError)
-				if nil != err {
-					fmt.Printf("failed to handle error for message(%s). error: %s", messageId, err.Error())
+			if nil != messageBasePo {
+				var state string
+				if flagError == exceptions.MessageExpire {
+					state = enumerations.MessageStateToString(enumerations.Expire)
+				} else {
+					state = enumerations.MessageStateToString(enumerations.Error)
 				}
+				messageConsumerBase.modifyMessagePo(messageBasePo, state, true, flagError.Error())
 			}
 		}
 	}
 }
 
-func (messageConsumerBase *messageConsumerBase) getMessageIds() ([]string, error) {
-	max := float64(time.Now().Unix())
-	messageIds, err := global.GetRedisClient().SortedSetRangeByScore(global.RedisKeyMessageKeys+messageConsumerBase.keySuffix, 0, max)
-	if nil != err {
-		return nil, err
-	}
+func (messageConsumerBase *messageConsumerBase) consume(messagePo interface{}, messageBasePo *models.MessageBasePo) (error) {
+	messageConsumerBase.modifyMessagePo(messageBasePo, enumerations.MessageStateToString(enumerations.Consuming), false, "")
 
-	return messageIds, nil
-}
-
-func (messageConsumerBase *messageConsumerBase) consume(messageDto interface{}, messageBaseDto *models.MessageBaseDto) (error) {
-	messageBaseDto.States = messageBaseDto.States + "+" + enumerations.MessageStateToString(enumerations.Consuming)
-	messageConsumerBase.updateMessage(messageDto, messageBaseDto.Id)
-
-	if time.Now().Unix() > messageBaseDto.ExpireTime {
+	if time.Now().Unix() > messageBasePo.ExpireTime.Unix() {
 		return exceptions.MessageExpire
 	}
 
-	err := messageConsumerBase.sendFunc(messageDto)
-	if nil == err {
-		messageBaseDto.States = messageBaseDto.States + "+" + enumerations.MessageStateToString(enumerations.Sent)
-		messageBaseDto.Finished = true
-		messageConsumerBase.updateMessage(messageDto, messageBaseDto.Id)
-	}
-
-	return err
-}
-
-func (messageConsumerBase *messageConsumerBase) handleError(messageDto interface{}, messageBaseDto *models.MessageBaseDto, flagError error) (error) {
-	var messageState string
-	if flagError == exceptions.MessageExpire {
-		messageState = enumerations.MessageStateToString(enumerations.Expire)
-	} else {
-		messageState = enumerations.MessageStateToString(enumerations.Error)
-	}
-
-	messageBaseDto.States = messageBaseDto.States + "+" + messageState
-	messageBaseDto.ErrorMessage = flagError.Error()
-	messageBaseDto.Finished = true
-
-	return messageConsumerBase.updateMessage(messageDto, messageBaseDto.Id)
-}
-
-func (messageConsumerBase *messageConsumerBase) updateMessage(messageDto interface{}, messageId int) (error) {
-	bytes, err := json.Marshal(messageDto)
+	err := messageConsumerBase.sendFunc(messagePo)
 	if nil != err {
 		return err
 	}
 
-	return global.GetRedisClient().HashSet(global.RedisKeyMessageValues+messageConsumerBase.keySuffix, common.Int32ToString(messageId), string(bytes))
+	messageConsumerBase.modifyMessagePo(messageBasePo, enumerations.MessageStateToString(enumerations.Sent), true, "")
+	return nil
+}
+
+func (messageConsumerBase *messageConsumerBase) modifyMessagePo(messageBasePo *models.MessageBasePo, state string, finished bool, errorMessage string) {
+	messageBasePo.States = messageBasePo.States + "+" + state
+	var errorMessages string
+	if "" == errorMessage {
+		errorMessages = ""
+	} else {
+		messageBasePo.ErrorMessages = messageBasePo.ErrorMessages + "+++" + errorMessage
+		errorMessages = messageBasePo.ErrorMessages
+	}
+
+	affectedCount, err := managements.SmsMessageManagement.ModifyById(messageBasePo.Id, messageBasePo.States, finished, errorMessages)
+	if nil != err || 0 == affectedCount {
+		fmt.Println("failed to handle error for message(", messageBasePo.Id, "). error: ", err.Error())
+	}
 }
 
 func ConsumerStart() {
