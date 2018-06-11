@@ -6,8 +6,8 @@ import (
 	"rz/middleware/notifycenter/exceptions"
 )
 
-func verifyMessageDto(baseMessageDto *models.BaseMessageDto) (error) {
-	if 0 == len(baseMessageDto.Tos) {
+func verifyMessageDto(messageBaseDto *models.MessageBaseDto) (error) {
+	if 0 == len(messageBaseDto.Tos) {
 		return exceptions.ErrorTosEmpty
 	}
 
@@ -19,7 +19,7 @@ func VerifyMailMessageDto(mailMessageDto *models.MailMessageDto) (error) {
 		return exceptions.DtoNull
 	}
 
-	err := verifyMessageDto(&mailMessageDto.BaseMessageDto)
+	err := verifyMessageDto(&mailMessageDto.MessageBaseDto)
 	if nil != err {
 		return err
 	}
@@ -36,7 +36,7 @@ func VerifySmsMessageDto(smsMessageDto *models.SmsMessageDto) (error) {
 		return exceptions.DtoNull
 	}
 
-	err := verifyMessageDto(&smsMessageDto.BaseMessageDto)
+	err := verifyMessageDto(&smsMessageDto.MessageBaseDto)
 	if nil != err {
 		return err
 	}

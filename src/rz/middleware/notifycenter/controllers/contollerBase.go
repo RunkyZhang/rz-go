@@ -6,10 +6,10 @@ import (
 	"rz/middleware/notifycenter/web"
 )
 
-type BaseController struct {
+type ControllerBase struct {
 }
 
-func (*BaseController) Enable(controller interface{}) {
+func (*ControllerBase) Enable(controller interface{}) {
 	messageControllerType := reflect.ValueOf(controller)
 	fieldCount := messageControllerType.NumField()
 

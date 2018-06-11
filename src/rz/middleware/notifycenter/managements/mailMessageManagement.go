@@ -10,7 +10,7 @@ var (
 )
 
 type mailMessageManagement struct {
-	baseMessageManagement
+	messageManagementBase
 }
 
 func (mailMessageManagement *mailMessageManagement) AddMailMessage(mailMessageDto *models.MailMessageDto) (error) {
@@ -19,5 +19,5 @@ func (mailMessageManagement *mailMessageManagement) AddMailMessage(mailMessageDt
 		return err
 	}
 
-	return mailMessageManagement.addMessage(&mailMessageDto.BaseMessageDto, string(bytes))
+	return mailMessageManagement.addMessage(&mailMessageDto.MessageBaseDto, string(bytes))
 }

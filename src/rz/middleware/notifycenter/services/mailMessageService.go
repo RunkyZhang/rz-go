@@ -16,23 +16,21 @@ func init() {
 }
 
 type mailMessageService struct {
-	baseMessageService
+	messageServiceBase
 }
 
-func (mailMessageService *mailMessageService) SendMail(mailMessageDto *models.MailMessageDto) (string, error) {
+func (mailMessageService *mailMessageService) SendMail(mailMessageDto *models.MailMessageDto) (int, error) {
 	err := VerifyMailMessageDto(mailMessageDto)
 	if nil != err {
-		return "", err
+		return 0, err
 	}
 
-	err = mailMessageService.setMessageDto(&mailMessageDto.BaseMessageDto)
-	if nil != err {
-		return "", err
-	}
+	mailMessagePo := models.MailMessageDtoToPo(mailMessageDto)
+	mailMessageService.setMessageBasePo(&mailMessagePo.MessageBasePo)
 
 	err = managements.MailMessageManagement.AddMailMessage(mailMessageDto)
 	if nil != err {
-		return "", err
+		return 0, err
 	}
 
 	return mailMessageDto.Id, nil

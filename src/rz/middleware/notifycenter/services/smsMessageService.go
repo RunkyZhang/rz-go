@@ -4,6 +4,7 @@ import (
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/managements"
 	"rz/middleware/notifycenter/enumerations"
+	"fmt"
 )
 
 var (
@@ -16,23 +17,22 @@ func init() {
 }
 
 type smsMessageService struct {
-	baseMessageService
+	messageServiceBase
 }
 
-func (smsMessageService *smsMessageService) SendSms(smsMessageDto *models.SmsMessageDto) (string, error) {
+func (smsMessageService *smsMessageService) SendSms(smsMessageDto *models.SmsMessageDto) (int, error) {
 	err := VerifySmsMessageDto(smsMessageDto)
 	if nil != err {
-		return "", err
+		return 0, err
 	}
 
-	err = smsMessageService.setMessageDto(&smsMessageDto.BaseMessageDto)
-	if nil != err {
-		return "", err
-	}
+	smsMessagePo := models.SmsMessageDtoToPo(smsMessageDto)
+	smsMessageService.setMessageBasePo(&smsMessagePo.MessageBasePo)
 
-	err = managements.SmsMessageManagement.AddSmsMessage(smsMessageDto)
+	err = managements.SmsMessageManagement.Add(smsMessagePo)
+	fmt.Println(smsMessagePo.Id)
 	if nil != err {
-		return "", err
+		return 0, err
 	}
 
 	return smsMessageDto.Id, nil

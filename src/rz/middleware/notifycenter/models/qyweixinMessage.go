@@ -1,7 +1,7 @@
 package models
 
 type QYWeixinMessageDto struct {
-	BaseMessageDto
+	MessageBaseDto
 
 	ToParties []string `json:"toParties"`
 	ToTags   []string `json:"toTags"`

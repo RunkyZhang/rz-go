@@ -35,7 +35,6 @@ func (smsTemplateManagement *smsTemplateManagement) Set(
 		Extend:           extend,
 		UserCallbackUrls: userCallbackUrls,
 		Pattern:          pattern,
-		Disable:          false,
 	}
 
 	bytes, err := json.Marshal(smsTemplateDto)

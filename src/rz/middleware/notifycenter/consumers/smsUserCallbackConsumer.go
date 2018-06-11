@@ -72,15 +72,15 @@ func (smsUserCallbackConsumer *smsUserCallbackConsumer) start() {
 		if nil == smsUserCallbackDto.UserCallbackMessages {
 			smsUserCallbackDto.UserCallbackMessages = make(map[string]models.SmsUserCallbackMessageDto)
 		}
-		if smsTemplateDto.Disable {
-			smsUserCallbackMessageDto.FinishedTime = time.Now().Unix()
-			smsUserCallbackMessageDto.Finished = true
-			smsUserCallbackMessageDto.ErrorMessage = "Disable Template"
-			smsUserCallbackDto.UserCallbackMessages[smsUserCallbackMessageDto.Id] = *smsUserCallbackMessageDto
-			managements.SmsUserCallbackManagement.Set(smsUserCallbackDto)
-
-			continue
-		}
+		//if smsTemplateDto.Disable {
+		//	smsUserCallbackMessageDto.FinishedTime = time.Now().Unix()
+		//	smsUserCallbackMessageDto.Finished = true
+		//	smsUserCallbackMessageDto.ErrorMessage = "Disable Template"
+		//	smsUserCallbackDto.UserCallbackMessages[smsUserCallbackMessageDto.Id] = *smsUserCallbackMessageDto
+		//	managements.SmsUserCallbackManagement.Set(smsUserCallbackDto)
+		//
+		//	continue
+		//}
 
 		regularExpression, ok := regularExpressions[smsTemplateDto.Pattern]
 		if !ok {

@@ -35,12 +35,12 @@ var (
 )
 
 type messageController struct {
-	BaseController
+	ControllerBase
 
 	SendMailControllerPack *web.ControllerPack
 	SendSmsControllerPack  *web.ControllerPack
 }
 
 func (messageController *messageController) Enable() {
-	messageController.BaseController.Enable(MessageController)
+	messageController.ControllerBase.Enable(MessageController)
 }

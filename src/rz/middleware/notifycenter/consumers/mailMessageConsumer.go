@@ -42,7 +42,7 @@ func init() {
 }
 
 type mailMessageConsumer struct {
-	baseMessageConsumer
+	messageConsumerBase
 
 	Host        string
 	Port        int
@@ -69,7 +69,7 @@ func (mailMessageConsumer *mailMessageConsumer) Send(messageDto interface{}) err
 	return mailMessageConsumer.dialer.DialAndSend(message)
 }
 
-func (mailMessageConsumer *mailMessageConsumer) convert(jsonString string) (interface{}, *models.BaseMessageDto, error) {
+func (mailMessageConsumer *mailMessageConsumer) convert(jsonString string) (interface{}, *models.MessageBaseDto, error) {
 	mailMessageDto := &models.MailMessageDto{}
 
 	err := json.Unmarshal([]byte(jsonString), mailMessageDto)
@@ -77,5 +77,5 @@ func (mailMessageConsumer *mailMessageConsumer) convert(jsonString string) (inte
 		return nil, nil, err
 	}
 
-	return mailMessageDto, &mailMessageDto.BaseMessageDto, nil
+	return mailMessageDto, &mailMessageDto.MessageBaseDto, nil
 }

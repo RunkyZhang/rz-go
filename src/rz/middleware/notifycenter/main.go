@@ -8,7 +8,6 @@ import (
 	"rz/middleware/notifycenter/controllers"
 	"rz/middleware/notifycenter/web"
 	"rz/middleware/notifycenter/global"
-	"rz/middleware/notifycenter/consumers"
 )
 
 // http://work.weixin.qq.com/api/doc
@@ -22,7 +21,7 @@ func main() {
 	//ree = json.Unmarshal([]byte(""), smsTemplateDto)
 	//fmt.Println(jsonString, ree)
 
-	consumers.ConsumerStart()
+	//consumers.ConsumerStart()
 
 	fmt.Println("start listening", global.Config.Web.Listen, "...")
 	controllers.MessageController.Enable()

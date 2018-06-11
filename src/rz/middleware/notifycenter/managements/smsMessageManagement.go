@@ -1,9 +1,9 @@
 package managements
 
 import (
-	"encoding/json"
 
 	"rz/middleware/notifycenter/models"
+	"rz/middleware/notifycenter/repositories"
 )
 
 var (
@@ -11,14 +11,18 @@ var (
 )
 
 type smsMessageManagement struct {
-	baseMessageManagement
+	messageManagementBase
+
+	smsMessageRepository *repositories.SmsMessageRepository
 }
 
-func (smsMessageManagement *smsMessageManagement) AddSmsMessage(smsMessageDto *models.SmsMessageDto) (error) {
-	bytes, err := json.Marshal(smsMessageDto)
-	if nil != err {
-		return err
-	}
+func (smsMessageManagement *smsMessageManagement) Add(smsMessagePo *models.SmsMessagePo) (error) {
+	//bytes, err := json.Marshal(smsMessageDto)
+	//if nil != err {
+	//	return err
+	//}
+	//
+	//return smsMessageManagement.addMessage(&smsMessageDto.MessageBaseDto, string(bytes))
 
-	return smsMessageManagement.addMessage(&smsMessageDto.BaseMessageDto, string(bytes))
+	return smsMessageManagement.smsMessageRepository.Insert(smsMessagePo)
 }

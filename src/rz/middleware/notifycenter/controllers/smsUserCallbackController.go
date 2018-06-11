@@ -24,11 +24,11 @@ var (
 )
 
 type smsUserCallbackController struct {
-	BaseController
+	ControllerBase
 
 	SmsUserCallbackControllerPack *web.ControllerPack
 }
 
 func (smsCallbackController *smsUserCallbackController) Enable() {
-	smsCallbackController.BaseController.Enable(MessageController)
+	smsCallbackController.ControllerBase.Enable(MessageController)
 }

@@ -41,7 +41,7 @@ func init() {
 }
 
 type smsMessageConsumer struct {
-	baseMessageConsumer
+	messageConsumerBase
 
 	Url               string
 	AppKey            string
@@ -125,7 +125,7 @@ func (smsMessageConsumer *smsMessageConsumer) buildPhoneNumberPackExternalDtos(s
 	return phoneNumberPackExternalDtos
 }
 
-func (smsMessageConsumer *smsMessageConsumer) convert(jsonString string) (interface{}, *models.BaseMessageDto, error) {
+func (smsMessageConsumer *smsMessageConsumer) convert(jsonString string) (interface{}, *models.MessageBaseDto, error) {
 	smsMessageDto := &models.SmsMessageDto{}
 
 	err := json.Unmarshal([]byte(jsonString), smsMessageDto)
@@ -133,5 +133,5 @@ func (smsMessageConsumer *smsMessageConsumer) convert(jsonString string) (interf
 		return nil, nil, err
 	}
 
-	return smsMessageDto, &smsMessageDto.BaseMessageDto, nil
+	return smsMessageDto, &smsMessageDto.MessageBaseDto, nil
 }

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 
 	"rz/middleware/notifycenter/models"
-	"rz/middleware/notifycenter/exceptions"
 	"rz/middleware/notifycenter/models/external"
+	"rz/middleware/notifycenter/exceptions"
 )
 
 func ConvertToMailMessageDto(body io.ReadCloser) (interface{}, error) {
@@ -30,9 +30,9 @@ func ConvertToSmsCallbackMessageDto(body io.ReadCloser) (interface{}, error) {
 func convertToDto(body io.ReadCloser, messageDto interface{}) (interface{}, error) {
 	decoder := json.NewDecoder(body)
 	err := decoder.Decode(&messageDto)
-	if nil == err {
-		return messageDto, nil
+	if nil != err {
+		return nil, exceptions.InvalidDtoType.AttachError(err)
 	}
 
-	return nil, exceptions.InvalidDtoType
+	return messageDto, nil
 }
