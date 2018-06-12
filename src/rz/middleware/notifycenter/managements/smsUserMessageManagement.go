@@ -14,7 +14,7 @@ var (
 type smsUserCallbackMessageManagement struct {
 }
 
-func (smsUserCallbackMessageManagement *smsUserCallbackMessageManagement) Add(smsUserCallbackMessageDto *models.SmsUserCallbackMessageDto) (error) {
+func (smsUserCallbackMessageManagement *smsUserCallbackMessageManagement) Add(smsUserCallbackMessageDto *models.SmsUserMessageDto) (error) {
 	bytes, err := json.Marshal(smsUserCallbackMessageDto)
 	if nil != err {
 		return err
@@ -23,10 +23,10 @@ func (smsUserCallbackMessageManagement *smsUserCallbackMessageManagement) Add(sm
 	return global.GetRedisClient().HashSet(global.RedisKeySmsUserCallbackMessages, smsUserCallbackMessageDto.Id, string(bytes))
 }
 
-func (smsUserCallbackMessageManagement *smsUserCallbackMessageManagement) GetById(id string) (*models.SmsUserCallbackMessageDto, error) {
+func (smsUserCallbackMessageManagement *smsUserCallbackMessageManagement) GetById(id string) (*models.SmsUserMessageDto, error) {
 	jsonString, err := global.GetRedisClient().HashGet(global.RedisKeySmsUserCallbackMessages, id)
 
-	smsUserCallbackMessageDto := &models.SmsUserCallbackMessageDto{}
+	smsUserCallbackMessageDto := &models.SmsUserMessageDto{}
 	err = json.Unmarshal([]byte(jsonString), smsUserCallbackMessageDto)
 	if nil != err {
 		return nil, err
