@@ -6,23 +6,23 @@ import (
 )
 
 var (
-	SmsTemplateRepository smsTemplateRepository
+	SmsUserMessageRepository smsUserMessageRepository
 )
 
 func init() {
-	SmsTemplateRepository.defaultDatabaseKey = "default"
-	SmsTemplateRepository.rawTableName = "smsTemplatePo"
+	SmsUserMessageRepository.defaultDatabaseKey = "default"
+	SmsUserMessageRepository.rawTableName = "smsUserMessage"
 }
 
-type smsTemplateRepository struct {
+type smsUserMessageRepository struct {
 	repositoryBase
 }
 
-func (myself *smsTemplateRepository) Insert(smsTemplatePo *models.SmsTemplatePo) (error) {
+func (myself *smsUserMessageRepository) Insert(smsTemplatePo *models.SmsUserMessagePo) (error) {
 	return myself.repositoryBase.Insert(smsTemplatePo, nil)
 }
 
-func (myself *smsTemplateRepository) UpdateById(id int, userCallbackUrls string, pattern string) (error) {
+func (myself *smsUserMessageRepository) UpdateById(id int, userCallbackUrls string, pattern string) (error) {
 	database, err := myself.getDatabase(nil)
 	if nil != err {
 		return err
@@ -35,14 +35,4 @@ func (myself *smsTemplateRepository) UpdateById(id int, userCallbackUrls string,
 	keyValues["updatedTime"] = time.Now()
 
 	return database.Table(tableName).Where("id=?", id).Updates(keyValues).Error
-}
-
-func (myself *smsTemplateRepository) SelectAll() ([]models.SmsTemplatePo, error) {
-	var smsTemplatePos []models.SmsTemplatePo
-	err := myself.repositoryBase.SelectAll(smsTemplatePos)
-	if nil != err {
-		return nil, err
-	}
-
-	return smsTemplatePos, nil
 }

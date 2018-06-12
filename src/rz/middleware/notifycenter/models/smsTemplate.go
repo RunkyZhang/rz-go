@@ -12,7 +12,7 @@ type SmsTemplateDto struct {
 type SmsTemplatePo struct {
 	PoBase
 
-	Id               int    `gorm:"column:id"`
+	Id               int    `gorm:"column:id;primary_key"`
 	Extend           int    `gorm:"column:extend"`
 	UserCallbackUrls string `gorm:"column:userCallbackUrls"`
 	Pattern          string `gorm:"column:pattern"`

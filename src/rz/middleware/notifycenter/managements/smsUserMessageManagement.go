@@ -8,22 +8,20 @@ import (
 )
 
 var (
-	SmsUserCallbackMessageManagement = smsUserCallbackMessageManagement{}
+	SmsUserMessageManagement = smsUserMessageManagement{}
 )
 
-type smsUserCallbackMessageManagement struct {
+type smsUserMessageManagement struct {
+	managementBase
 }
 
-func (smsUserCallbackMessageManagement *smsUserCallbackMessageManagement) Add(smsUserCallbackMessageDto *models.SmsUserMessageDto) (error) {
-	bytes, err := json.Marshal(smsUserCallbackMessageDto)
-	if nil != err {
-		return err
-	}
+func (myself *smsUserMessageManagement) Add(smsUserMessagePo *models.SmsUserMessagePo) (error) {
+	myself.setPoBase(&smsUserMessagePo.PoBase)
 
-	return global.GetRedisClient().HashSet(global.RedisKeySmsUserCallbackMessages, smsUserCallbackMessageDto.Id, string(bytes))
+	return global.GetRedisClient().HashSet(global.RedisKeySmsUserCallbackMessages, smsUserMessagePo.Id, string(bytes))
 }
 
-func (smsUserCallbackMessageManagement *smsUserCallbackMessageManagement) GetById(id string) (*models.SmsUserMessageDto, error) {
+func (myself *smsUserMessageManagement) GetById(id string) (*models.SmsUserMessageDto, error) {
 	jsonString, err := global.GetRedisClient().HashGet(global.RedisKeySmsUserCallbackMessages, id)
 
 	smsUserCallbackMessageDto := &models.SmsUserMessageDto{}
@@ -35,16 +33,16 @@ func (smsUserCallbackMessageManagement *smsUserCallbackMessageManagement) GetByI
 	return smsUserCallbackMessageDto, err
 }
 
-func (smsUserCallbackMessageManagement *smsUserCallbackMessageManagement) RemoveById(id string) (bool, error) {
+func (myself *smsUserMessageManagement) RemoveById(id string) (bool, error) {
 	count, err := global.GetRedisClient().HashDelete(global.RedisKeySmsUserCallbackMessages, id)
 
 	return 0 < count, err
 }
 
-func (smsUserCallbackMessageManagement *smsUserCallbackMessageManagement) GetAllIds() ([]string, error) {
+func (myself *smsUserMessageManagement) GetAllIds() ([]string, error) {
 	return global.GetRedisClient().HashKeys(global.RedisKeySmsUserCallbackMessages)
 }
 
-func (*smsUserCallbackMessageManagement) BuildId(nationCode string, phoneNumber string, createdTime int64) (string) {
+func (*smsUserMessageManagement) BuildId(nationCode string, phoneNumber string, createdTime int64) (string) {
 	return fmt.Sprintf("%s_%s_%d", nationCode, phoneNumber, createdTime)
 }

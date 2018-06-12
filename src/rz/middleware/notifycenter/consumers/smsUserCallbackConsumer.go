@@ -28,7 +28,7 @@ func (smsUserCallbackConsumer *smsUserCallbackConsumer) Start(duration time.Dura
 }
 
 func (smsUserCallbackConsumer *smsUserCallbackConsumer) start() {
-	smsUserCallbackMessageIds, err := managements.SmsUserCallbackMessageManagement.GetAllIds()
+	smsUserCallbackMessageIds, err := managements.SmsUserMessageManagement.GetAllIds()
 	if nil != err {
 		fmt.Printf("failed to get [smsUserCallbackMessage] ids. error: %s", err.Error())
 		return
@@ -38,10 +38,10 @@ func (smsUserCallbackConsumer *smsUserCallbackConsumer) start() {
 	}
 
 	for _, smsUserCallbackMessageId := range smsUserCallbackMessageIds {
-		smsUserCallbackMessageDto, err := managements.SmsUserCallbackMessageManagement.GetById(smsUserCallbackMessageId)
+		smsUserCallbackMessageDto, err := managements.SmsUserMessageManagement.GetById(smsUserCallbackMessageId)
 		if nil != err {
 			fmt.Printf("failed to get [UserCallbackMessage](%s) value. error: %s", smsUserCallbackMessageId, err.Error())
-			_, err := managements.SmsUserCallbackMessageManagement.RemoveById(smsUserCallbackMessageId)
+			_, err := managements.SmsUserMessageManagement.RemoveById(smsUserCallbackMessageId)
 			if nil != err {
 				fmt.Printf("failed to remove [UserCallbackMessage](%s). error: %s", smsUserCallbackMessageId, err.Error())
 			}
@@ -49,7 +49,7 @@ func (smsUserCallbackConsumer *smsUserCallbackConsumer) start() {
 			continue
 		}
 
-		ok, err := managements.SmsUserCallbackMessageManagement.RemoveById(smsUserCallbackMessageId)
+		ok, err := managements.SmsUserMessageManagement.RemoveById(smsUserCallbackMessageId)
 		if nil != err || !ok {
 			fmt.Printf("failed to remove [UserCallbackMessage](%s). error: %s", smsUserCallbackMessageId, err.Error())
 
@@ -70,7 +70,7 @@ func (smsUserCallbackConsumer *smsUserCallbackConsumer) start() {
 		}
 
 		if nil == smsUserCallbackDto.UserCallbackMessages {
-			smsUserCallbackDto.UserCallbackMessages = make(map[string]models.SmsUserCallbackMessageDto)
+			smsUserCallbackDto.UserCallbackMessages = make(map[string]models.SmsUserMessageDto)
 		}
 		//if smsTemplateDto.Disable {
 		//	smsUserCallbackMessageDto.FinishedTime = time.Now().Unix()

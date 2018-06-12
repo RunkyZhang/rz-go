@@ -35,7 +35,7 @@ func (*smsUserCallbackService) Add(smsUserCallbackMessageRequestExternalDto *ext
 		}
 	}
 
-	smsUserCallbackMessageDto := models.SmsUserCallbackMessageDto{
+	smsUserCallbackMessageDto := models.SmsUserMessageDto{
 		Content:        smsUserCallbackMessageRequestExternalDto.Text,
 		Sign:           smsUserCallbackMessageRequestExternalDto.Sign,
 		Time:           smsUserCallbackMessageRequestExternalDto.Time,
@@ -43,12 +43,12 @@ func (*smsUserCallbackService) Add(smsUserCallbackMessageRequestExternalDto *ext
 		Finished:       false,
 		UserCallbackId: smsUserCallbackDto.Id,
 	}
-	smsUserCallbackMessageDto.Id = managements.SmsUserCallbackMessageManagement.BuildId(
+	smsUserCallbackMessageDto.Id = managements.SmsUserMessageManagement.BuildId(
 		smsUserCallbackDto.NationCode,
 		smsUserCallbackDto.PhoneNumber,
 		smsUserCallbackMessageDto.CreatedTime)
 	if nil == smsUserCallbackDto.UserCallbackMessages {
-		smsUserCallbackDto.UserCallbackMessages = make(map[string]models.SmsUserCallbackMessageDto)
+		smsUserCallbackDto.UserCallbackMessages = make(map[string]models.SmsUserMessageDto)
 	}
 	smsUserCallbackDto.UserCallbackMessages[smsUserCallbackMessageDto.Id] = smsUserCallbackMessageDto
 	err = managements.SmsUserCallbackManagement.Set(smsUserCallbackDto)
@@ -59,7 +59,7 @@ func (*smsUserCallbackService) Add(smsUserCallbackMessageRequestExternalDto *ext
 		}
 	}
 
-	err = managements.SmsUserCallbackMessageManagement.Add(&smsUserCallbackMessageDto)
+	err = managements.SmsUserMessageManagement.Add(&smsUserCallbackMessageDto)
 	if nil != err {
 		return &external.SmsUserCallbackMessageResponseExternalDto{
 			Result: 1,
