@@ -123,8 +123,8 @@ func (smsMessageConsumer *smsMessageConsumer) buildPhoneNumberPackExternalDtos(s
 	return phoneNumberPackExternalDtos
 }
 
-func (smsMessageConsumer *smsMessageConsumer) convert(messageId int) (interface{}, *models.MessageBasePo, error) {
-	smsMessageDto, err := managements.SmsMessageManagement.GetById(messageId)
+func (smsMessageConsumer *smsMessageConsumer) convert(messageId int, date time.Time) (interface{}, *models.MessageBasePo, error) {
+	smsMessageDto, err := managements.SmsMessageManagement.GetById(messageId, date)
 	if nil != err {
 		return nil, nil, err
 	}

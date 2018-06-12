@@ -3,7 +3,6 @@ package services
 import (
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/managements"
-	"fmt"
 )
 
 var (
@@ -23,10 +22,9 @@ func (smsMessageService *smsMessageService) SendSms(smsMessageDto *models.SmsMes
 	smsMessageService.setMessageBasePo(&smsMessagePo.MessageBasePo)
 
 	err = managements.SmsMessageManagement.Add(smsMessagePo)
-	fmt.Println(smsMessagePo.Id)
 	if nil != err {
 		return 0, err
 	}
 
-	return smsMessageDto.Id, nil
+	return smsMessagePo.Id, nil
 }

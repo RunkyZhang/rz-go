@@ -3,12 +3,10 @@ package consumers
 import (
 	"gopkg.in/gomail.v2"
 	"net/smtp"
-	"encoding/json"
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/global"
-	"rz/middleware/notifycenter/enumerations"
-	"rz/middleware/notifycenter/common"
 	"rz/middleware/notifycenter/managements"
+	"time"
 )
 
 var (
@@ -67,8 +65,8 @@ func (mailMessageConsumer *mailMessageConsumer) Send(messageDto interface{}) err
 	return mailMessageConsumer.dialer.DialAndSend(message)
 }
 
-func (mailMessageConsumer *mailMessageConsumer) convert(messageId int) (interface{}, *models.MessageBasePo, error) {
-	mailMessageDto, err := managements.MailMessageManagement.GetById(messageId)
+func (mailMessageConsumer *mailMessageConsumer) convert(messageId int, date time.Time) (interface{}, *models.MessageBasePo, error) {
+	mailMessageDto, err := managements.MailMessageManagement.GetById(messageId, date)
 	if nil != err {
 		return nil, nil, err
 	}

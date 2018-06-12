@@ -9,17 +9,19 @@ import (
 )
 
 type MessageManagementBase struct {
+	managementBase
+
 	SendChannel enumerations.SendChannel
 	keySuffix   string
 }
 
-func (messageManagementBase *MessageManagementBase) RemoveMessageId(messageId int) (int64, error) {
-	return global.GetRedisClient().SortedSetRemoveByValue(global.RedisKeyMessageIds+messageManagementBase.keySuffix, common.Int32ToString(messageId))
+func (myself *MessageManagementBase) RemoveMessageId(messageId int) (int64, error) {
+	return global.GetRedisClient().SortedSetRemoveByValue(global.RedisKeyMessageIds+myself.keySuffix, common.Int32ToString(messageId))
 }
 
-func (messageManagementBase *MessageManagementBase) DequeueMessageIds() ([]int, error) {
-	max := float64(time.Now().Unix())
-	messageIds, err := global.GetRedisClient().SortedSetRangeByScore(global.RedisKeyMessageIds+messageManagementBase.keySuffix, 0, max)
+func (myself *MessageManagementBase) DequeueMessageIds(now time.Time) ([]int, error) {
+	max := float64(now.Unix())
+	messageIds, err := global.GetRedisClient().SortedSetRangeByScore(global.RedisKeyMessageIds+myself.keySuffix, 0, max)
 	if nil != err {
 		return nil, err
 	}

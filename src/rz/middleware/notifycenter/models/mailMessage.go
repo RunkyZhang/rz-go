@@ -12,10 +12,6 @@ type MailMessagePo struct {
 	Subject string `gorm:"column:subject"`
 }
 
-func (*MailMessagePo) TableName() string {
-	return "smsMessagePo"
-}
-
 func MailMessageDtoToPo(mailMessageDto *MailMessageDto) (*MailMessagePo) {
 	mailMessagePo := &MailMessagePo{}
 	mailMessagePo.MessageBasePo = *MessageBaseDtoToPo(&mailMessageDto.MessageBaseDto)

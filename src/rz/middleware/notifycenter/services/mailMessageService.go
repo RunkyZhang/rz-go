@@ -28,10 +28,10 @@ func (mailMessageService *mailMessageService) SendMail(mailMessageDto *models.Ma
 	mailMessagePo := models.MailMessageDtoToPo(mailMessageDto)
 	mailMessageService.setMessageBasePo(&mailMessagePo.MessageBasePo)
 
-	err = managements.MailMessageManagement.AddMailMessage(mailMessageDto)
+	err = managements.MailMessageManagement.Add(mailMessagePo)
 	if nil != err {
 		return 0, err
 	}
 
-	return mailMessageDto.Id, nil
+	return mailMessagePo.Id, nil
 }

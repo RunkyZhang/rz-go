@@ -24,10 +24,6 @@ type SmsMessagePo struct {
 	ExpireCallbackUrls string `gorm:"column:expireCallbackUrls"`
 }
 
-func (*SmsMessagePo) TableName() string {
-	return "smsMessagePo"
-}
-
 func SmsMessageDtoToPo(smsMessageDto *SmsMessageDto) (*SmsMessagePo) {
 	smsMessagePo := &SmsMessagePo{}
 	smsMessagePo.MessageBasePo = *MessageBaseDtoToPo(&smsMessageDto.MessageBaseDto)

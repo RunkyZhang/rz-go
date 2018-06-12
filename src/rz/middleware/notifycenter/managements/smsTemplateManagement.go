@@ -1,19 +1,17 @@
 package managements
 
 import (
-	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/models"
-	"encoding/json"
 	"time"
 	"fmt"
 	"errors"
-	"rz/middleware/notifycenter/common"
+	"rz/middleware/notifycenter/repositories"
 )
 
 var (
 	SmsTemplateManagement = smsTemplateManagement{}
 
-	smsTemplateDtos map[int]models.SmsTemplateDto
+	smsTemplatePos  map[int]models.SmsTemplatePo
 	lastRefreshTime int64
 	refreshDuration int
 )
@@ -23,49 +21,36 @@ func init() {
 }
 
 type smsTemplateManagement struct {
+	managementBase
 }
 
-func (smsTemplateManagement *smsTemplateManagement) Set(
-	templateId int,
-	extend int,
-	userCallbackUrls []string,
-	pattern string) (error) {
-	smsTemplateDto := &models.SmsTemplateDto{
-		Id:               templateId,
-		Extend:           extend,
-		UserCallbackUrls: userCallbackUrls,
-		Pattern:          pattern,
-	}
+func (myself *smsTemplateManagement) Add(smsTemplatePo *models.SmsTemplatePo) (error) {
+	myself.setPoBase(&smsTemplatePo.PoBase)
 
-	bytes, err := json.Marshal(smsTemplateDto)
-	if nil != err {
-		return err
-	}
-
-	return global.GetRedisClient().HashSet(global.RedisKeySmsTemplates, common.Int32ToString(templateId), string(bytes))
+	return repositories.SmsTemplateRepository.Insert(smsTemplatePo)
 }
 
-func (smsTemplateManagement *smsTemplateManagement) GetByTemplateId(templateId int) (*models.SmsTemplateDto, error) {
-	smsTemplateDtos, err := smsTemplateManagement.GetAll()
+func (myself *smsTemplateManagement) GetByTemplateId(templateId int) (*models.SmsTemplatePo, error) {
+	smsTemplatePos, err := myself.GetAll()
 	if nil != err {
 		return nil, err
 	}
 
-	smsTemplateDto, ok := smsTemplateDtos[templateId]
+	smsTemplatePo, ok := smsTemplatePos[templateId]
 	if !ok {
 		return nil, errors.New(fmt.Sprintf("map key(%d) is not exist", templateId))
 	}
 
-	return &smsTemplateDto, nil
+	return &smsTemplatePo, nil
 }
 
-func (smsTemplateManagement *smsTemplateManagement) GetByExtend(extend int) (*models.SmsTemplateDto, error) {
-	smsTemplateIdExtendMappingDtos, err := smsTemplateManagement.GetAll()
+func (myself *smsTemplateManagement) GetByExtend(extend int) (*models.SmsTemplatePo, error) {
+	smsTemplateIdExtendMappingPos, err := myself.GetAll()
 	if nil != err {
 		return nil, err
 	}
 
-	for _, value := range smsTemplateIdExtendMappingDtos {
+	for _, value := range smsTemplateIdExtendMappingPos {
 		if extend == value.Extend {
 			return &value, nil
 		}
@@ -74,43 +59,37 @@ func (smsTemplateManagement *smsTemplateManagement) GetByExtend(extend int) (*mo
 	return nil, errors.New(fmt.Sprintf("the extend[%d] is not exist", extend))
 }
 
-func (smsTemplateManagement *smsTemplateManagement) GetAll() (map[int]models.SmsTemplateDto, error) {
+func (myself *smsTemplateManagement) GetAll() (map[int]models.SmsTemplatePo, error) {
 	var err error
-	if nil == smsTemplateDtos {
-		smsTemplateDtos, err = smsTemplateManagement.getAll()
-		return smsTemplateDtos, err
+	if nil == smsTemplatePos {
+		smsTemplatePos, err = myself.getAll()
+		return smsTemplatePos, err
 	}
 
 	if int64(refreshDuration) <= time.Now().Unix()-lastRefreshTime {
 		go func() {
-			smsTemplateDtos, err = smsTemplateManagement.getAll()
+			smsTemplatePos, err = myself.getAll()
 			if nil == err {
 				lastRefreshTime = time.Now().Unix()
 			} else {
-				fmt.Println("failed to get all [smsTemplateIdExtendMappingDto], error:", err)
+				fmt.Println("failed to get all [smsTemplatePo], error:", err)
 			}
 		}()
 	}
 
-	return smsTemplateDtos, nil
+	return smsTemplatePos, nil
 }
 
-func (*smsTemplateManagement) getAll() (map[int]models.SmsTemplateDto, error) {
-	jsonStrings, err := global.GetRedisClient().HashGetAll(global.RedisKeySmsTemplates)
+func (*smsTemplateManagement) getAll() (map[int]models.SmsTemplatePo, error) {
+	smsTemplatePos, err := repositories.SmsTemplateRepository.SelectAll()
 	if nil != err {
 		return nil, err
 	}
 
-	var smsTemplateDtos = make(map[int]models.SmsTemplateDto)
-	for _, jsonString := range jsonStrings {
-		smsTemplateDto := models.SmsTemplateDto{}
-		err = json.Unmarshal([]byte(jsonString), &smsTemplateDto)
-		if nil != err {
-			continue
-		}
-
-		smsTemplateDtos[smsTemplateDto.Id] = smsTemplateDto
+	var keyValues = make(map[int]models.SmsTemplatePo)
+	for _, smsTemplatePo := range smsTemplatePos {
+		keyValues[smsTemplatePo.Id] = smsTemplatePo
 	}
 
-	return smsTemplateDtos, nil
+	return keyValues, nil
 }

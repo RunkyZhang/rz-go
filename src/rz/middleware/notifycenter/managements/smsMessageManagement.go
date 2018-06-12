@@ -5,6 +5,7 @@ import (
 	"rz/middleware/notifycenter/repositories"
 	"rz/middleware/notifycenter/enumerations"
 	"rz/middleware/notifycenter/common"
+	"time"
 )
 
 var (
@@ -20,18 +21,18 @@ func init() {
 
 type smsMessageManagement struct {
 	MessageManagementBase
-
-	smsMessageRepository *repositories.SmsMessageRepository
 }
 
-func (smsMessageManagement *smsMessageManagement) Add(smsMessagePo *models.SmsMessagePo) (error) {
-	return smsMessageManagement.smsMessageRepository.Insert(smsMessagePo)
+func (myself *smsMessageManagement) Add(smsMessagePo *models.SmsMessagePo) (error) {
+	myself.setPoBase(&smsMessagePo.PoBase)
+
+	return repositories.SmsMessageRepository.Insert(smsMessagePo)
 }
 
-func (smsMessageManagement *smsMessageManagement) GetById(id int) (*models.SmsMessagePo, error) {
-	return smsMessageManagement.smsMessageRepository.SelectById(id)
+func (myself *smsMessageManagement) GetById(id int, date time.Time) (*models.SmsMessagePo, error) {
+	return repositories.SmsMessageRepository.SelectById(id, date)
 }
 
-func (smsMessageManagement *smsMessageManagement) ModifyById(id int, states string, finished bool, errorMessages string) (int64, error) {
-	return smsMessageManagement.smsMessageRepository.UpdateById(id, states, finished, errorMessages)
+func (myself *smsMessageManagement) ModifyById(id int, states string, finished bool, errorMessages string, date time.Time) (int64, error) {
+	return repositories.SmsMessageRepository.UpdateById(id, states, finished, errorMessages, date)
 }

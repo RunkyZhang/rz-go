@@ -3,35 +3,32 @@ package repositories
 import (
 	"rz/middleware/notifycenter/models"
 	"time"
+	"rz/middleware/notifycenter/common"
 )
 
-type SmsMessageRepository struct {
-	//reflect.ValueOf(controller)
+var (
+	SmsMessageRepository smsMessageRepository
+)
+
+type smsMessageRepository struct {
+	messageRepositoryBase
 }
 
-func (*SmsMessageRepository) Insert(smsMessagePo *models.SmsMessagePo) error {
-	return database.Create(smsMessagePo).Error
+func init() {
+	SmsMessageRepository.defaultDatabaseKey = "default"
+	SmsMessageRepository.rawTableName = "smsMessagePo"
+	SmsMessageRepository.getDatabaseKeyFunc = SmsMessageRepository.getDatabaseKey
+	SmsMessageRepository.getTableNameFunc = SmsMessageRepository.getTableName
 }
 
-func (*SmsMessageRepository) UpdateById(id int, states string, finished bool, errorMessages string) (int64, error) {
-	keyValues := map[string]interface{}{}
-	keyValues["states"] = states
-	keyValues["finished"] = finished
-	keyValues["errorMessages"] = errorMessages
-	keyValues["updatedTime"] = time.Now()
-
-	database := database.Where("id=?", id).Updates(keyValues)
-	if nil != database.Error {
-		return 0, database.Error
-	}
-
-	return database.RowsAffected, nil
+func (myself *smsMessageRepository) Insert(smsMessagePo *models.SmsMessagePo) (error) {
+	return myself.repositoryBase.Insert(smsMessagePo, smsMessagePo.CreatedTime)
 }
 
-func (*SmsMessageRepository) SelectById(id int) (*models.SmsMessagePo, error) {
+func (myself *smsMessageRepository) SelectById(id int, date time.Time) (*models.SmsMessagePo, error) {
 	smsMessagePo := &models.SmsMessagePo{}
 
-	err := database.Where("id=? and deleted=0", id).First(smsMessagePo).Error
+	err := myself.repositoryBase.SelectById(id, smsMessagePo, date)
 	if nil != err {
 		return nil, err
 	}
@@ -39,13 +36,30 @@ func (*SmsMessageRepository) SelectById(id int) (*models.SmsMessagePo, error) {
 	return smsMessagePo, nil
 }
 
-func (*SmsMessageRepository) SelectByExpireTimeAndFinished() ([]models.SmsMessagePo, error) {
-	var smsMessagePo []models.SmsMessagePo
+func (myself *smsMessageRepository) SelectByExpireTimeAndFinished(date time.Time) ([]models.SmsMessagePo, error) {
+	var smsMessagePos []models.SmsMessagePo
 
-	err := database.Where("finished=0 and deleted=0 and expireTime<? ", time.Now()).Find(smsMessagePo).Error
+	err := myself.messageRepositoryBase.SelectByExpireTimeAndFinished(smsMessagePos, date)
 	if nil != err {
 		return nil, err
 	}
 
-	return smsMessagePo, nil
+	return smsMessagePos, nil
+}
+
+func (myself *smsMessageRepository) getDatabaseKey(shardingParameters ...interface{}) (string) {
+	return myself.defaultDatabaseKey
+}
+
+func (myself *smsMessageRepository) getTableName(shardingParameters ...interface{}) (string) {
+	if nil == shardingParameters || 0 == len(shardingParameters) {
+		return ""
+	}
+
+	date, ok := shardingParameters[0].(time.Time)
+	if !ok {
+		return ""
+	}
+
+	return myself.rawTableName + "_" + common.Int32ToString(date.Year())
 }

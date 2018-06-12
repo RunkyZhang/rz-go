@@ -12,7 +12,7 @@ import (
 	"rz/middleware/notifycenter/managements"
 )
 
-type convertFunc func(int) (interface{}, *models.MessageBasePo, error)
+type convertFunc func(int, time.Time) (interface{}, *models.MessageBasePo, error)
 type sendFunc func(interface{}) (error)
 
 type messageConsumerBase struct {
@@ -34,7 +34,8 @@ func (messageConsumerBase *messageConsumerBase) Start(duration time.Duration) {
 }
 
 func (messageConsumerBase *messageConsumerBase) start() {
-	messageIds, err := messageConsumerBase.messageManagementBase.DequeueMessageIds()
+	now := time.Now()
+	messageIds, err := messageConsumerBase.messageManagementBase.DequeueMessageIds(now)
 	if nil != err || nil == messageIds {
 		fmt.Println("failed to get message ids. error: ", err)
 		return
@@ -62,7 +63,7 @@ func (messageConsumerBase *messageConsumerBase) start() {
 		var messagePo interface{}
 		var messageBasePo *models.MessageBasePo
 		var flagError error
-		messagePo, messageBasePo, flagError = messageConsumerBase.convertFunc(messageId)
+		messagePo, messageBasePo, flagError = messageConsumerBase.convertFunc(messageId, now)
 		if nil == flagError {
 			flagError = messageConsumerBase.consume(messagePo, messageBasePo)
 			if nil == flagError {
@@ -113,7 +114,12 @@ func (messageConsumerBase *messageConsumerBase) modifyMessagePo(messageBasePo *m
 		errorMessages = messageBasePo.ErrorMessages
 	}
 
-	affectedCount, err := managements.SmsMessageManagement.ModifyById(messageBasePo.Id, messageBasePo.States, finished, errorMessages)
+	affectedCount, err := managements.SmsMessageManagement.ModifyById(
+		messageBasePo.Id,
+		messageBasePo.States,
+		finished,
+		errorMessages,
+		messageBasePo.CreatedTime)
 	if nil != err || 0 == affectedCount {
 		fmt.Println("failed to handle error for message(", messageBasePo.Id, "). error: ", err.Error())
 	}

@@ -12,10 +12,10 @@ type SmsTemplateDto struct {
 type SmsTemplatePo struct {
 	PoBase
 
-	Id               int    `json:"id"`
-	Extend           int    `json:"extend"`
-	UserCallbackUrls string `json:"userCallbackUrls"`
-	Pattern          string `json:"pattern"`
+	Id               int    `gorm:"column:id"`
+	Extend           int    `gorm:"column:extend"`
+	UserCallbackUrls string `gorm:"column:userCallbackUrls"`
+	Pattern          string `gorm:"column:pattern"`
 }
 
 func SmsTemplateDtoToPo(smsTemplateDto *SmsTemplateDto) (*SmsTemplatePo) {
