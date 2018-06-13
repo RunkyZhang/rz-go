@@ -26,20 +26,20 @@ type RedisClientSettings struct {
 	Address         string
 }
 
-func (redisClient *RedisClient) Init() {
-	redisClient.redisPool = &redis.Pool{
-		MaxActive:   redisClient.RedisClientSettings.PoolMaxActive,
-		MaxIdle:     redisClient.RedisClientSettings.PoolMaxIdle,
-		Wait:        redisClient.RedisClientSettings.PoolWait,
-		IdleTimeout: redisClient.RedisClientSettings.PoolIdleTimeout,
+func (myself *RedisClient) Init() {
+	myself.redisPool = &redis.Pool{
+		MaxActive:   myself.RedisClientSettings.PoolMaxActive,
+		MaxIdle:     myself.RedisClientSettings.PoolMaxIdle,
+		Wait:        myself.RedisClientSettings.PoolWait,
+		IdleTimeout: myself.RedisClientSettings.PoolIdleTimeout,
 
 		Dial: func() (redis.Conn, error) {
 			conn, err := redis.Dial(
 				"tcp",
-				redisClient.RedisClientSettings.Address,
-				redis.DialDatabase(redisClient.RedisClientSettings.DatabaseId),
-				redis.DialPassword(redisClient.RedisClientSettings.Password),
-				redis.DialConnectTimeout(redisClient.RedisClientSettings.ConnectTimeout))
+				myself.RedisClientSettings.Address,
+				redis.DialDatabase(myself.RedisClientSettings.DatabaseId),
+				redis.DialPassword(myself.RedisClientSettings.Password),
+				redis.DialConnectTimeout(myself.RedisClientSettings.ConnectTimeout))
 			if nil != err {
 				return nil, err
 			}
@@ -49,8 +49,8 @@ func (redisClient *RedisClient) Init() {
 	}
 }
 
-func (redisClient *RedisClient) Ping() (bool, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) Ping() (bool, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("PING")
 	})
 
@@ -62,8 +62,8 @@ func (redisClient *RedisClient) Ping() (bool, error) {
 	return 0 == strings.Compare("PONG", value), nil
 }
 
-func (redisClient *RedisClient) KeyDelete(keys ...string) (error) {
-	_, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) KeyDelete(keys ...string) (error) {
+	_, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		var args []interface{}
 		if nil != keys {
 			for _, key := range keys {
@@ -77,56 +77,56 @@ func (redisClient *RedisClient) KeyDelete(keys ...string) (error) {
 	return err
 }
 
-func (redisClient *RedisClient) KeyExist(key string) (bool, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) KeyExist(key string) (bool, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("EXISTS", key)
 	})
 
 	return redis.Bool(result, err)
 }
 
-func (redisClient *RedisClient) KeyExpire(key string, expiryMillis int64) (error) {
-	_, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) KeyExpire(key string, expiryMillis int64) (error) {
+	_, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("TYPE", key)
 	})
 
 	return err
 }
 
-func (redisClient *RedisClient) KeyTTL(key string) (int64, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) KeyTTL(key string) (int64, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("TYPE", key)
 	})
 
 	return redis.Int64(result, err)
 }
 
-func (redisClient *RedisClient) KeyType(key string) (string, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) KeyType(key string) (string, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("TYPE", key)
 	})
 
 	return redis.String(result, err)
 }
 
-func (redisClient *RedisClient) StringSet(key string, value string) (error) {
-	_, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) StringSet(key string, value string) (error) {
+	_, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("SET", key, value)
 	})
 
 	return err
 }
 
-func (redisClient *RedisClient) StringGet(key string) (string, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) StringGet(key string) (string, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("GET", key)
 	})
 
 	return redis.String(result, err)
 }
 
-func (redisClient *RedisClient) StringGetMany(keys ... string) ([]string, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) StringGetMany(keys ... string) ([]string, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		var args []interface{}
 		if nil != keys {
 			for _, key := range keys {
@@ -140,32 +140,32 @@ func (redisClient *RedisClient) StringGetMany(keys ... string) ([]string, error)
 	return redis.Strings(result, err)
 }
 
-func (redisClient *RedisClient) Increment(key string, value int) (int64, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) Increment(key string, value int) (int64, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("INCRBY", key, value)
 	})
 
 	return redis.Int64(result, err)
 }
 
-func (redisClient *RedisClient) Decrement(key string, value int) (int64, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) Decrement(key string, value int) (int64, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("DECRBY", key, value)
 	})
 
 	return redis.Int64(result, err)
 }
 
-func (redisClient *RedisClient) HashSet(key string, fieldName string, value string) (error) {
-	_, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) HashSet(key string, fieldName string, value string) (error) {
+	_, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("HSET", key, fieldName, value)
 	})
 
 	return err
 }
 
-func (redisClient *RedisClient) HashSetMap(key string, fieldNameValues map[string]string) (error) {
-	_, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) HashSetMap(key string, fieldNameValues map[string]string) (error) {
+	_, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		var args []interface{}
 		args = append(args, key)
 		for fieldName, value := range fieldNameValues {
@@ -179,16 +179,16 @@ func (redisClient *RedisClient) HashSetMap(key string, fieldNameValues map[strin
 	return err
 }
 
-func (redisClient *RedisClient) HashGet(key string, fieldName string) (string, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) HashGet(key string, fieldName string) (string, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("HGET", key, fieldName)
 	})
 
 	return redis.String(result, err)
 }
 
-func (redisClient *RedisClient) HashGetMany(key string, fieldNames ...string) ([]string, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) HashGetMany(key string, fieldNames ...string) ([]string, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		var args []interface{}
 		args = append(args, key)
 		if nil != fieldNames {
@@ -202,32 +202,32 @@ func (redisClient *RedisClient) HashGetMany(key string, fieldNames ...string) ([
 	return redis.Strings(result, err)
 }
 
-func (redisClient *RedisClient) HashGetAll(key string) (map[string]string, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) HashGetAll(key string) (map[string]string, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("HGETALL", key)
 	})
 
 	return redis.StringMap(result, err)
 }
 
-func (redisClient *RedisClient) HashKeys(key string) ([]string, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) HashKeys(key string) ([]string, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("HKEYS", key)
 	})
 
 	return redis.Strings(result, err)
 }
 
-func (redisClient *RedisClient) HashValues(key string) ([]string, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) HashValues(key string) ([]string, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("HVALS", key)
 	})
 
 	return redis.Strings(result, err)
 }
 
-func (redisClient *RedisClient) HashDelete(key string, fieldNames ...string) (int64, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) HashDelete(key string, fieldNames ...string) (int64, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		var args []interface{}
 		args = append(args, key)
 		if nil != fieldNames {
@@ -242,56 +242,56 @@ func (redisClient *RedisClient) HashDelete(key string, fieldNames ...string) (in
 	return redis.Int64(result, err)
 }
 
-func (redisClient *RedisClient) HashLength(key string) (int64, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) HashLength(key string) (int64, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("HLEN", key)
 	})
 
 	return redis.Int64(result, err)
 }
 
-func (redisClient *RedisClient) HashExist(key string, fieldName string) (bool, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) HashExist(key string, fieldName string) (bool, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("HEXISTS", key, fieldName)
 	})
 
 	return redis.Bool(result, err)
 }
 
-func (redisClient *RedisClient) SortedSetAdd(key string, value string, score float64) (error) {
-	_, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) SortedSetAdd(key string, value string, score float64) (error) {
+	_, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("ZADD", key, score, value)
 	})
 
 	return err
 }
 
-func (redisClient *RedisClient) SortedSetRangeByScore(key string, min float64, max float64) ([]string, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) SortedSetRangeByScore(key string, min float64, max float64) ([]string, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("ZRANGEBYSCORE", key, min, max)
 	})
 
 	return redis.Strings(result, err)
 }
 
-func (redisClient *RedisClient) SortedSetCount(key string, min float64, max float64) (int64, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) SortedSetCount(key string, min float64, max float64) (int64, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("ZCOUNT", key, min, max)
 	})
 
 	return redis.Int64(result, err)
 }
 
-func (redisClient *RedisClient) SortedSetRemoveRangeByScore(key string, min float64, max float64) (int64, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) SortedSetRemoveRangeByScore(key string, min float64, max float64) (int64, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("ZREMRANGEBYSCORE", key, min, max)
 	})
 
 	return redis.Int64(result, err)
 }
 
-func (redisClient *RedisClient) SortedSetRemoveByValue(key string, values ...string) (int64, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) SortedSetRemoveByValue(key string, values ...string) (int64, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		var args []interface{}
 		args = append(args, key)
 		if nil != values {
@@ -306,16 +306,16 @@ func (redisClient *RedisClient) SortedSetRemoveByValue(key string, values ...str
 	return redis.Int64(result, err)
 }
 
-func (redisClient *RedisClient) SortedSetLength(key string) (int64, error) {
-	result, err := redisClient.safeDo(func(conn redis.Conn) (interface{}, error) {
+func (myself *RedisClient) SortedSetLength(key string) (int64, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("ZCARD", key)
 	})
 
 	return redis.Int64(result, err)
 }
 
-func (redisClient *RedisClient) safeDo(doFunc doFunc) (interface{}, error) {
-	conn := redisClient.redisPool.Get()
+func (myself *RedisClient) safeDo(doFunc doFunc) (interface{}, error) {
+	conn := myself.redisPool.Get()
 	defer conn.Close()
 
 	return doFunc(conn)

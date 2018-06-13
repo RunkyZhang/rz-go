@@ -6,6 +6,7 @@ import (
 	"rz/middleware/notifycenter/repositories"
 	"rz/middleware/notifycenter/enumerations"
 	"rz/middleware/notifycenter/common"
+	"time"
 )
 
 var (
@@ -15,7 +16,7 @@ var (
 func init() {
 	var err error
 	SmsUserMessageManagement.SendChannel = enumerations.SmsCallback
-	SmsUserMessageManagement.keySuffix, err = enumerations.SendChannelToString(SmsUserMessageManagement.SendChannel)
+	SmsUserMessageManagement.KeySuffix, err = enumerations.SendChannelToString(SmsUserMessageManagement.SendChannel)
 	common.Assert.IsNilError(err, "")
 	SmsUserMessageManagement.messageRepositoryBase = repositories.SmsUserMessageRepository.MessageRepositoryBase
 }
@@ -41,6 +42,6 @@ func (myself *smsUserMessageManagement) RemoveById(id string) (bool, error) {
 	return 0 < count, err
 }
 
-func (myself *smsUserMessageManagement) GetAllIds() ([]string, error) {
-	return global.GetRedisClient().HashKeys(global.RedisKeySmsUserCallbackMessages)
+func (myself *smsUserMessageManagement) GetById(id int, date time.Time) (*models.SmsUserMessagePo, error) {
+	return repositories.SmsUserMessageRepository.SelectById(id, date)
 }

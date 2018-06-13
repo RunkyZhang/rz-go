@@ -24,11 +24,11 @@ func (myself *MessageRepositoryBase) UpdateById(id int, states string, finished 
 	return database.RowsAffected, database.Error
 }
 
-func (myself *MessageRepositoryBase) SelectByExpireTimeAndFinished(models interface{}, date time.Time) (error) {
+func (myself *MessageRepositoryBase) SelectByExpireTimeAndFinished(pos interface{}, date time.Time) (error) {
 	database, err := myself.getShardingDatabase(nil)
 	if nil != err {
 		return err
 	}
 
-	return database.Where("finished=0 and deleted=0 and expireTime<? ", time.Now()).Find(models).Error
+	return database.Where("finished=0 and deleted=0 and expireTime<? ", time.Now()).Find(pos).Error
 }

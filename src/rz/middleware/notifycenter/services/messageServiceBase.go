@@ -11,7 +11,8 @@ type MessageServiceBase struct {
 	messageManagementBase managements.MessageManagementBase
 }
 
-func (myself *MessageServiceBase) modifyMessagePo(
+func (myself *MessageServiceBase) modifyMessageFlow(
+	messageId int,
 	poBase *models.PoBase,
 	callbackBasePo *models.CallbackBasePo,
 	messageState enumerations.MessageState,
@@ -28,12 +29,12 @@ func (myself *MessageServiceBase) modifyMessagePo(
 	}
 
 	affectedCount, err := myself.messageManagementBase.ModifyById(
-		poBase.Id,
+		messageId,
 		callbackBasePo.States,
 		finished,
 		errorMessages,
 		poBase.CreatedTime)
 	if nil != err || 0 == affectedCount {
-		fmt.Println("failed to modify message(", poBase.Id, ") state. error: ", err.Error())
+		fmt.Printf("failed to modify message(%d) state. error: %s", messageId, err)
 	}
 }

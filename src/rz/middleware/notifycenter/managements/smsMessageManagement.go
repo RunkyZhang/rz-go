@@ -15,7 +15,7 @@ var (
 func init() {
 	var err error
 	SmsMessageManagement.SendChannel = enumerations.Sms
-	SmsMessageManagement.keySuffix, err = enumerations.SendChannelToString(SmsMessageManagement.SendChannel)
+	SmsMessageManagement.KeySuffix, err = enumerations.SendChannelToString(SmsMessageManagement.SendChannel)
 	common.Assert.IsNilError(err, "")
 	SmsMessageManagement.messageRepositoryBase = repositories.SmsMessageRepository.MessageRepositoryBase
 }

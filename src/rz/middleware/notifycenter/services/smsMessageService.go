@@ -34,7 +34,8 @@ func (myself *smsMessageService) SendSms(smsMessageDto *models.SmsMessageDto) (i
 
 	err = managements.SmsMessageManagement.EnqueueMessageIds(smsMessagePo.Id, smsMessagePo.ScheduleTime.Unix())
 	if nil != err {
-		myself.modifyMessagePo(
+		myself.modifyMessageFlow(
+			smsMessagePo.Id,
 			&smsMessagePo.PoBase,
 			&smsMessagePo.CallbackBasePo,
 			enumerations.Error,

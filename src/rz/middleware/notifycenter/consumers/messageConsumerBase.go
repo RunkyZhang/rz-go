@@ -10,9 +10,10 @@ import (
 	"rz/middleware/notifycenter/exceptions"
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/managements"
+	"rz/middleware/notifycenter/common"
 )
 
-type convertFunc func(int, time.Time) (interface{}, *models.MessageBasePo, error)
+type convertFunc func(int, time.Time) (interface{}, *models.PoBase, *models.CallbackBasePo, error)
 type sendFunc func(interface{}) (error)
 
 type messageConsumerBase struct {
@@ -36,36 +37,24 @@ func (myself *messageConsumerBase) Start(duration time.Duration) {
 func (myself *messageConsumerBase) start() {
 	now := time.Now()
 	messageIds, err := myself.messageManagementBase.DequeueMessageIds(now)
-	if nil != err || nil == messageIds {
-		fmt.Println("failed to get message ids. error: ", err)
+	if nil != err {
+		fmt.Printf("failed to get message(%s) ids. error: %s", myself.messageManagementBase.KeySuffix, err.Error())
+		return
+	}
+	if nil == messageIds {
 		return
 	}
 
 	for _, messageId := range messageIds {
-		if nil != err {
-			// ignore message
-			fmt.Printf("failed to get message(%d) value. error: %s", messageId, err.Error())
-
-			affectedCount, err := myself.messageManagementBase.RemoveMessageId(messageId)
-			if nil != err || 0 == affectedCount {
-				fmt.Println("failed to remove message(", messageId, ") value. error: ", err)
-			}
-
-			continue
-		}
-
 		affectedCount, err := myself.messageManagementBase.RemoveMessageId(messageId)
 		if nil != err || 0 == affectedCount {
-			fmt.Println("failed to remove message(", messageId, "). error: ", err)
+			fmt.Printf("failed to remove message(%d). error: %s", messageId, err)
 			continue
 		}
 
-		var messagePo interface{}
-		var messageBasePo *models.MessageBasePo
-		var flagError error
-		messagePo, messageBasePo, flagError = myself.convertFunc(messageId, now)
+		messagePo, poBase, callbackBasePo, flagError := myself.convertFunc(messageId, now)
 		if nil == flagError {
-			flagError = myself.consume(messagePo, messageBasePo)
+			flagError = myself.consume(messagePo, messageId, poBase, callbackBasePo)
 			if nil == flagError {
 				fmt.Printf("success to consume message(%d)", messageId)
 			}
@@ -74,25 +63,24 @@ func (myself *messageConsumerBase) start() {
 		if nil != flagError {
 			fmt.Printf("failed to consume message(%d). error: %s", messageId, flagError.Error())
 
-			// when string is error json string
-			if nil != messageBasePo {
-				var state string
-				if flagError == exceptions.MessageExpire {
-					state = enumerations.MessageStateToString(enumerations.Expire)
-				} else {
-					state = enumerations.MessageStateToString(enumerations.Error)
-				}
-				myself.modifyMessagePo(messageBasePo, state, true, flagError.Error())
+			var messageState enumerations.MessageState
+			businessError, ok := flagError.(*exceptions.BusinessError)
+			if ok && exceptions.MessageExpire().Code == businessError.Code {
+				messageState = enumerations.Expire
+			} else {
+				messageState = enumerations.Error
 			}
+
+			myself.modifyMessageFlow(messageId, poBase, callbackBasePo, messageState, true, flagError.Error())
 		}
 	}
 }
 
-func (myself *messageConsumerBase) consume(messagePo interface{}, messageBasePo *models.MessageBasePo) (error) {
-	myself.modifyMessagePo(messageBasePo, enumerations.MessageStateToString(enumerations.Consuming), false, "")
+func (myself *messageConsumerBase) consume(messagePo interface{}, messageId int, poBase *models.PoBase, callbackBasePo *models.CallbackBasePo) (error) {
+	myself.modifyMessageFlow(messageId, poBase, callbackBasePo, enumerations.Consuming, false, "")
 
-	if time.Now().Unix() > messageBasePo.ExpireTime.Unix() {
-		return exceptions.MessageExpire
+	if time.Now().Unix() > callbackBasePo.ExpireTime.Unix() {
+		return exceptions.MessageExpire().AttachMessage(common.Int32ToString(messageId))
 	}
 
 	err := myself.sendFunc(messagePo)
@@ -100,28 +88,35 @@ func (myself *messageConsumerBase) consume(messagePo interface{}, messageBasePo 
 		return err
 	}
 
-	myself.modifyMessagePo(messageBasePo, enumerations.MessageStateToString(enumerations.Sent), true, "")
+	myself.modifyMessageFlow(messageId, poBase, callbackBasePo, enumerations.Sent, true, "")
 	return nil
 }
 
-func (myself *messageConsumerBase) modifyMessagePo(messageBasePo *models.MessageBasePo, state string, finished bool, errorMessage string) {
-	messageBasePo.States = messageBasePo.States + "+" + state
+func (myself *messageConsumerBase) modifyMessageFlow(
+	messageId int,
+	poBase *models.PoBase,
+	callbackBasePo *models.CallbackBasePo,
+	messageState enumerations.MessageState,
+	finished bool,
+	errorMessage string) {
+	state := enumerations.MessageStateToString(messageState)
+	callbackBasePo.States = callbackBasePo.States + "+" + state
 	var errorMessages string
 	if "" == errorMessage {
 		errorMessages = ""
 	} else {
-		messageBasePo.ErrorMessages = messageBasePo.ErrorMessages + "+++" + errorMessage
-		errorMessages = messageBasePo.ErrorMessages
+		callbackBasePo.ErrorMessages = callbackBasePo.ErrorMessages + "+++" + errorMessage
+		errorMessages = callbackBasePo.ErrorMessages
 	}
 
 	affectedCount, err := myself.messageManagementBase.ModifyById(
-		messageBasePo.Id,
-		messageBasePo.States,
+		messageId,
+		callbackBasePo.States,
 		finished,
 		errorMessages,
-		messageBasePo.CreatedTime)
+		poBase.CreatedTime)
 	if nil != err || 0 == affectedCount {
-		fmt.Println("failed to modfiy message(", messageBasePo.Id, ") state. error: ", err.Error())
+		fmt.Printf("failed to modify message(%d) state. error: %s", messageId, err)
 	}
 }
 

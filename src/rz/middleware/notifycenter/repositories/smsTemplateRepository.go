@@ -33,12 +33,12 @@ func (myself *smsTemplateRepository) UpdateById(id int, userCallbackUrls string,
 	keyValues["pattern"] = pattern
 	keyValues["updatedTime"] = time.Now()
 
-	return database.Where("id=? and deleted=0", id).Updates(keyValues).Error
+	return database.Where("id=? AND deleted=0", id).Updates(keyValues).Error
 }
 
 func (myself *smsTemplateRepository) SelectAll() ([]models.SmsTemplatePo, error) {
 	var smsTemplatePos []models.SmsTemplatePo
-	err := myself.repositoryBase.SelectAll(smsTemplatePos)
+	err := myself.repositoryBase.SelectAll(&smsTemplatePos)
 
 	return smsTemplatePos, err
 }

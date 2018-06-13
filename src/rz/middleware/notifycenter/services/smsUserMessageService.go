@@ -58,7 +58,8 @@ func (myself *smsUserMessageService) Add(
 	if false == smsUserMessagePo.Finished {
 		err = managements.SmsUserMessageManagement.EnqueueMessageIds(smsUserMessagePo.Id, smsUserMessagePo.CreatedTime.Unix())
 		if nil != err {
-			myself.modifyMessagePo(
+			myself.modifyMessageFlow(
+				smsUserMessagePo.Id,
 				&smsUserMessagePo.PoBase,
 				&smsUserMessagePo.CallbackBasePo,
 				enumerations.Error,

@@ -34,7 +34,8 @@ func (myself *mailMessageService) SendMail(mailMessageDto *models.MailMessageDto
 
 	err = managements.MailMessageManagement.EnqueueMessageIds(mailMessagePo.Id, mailMessagePo.ScheduleTime.Unix())
 	if nil != err {
-		myself.modifyMessagePo(
+		myself.modifyMessageFlow(
+			mailMessagePo.Id,
 			&mailMessagePo.PoBase,
 			&mailMessagePo.CallbackBasePo,
 			enumerations.Error,

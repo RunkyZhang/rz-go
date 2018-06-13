@@ -19,7 +19,7 @@ type mailMessageManagement struct {
 func init() {
 	var err error
 	MailMessageManagement.SendChannel = enumerations.Mail
-	MailMessageManagement.keySuffix, err = enumerations.SendChannelToString(MailMessageManagement.SendChannel)
+	MailMessageManagement.KeySuffix, err = enumerations.SendChannelToString(MailMessageManagement.SendChannel)
 	common.Assert.IsNilError(err, "")
 	MailMessageManagement.messageRepositoryBase = repositories.MailMessageRepository.MessageRepositoryBase
 }

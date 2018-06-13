@@ -36,7 +36,7 @@ func (myself *mailMessageRepository) SelectById(id int, date time.Time) (*models
 func (myself *mailMessageRepository) SelectByExpireTimeAndFinished(date time.Time) ([]models.MailMessagePo, error) {
 	var mailMessagePos []models.MailMessagePo
 
-	err := myself.MessageRepositoryBase.SelectByExpireTimeAndFinished(mailMessagePos, date)
+	err := myself.MessageRepositoryBase.SelectByExpireTimeAndFinished(&mailMessagePos, date)
 
 	return mailMessagePos, err
 }

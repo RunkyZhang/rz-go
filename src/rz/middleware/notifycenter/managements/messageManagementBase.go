@@ -13,8 +13,8 @@ import (
 type MessageManagementBase struct {
 	managementBase
 
-	SendChannel enumerations.SendChannel
-	keySuffix   string
+	SendChannel           enumerations.SendChannel
+	KeySuffix             string
 	messageRepositoryBase repositories.MessageRepositoryBase
 }
 
@@ -27,12 +27,12 @@ func (myself *MessageManagementBase) setCallbackBasePo(callbackBasePo *models.Ca
 }
 
 func (myself *MessageManagementBase) RemoveMessageId(messageId int) (int64, error) {
-	return global.GetRedisClient().SortedSetRemoveByValue(global.RedisKeyMessageIds+myself.keySuffix, common.Int32ToString(messageId))
+	return global.GetRedisClient().SortedSetRemoveByValue(global.RedisKeyMessageIds+myself.KeySuffix, common.Int32ToString(messageId))
 }
 
 func (myself *MessageManagementBase) DequeueMessageIds(now time.Time) ([]int, error) {
 	max := float64(now.Unix())
-	messageIds, err := global.GetRedisClient().SortedSetRangeByScore(global.RedisKeyMessageIds+myself.keySuffix, 0, max)
+	messageIds, err := global.GetRedisClient().SortedSetRangeByScore(global.RedisKeyMessageIds+myself.KeySuffix, 0, max)
 	if nil != err {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (myself *MessageManagementBase) DequeueMessageIds(now time.Time) ([]int, er
 
 func (myself *MessageManagementBase) EnqueueMessageIds(messageId int, score int64) (error) {
 	return global.GetRedisClient().SortedSetAdd(
-		global.RedisKeyMessageIds+myself.keySuffix,
+		global.RedisKeyMessageIds+myself.KeySuffix,
 		common.Int32ToString(messageId),
 		float64(score))
 }

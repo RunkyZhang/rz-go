@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"rz/middleware/notifycenter/models"
+	"time"
 )
 
 var (
@@ -19,6 +20,14 @@ type smsUserMessageRepository struct {
 
 func (myself *smsUserMessageRepository) Insert(smsTemplatePo *models.SmsUserMessagePo) (error) {
 	return myself.repositoryBase.Insert(smsTemplatePo, nil)
+}
+
+func (myself *smsUserMessageRepository) SelectById(id int, date time.Time) (*models.SmsUserMessagePo, error) {
+	smsUserMessagePo := &models.SmsUserMessagePo{}
+
+	err := myself.repositoryBase.SelectById(id, smsUserMessagePo, date)
+
+	return smsUserMessagePo, err
 }
 
 func (myself *smsUserMessageRepository) SelectByPhoneNumber(nationCode string, phoneNumber string) ([]models.SmsUserMessagePo, error) {

@@ -25,6 +25,7 @@ type SmsUserMessagePo struct {
 	PoBase
 	CallbackBasePo
 
+	Id          int    `gorm:"column:id;primary_key;auto_increment"`
 	NationCode  string `gorm:"column:nationCode"`
 	PhoneNumber string `gorm:"column:phoneNumber"`
 	TemplateId  int    `gorm:"column:templateId"`

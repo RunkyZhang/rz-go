@@ -101,7 +101,7 @@ func (myself *repositoryBase) getShardingDatabase(shardingParameters ...interfac
 	if nil != myself.getTableNameFunc {
 		tableName = myself.getTableNameFunc(shardingParameters...)
 	} else {
-		tableName = myself.defaultDatabaseKey
+		tableName = myself.rawTableName
 	}
 
 	return database.Table(tableName), nil
