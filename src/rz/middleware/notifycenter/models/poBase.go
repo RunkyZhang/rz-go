@@ -3,6 +3,7 @@ package models
 import "time"
 
 type PoBase struct {
+	Id            int       `gorm:"column:id;primary_key;auto_increment"`
 	Comment       string    `gorm:"column:comment"`
 	OperationUser string    `gorm:"column:operationUser"`
 	CreatedTime   time.Time `gorm:"column:createdTime"`

@@ -49,46 +49,42 @@ type repositoryBase struct {
 }
 
 func (myself *repositoryBase) Insert(po interface{}, shardingParameters ...interface{}) (error) {
-	database, err := myself.getDatabase(shardingParameters...)
+	database, err := myself.getShardingDatabase(shardingParameters...)
 	if nil != err {
 		return err
 	}
-	tableName := myself.getTableName(shardingParameters...)
 
-	return database.Table(tableName).Create(po).Error
+	return database.Create(po).Error
 }
 
 func (myself *repositoryBase) Update(po interface{}, shardingParameters ...interface{}) (error) {
-	database, err := myself.getDatabase(shardingParameters...)
+	database, err := myself.getShardingDatabase(shardingParameters...)
 	if nil != err {
 		return err
 	}
-	tableName := myself.getTableName(shardingParameters...)
 
-	return database.Table(tableName).Update(po).Error
+	return database.Update(po).Error
 }
 
 func (myself *repositoryBase) SelectById(id int, po interface{}, shardingParameters ...interface{}) (error) {
-	database, err := myself.getDatabase(shardingParameters...)
+	database, err := myself.getShardingDatabase(shardingParameters...)
 	if nil != err {
 		return err
 	}
-	tableName := myself.getTableName(shardingParameters...)
 
-	return database.Table(tableName).Where("id=? and deleted=0", id).First(po).Error
+	return database.Where("id=? and deleted=0", id).First(po).Error
 }
 
 func (myself *repositoryBase) SelectAll(pos interface{}, shardingParameters ...interface{}) (error) {
-	database, err := myself.getDatabase(shardingParameters...)
+	database, err := myself.getShardingDatabase(shardingParameters...)
 	if nil != err {
 		return err
 	}
-	tableName := myself.getTableName(shardingParameters...)
 
-	return database.Table(tableName).Where("deleted=0").Find(pos).Error
+	return database.Where("deleted=0").Find(pos).Error
 }
 
-func (myself *repositoryBase) getDatabase(shardingParameters ...interface{}) (*gorm.DB, error) {
+func (myself *repositoryBase) getShardingDatabase(shardingParameters ...interface{}) (*gorm.DB, error) {
 	var defaultDatabaseKey string
 	if nil != myself.getDatabaseKeyFunc {
 		defaultDatabaseKey = myself.getDatabaseKeyFunc(shardingParameters...)
@@ -101,13 +97,12 @@ func (myself *repositoryBase) getDatabase(shardingParameters ...interface{}) (*g
 		return nil, errors.New(fmt.Sprintf("failed to get database(%s)", defaultDatabaseKey))
 	}
 
-	return database, nil
-}
-
-func (myself *repositoryBase) getTableName(shardingParameters ...interface{}) (string) {
+	var tableName string
 	if nil != myself.getTableNameFunc {
-		return myself.getTableNameFunc(shardingParameters...)
+		tableName = myself.getTableNameFunc(shardingParameters...)
 	} else {
-		return myself.defaultDatabaseKey
+		tableName = myself.defaultDatabaseKey
 	}
+
+	return database.Table(tableName), nil
 }

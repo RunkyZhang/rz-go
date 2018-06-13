@@ -9,6 +9,7 @@ import (
 	"rz/middleware/notifycenter/web"
 	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/repositories"
+	"rz/middleware/notifycenter/consumers"
 )
 
 // http://work.weixin.qq.com/api/doc
@@ -28,10 +29,13 @@ func main() {
 			"default": "ua_notifycenter:ekIxrgWsJ03u@tcp(10.0.34.44:3306)/notifycenter?parseTime=true",
 		})
 
-	//asd, err := repositories.SmsMessageRepository.SelectById(100000002, time.Now())
-	//fmt.Println(asd, err)
+	//var mailMessagePos []models.MailMessagePo
+	//fmt.Println(mailMessagePos)
+	//smsMessagePo, err := repositories.SmsMessageRepository.SelectById(100000002, time.Now())
+	//repositories.SmsMessageRepository.UpdateById(smsMessagePo.Id, "Test", false, "", time.Now())
+	//fmt.Println(smsMessagePo, err)
 
-	//consumers.ConsumerStart()
+	consumers.ConsumerStart()
 
 	fmt.Println("start listening", global.Config.Web.Listen, "...")
 	controllers.MessageController.Enable()

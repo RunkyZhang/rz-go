@@ -1,16 +1,19 @@
 package enumerations
 
-import "rz/middleware/notifycenter/exceptions"
+import (
+	"rz/middleware/notifycenter/exceptions"
+)
 
 type SendChannel int
 
 const (
-	Mail     SendChannel = iota
+	Mail        SendChannel = iota
 	Sms
 	QYWeixin
 	Weixin
 	JPush
 	Voice
+	SmsCallback
 )
 
 func SendChannelToString(sendChannel SendChannel) (string, error) {
@@ -26,9 +29,11 @@ func SendChannelToString(sendChannel SendChannel) (string, error) {
 		return "JPush", nil
 	} else if Voice == sendChannel {
 		return "Voice", nil
+	} else if SmsCallback == sendChannel {
+		return "SmsCallback", nil
 	}
 
-	return "", exceptions.InvalidSendChannel
+	return "", exceptions.InvalidSendChannel()
 }
 
 type ToType int

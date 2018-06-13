@@ -11,7 +11,6 @@ import (
 	"rz/middleware/notifycenter/exceptions"
 	"rz/middleware/notifycenter/global"
 	"errors"
-	"fmt"
 )
 
 type ConvertToDtoFunc func(body io.ReadCloser) (interface{}, error)
@@ -48,9 +47,10 @@ func RegisterController(controllerPack *ControllerPack) {
 			return
 		}
 
+		exceptionsOk := exceptions.Ok()
 		requestDto = models.ResponseDto{
-			Code:    exceptions.Ok.Code,
-			Message: exceptions.Ok.Message,
+			Code:    exceptionsOk.Code,
+			Message: exceptionsOk.Error(),
 			Data:    result,
 		}
 		wrapResponseWriter(responseWriter, &requestDto)
@@ -62,14 +62,16 @@ func toResponseDto(err error) models.ResponseDto {
 	if ok {
 		return models.ResponseDto{
 			Code:    businessError.Code,
-			Message: businessError.Message,
+			Message: businessError.Error(),
 			Data:    nil,
 		}
 	}
 
+	exceptionsInternalServerError := exceptions.InternalServerError()
+	exceptionsInternalServerError.AttachError(err)
 	return models.ResponseDto{
-		Code:    exceptions.InternalServerError.Code,
-		Message: fmt.Sprintf("%s. error: %s", exceptions.InternalServerError.Message, err.Error()),
+		Code:    exceptionsInternalServerError.Code,
+		Message: exceptionsInternalServerError.Error(),
 		Data:    nil,
 	}
 }

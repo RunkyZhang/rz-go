@@ -6,6 +6,8 @@ import (
 	"rz/middleware/notifycenter/enumerations"
 	"time"
 	"sort"
+	"rz/middleware/notifycenter/models"
+	"rz/middleware/notifycenter/repositories"
 )
 
 type MessageManagementBase struct {
@@ -13,6 +15,15 @@ type MessageManagementBase struct {
 
 	SendChannel enumerations.SendChannel
 	keySuffix   string
+	messageRepositoryBase repositories.MessageRepositoryBase
+}
+
+func (myself *MessageManagementBase) ModifyById(id int, states string, finished bool, errorMessages string, date time.Time) (int64, error) {
+	return repositories.SmsMessageRepository.UpdateById(id, states, finished, errorMessages, date)
+}
+
+func (myself *MessageManagementBase) setCallbackBasePo(callbackBasePo *models.CallbackBasePo) {
+	callbackBasePo.States = enumerations.MessageStateToString(enumerations.Initial)
 }
 
 func (myself *MessageManagementBase) RemoveMessageId(messageId int) (int64, error) {
@@ -44,4 +55,11 @@ func (myself *MessageManagementBase) DequeueMessageIds(now time.Time) ([]int, er
 	}
 
 	return values, nil
+}
+
+func (myself *MessageManagementBase) EnqueueMessageIds(messageId int, score int64) (error) {
+	return global.GetRedisClient().SortedSetAdd(
+		global.RedisKeyMessageIds+myself.keySuffix,
+		common.Int32ToString(messageId),
+		float64(score))
 }

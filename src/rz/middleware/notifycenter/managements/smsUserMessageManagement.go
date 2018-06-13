@@ -2,35 +2,37 @@ package managements
 
 import (
 	"rz/middleware/notifycenter/global"
-	"fmt"
 	"rz/middleware/notifycenter/models"
-	"encoding/json"
+	"rz/middleware/notifycenter/repositories"
+	"rz/middleware/notifycenter/enumerations"
+	"rz/middleware/notifycenter/common"
 )
 
 var (
 	SmsUserMessageManagement = smsUserMessageManagement{}
 )
 
+func init() {
+	var err error
+	SmsUserMessageManagement.SendChannel = enumerations.SmsCallback
+	SmsUserMessageManagement.keySuffix, err = enumerations.SendChannelToString(SmsUserMessageManagement.SendChannel)
+	common.Assert.IsNilError(err, "")
+	SmsUserMessageManagement.messageRepositoryBase = repositories.SmsUserMessageRepository.MessageRepositoryBase
+}
+
 type smsUserMessageManagement struct {
-	managementBase
+	MessageManagementBase
 }
 
 func (myself *smsUserMessageManagement) Add(smsUserMessagePo *models.SmsUserMessagePo) (error) {
 	myself.setPoBase(&smsUserMessagePo.PoBase)
+	myself.setCallbackBasePo(&smsUserMessagePo.CallbackBasePo)
 
-	return global.GetRedisClient().HashSet(global.RedisKeySmsUserCallbackMessages, smsUserMessagePo.Id, string(bytes))
+	return repositories.SmsUserMessageRepository.Insert(smsUserMessagePo)
 }
 
-func (myself *smsUserMessageManagement) GetById(id string) (*models.SmsUserMessageDto, error) {
-	jsonString, err := global.GetRedisClient().HashGet(global.RedisKeySmsUserCallbackMessages, id)
-
-	smsUserCallbackMessageDto := &models.SmsUserMessageDto{}
-	err = json.Unmarshal([]byte(jsonString), smsUserCallbackMessageDto)
-	if nil != err {
-		return nil, err
-	}
-
-	return smsUserCallbackMessageDto, err
+func (myself *smsUserMessageManagement) GetByPhoneNumber(nationCode string, phoneNumber string) ([]models.SmsUserMessagePo, error) {
+	return repositories.SmsUserMessageRepository.SelectByPhoneNumber(nationCode, phoneNumber)
 }
 
 func (myself *smsUserMessageManagement) RemoveById(id string) (bool, error) {
@@ -41,8 +43,4 @@ func (myself *smsUserMessageManagement) RemoveById(id string) (bool, error) {
 
 func (myself *smsUserMessageManagement) GetAllIds() ([]string, error) {
 	return global.GetRedisClient().HashKeys(global.RedisKeySmsUserCallbackMessages)
-}
-
-func (*smsUserMessageManagement) BuildId(nationCode string, phoneNumber string, createdTime int64) (string) {
-	return fmt.Sprintf("%s_%s_%d", nationCode, phoneNumber, createdTime)
 }

@@ -31,7 +31,7 @@ func convertToDto(body io.ReadCloser, messageDto interface{}) (interface{}, erro
 	decoder := json.NewDecoder(body)
 	err := decoder.Decode(&messageDto)
 	if nil != err {
-		return nil, exceptions.InvalidDtoType.AttachError(err)
+		return nil, exceptions.InvalidDtoType().AttachError(err)
 	}
 
 	return messageDto, nil

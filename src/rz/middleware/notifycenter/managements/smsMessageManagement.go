@@ -17,6 +17,7 @@ func init() {
 	SmsMessageManagement.SendChannel = enumerations.Sms
 	SmsMessageManagement.keySuffix, err = enumerations.SendChannelToString(SmsMessageManagement.SendChannel)
 	common.Assert.IsNilError(err, "")
+	SmsMessageManagement.messageRepositoryBase = repositories.SmsMessageRepository.MessageRepositoryBase
 }
 
 type smsMessageManagement struct {
@@ -25,14 +26,12 @@ type smsMessageManagement struct {
 
 func (myself *smsMessageManagement) Add(smsMessagePo *models.SmsMessagePo) (error) {
 	myself.setPoBase(&smsMessagePo.PoBase)
+	myself.setCallbackBasePo(&smsMessagePo.CallbackBasePo)
+	smsMessagePo.SendChannel = myself.SendChannel
 
 	return repositories.SmsMessageRepository.Insert(smsMessagePo)
 }
 
 func (myself *smsMessageManagement) GetById(id int, date time.Time) (*models.SmsMessagePo, error) {
 	return repositories.SmsMessageRepository.SelectById(id, date)
-}
-
-func (myself *smsMessageManagement) ModifyById(id int, states string, finished bool, errorMessages string, date time.Time) (int64, error) {
-	return repositories.SmsMessageRepository.UpdateById(id, states, finished, errorMessages, date)
 }

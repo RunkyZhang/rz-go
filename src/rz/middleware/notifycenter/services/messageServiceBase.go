@@ -2,16 +2,38 @@ package services
 
 import (
 	"rz/middleware/notifycenter/models"
+	"rz/middleware/notifycenter/managements"
+	"fmt"
 	"rz/middleware/notifycenter/enumerations"
 )
 
-type messageServiceBase struct {
-	SendChannel enumerations.SendChannel
-	Prefix      string
+type MessageServiceBase struct {
+	messageManagementBase managements.MessageManagementBase
 }
 
-func (messageServiceBase *messageServiceBase) setMessageBasePo(messageBasePo *models.MessageBasePo) {
-	messageBasePo.Finished = false
-	messageBasePo.SendChannel = messageServiceBase.SendChannel
-	messageBasePo.States = enumerations.MessageStateToString(enumerations.Initial)
+func (myself *MessageServiceBase) modifyMessagePo(
+	poBase *models.PoBase,
+	callbackBasePo *models.CallbackBasePo,
+	messageState enumerations.MessageState,
+	finished bool,
+	errorMessage string) {
+	state := enumerations.MessageStateToString(messageState)
+	callbackBasePo.States = callbackBasePo.States + "+" + state
+	var errorMessages string
+	if "" == errorMessage {
+		errorMessages = ""
+	} else {
+		callbackBasePo.ErrorMessages = callbackBasePo.ErrorMessages + "+++" + errorMessage
+		errorMessages = callbackBasePo.ErrorMessages
+	}
+
+	affectedCount, err := myself.messageManagementBase.ModifyById(
+		poBase.Id,
+		callbackBasePo.States,
+		finished,
+		errorMessages,
+		poBase.CreatedTime)
+	if nil != err || 0 == affectedCount {
+		fmt.Println("failed to modify message(", poBase.Id, ") state. error: ", err.Error())
+	}
 }

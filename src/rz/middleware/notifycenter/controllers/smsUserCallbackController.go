@@ -9,7 +9,7 @@ import (
 func smsUserCallback(dto interface{}) (interface{}, error) {
 	smsUserCallbackMessageRequestExternalDto := dto.(*external.SmsUserCallbackMessageRequestExternalDto)
 
-	return services.SmsUserCallbackService.Add(smsUserCallbackMessageRequestExternalDto), nil
+	return services.SmsUserMessageService.Add(smsUserCallbackMessageRequestExternalDto), nil
 }
 
 // MVC structure

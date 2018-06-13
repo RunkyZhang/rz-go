@@ -21,21 +21,21 @@ type messageConsumerBase struct {
 	messageManagementBase *managements.MessageManagementBase
 }
 
-func (messageConsumerBase *messageConsumerBase) Start(duration time.Duration) {
+func (myself *messageConsumerBase) Start(duration time.Duration) {
 	timer := time.NewTimer(duration)
 
 	for {
 		select {
 		case <-timer.C:
-			messageConsumerBase.start()
+			myself.start()
 			timer.Reset(duration)
 		}
 	}
 }
 
-func (messageConsumerBase *messageConsumerBase) start() {
+func (myself *messageConsumerBase) start() {
 	now := time.Now()
-	messageIds, err := messageConsumerBase.messageManagementBase.DequeueMessageIds(now)
+	messageIds, err := myself.messageManagementBase.DequeueMessageIds(now)
 	if nil != err || nil == messageIds {
 		fmt.Println("failed to get message ids. error: ", err)
 		return
@@ -46,7 +46,7 @@ func (messageConsumerBase *messageConsumerBase) start() {
 			// ignore message
 			fmt.Printf("failed to get message(%d) value. error: %s", messageId, err.Error())
 
-			affectedCount, err := messageConsumerBase.messageManagementBase.RemoveMessageId(messageId)
+			affectedCount, err := myself.messageManagementBase.RemoveMessageId(messageId)
 			if nil != err || 0 == affectedCount {
 				fmt.Println("failed to remove message(", messageId, ") value. error: ", err)
 			}
@@ -54,7 +54,7 @@ func (messageConsumerBase *messageConsumerBase) start() {
 			continue
 		}
 
-		affectedCount, err := messageConsumerBase.messageManagementBase.RemoveMessageId(messageId)
+		affectedCount, err := myself.messageManagementBase.RemoveMessageId(messageId)
 		if nil != err || 0 == affectedCount {
 			fmt.Println("failed to remove message(", messageId, "). error: ", err)
 			continue
@@ -63,9 +63,9 @@ func (messageConsumerBase *messageConsumerBase) start() {
 		var messagePo interface{}
 		var messageBasePo *models.MessageBasePo
 		var flagError error
-		messagePo, messageBasePo, flagError = messageConsumerBase.convertFunc(messageId, now)
+		messagePo, messageBasePo, flagError = myself.convertFunc(messageId, now)
 		if nil == flagError {
-			flagError = messageConsumerBase.consume(messagePo, messageBasePo)
+			flagError = myself.consume(messagePo, messageBasePo)
 			if nil == flagError {
 				fmt.Printf("success to consume message(%d)", messageId)
 			}
@@ -82,29 +82,29 @@ func (messageConsumerBase *messageConsumerBase) start() {
 				} else {
 					state = enumerations.MessageStateToString(enumerations.Error)
 				}
-				messageConsumerBase.modifyMessagePo(messageBasePo, state, true, flagError.Error())
+				myself.modifyMessagePo(messageBasePo, state, true, flagError.Error())
 			}
 		}
 	}
 }
 
-func (messageConsumerBase *messageConsumerBase) consume(messagePo interface{}, messageBasePo *models.MessageBasePo) (error) {
-	messageConsumerBase.modifyMessagePo(messageBasePo, enumerations.MessageStateToString(enumerations.Consuming), false, "")
+func (myself *messageConsumerBase) consume(messagePo interface{}, messageBasePo *models.MessageBasePo) (error) {
+	myself.modifyMessagePo(messageBasePo, enumerations.MessageStateToString(enumerations.Consuming), false, "")
 
 	if time.Now().Unix() > messageBasePo.ExpireTime.Unix() {
 		return exceptions.MessageExpire
 	}
 
-	err := messageConsumerBase.sendFunc(messagePo)
+	err := myself.sendFunc(messagePo)
 	if nil != err {
 		return err
 	}
 
-	messageConsumerBase.modifyMessagePo(messageBasePo, enumerations.MessageStateToString(enumerations.Sent), true, "")
+	myself.modifyMessagePo(messageBasePo, enumerations.MessageStateToString(enumerations.Sent), true, "")
 	return nil
 }
 
-func (messageConsumerBase *messageConsumerBase) modifyMessagePo(messageBasePo *models.MessageBasePo, state string, finished bool, errorMessage string) {
+func (myself *messageConsumerBase) modifyMessagePo(messageBasePo *models.MessageBasePo, state string, finished bool, errorMessage string) {
 	messageBasePo.States = messageBasePo.States + "+" + state
 	var errorMessages string
 	if "" == errorMessage {
@@ -114,14 +114,14 @@ func (messageConsumerBase *messageConsumerBase) modifyMessagePo(messageBasePo *m
 		errorMessages = messageBasePo.ErrorMessages
 	}
 
-	affectedCount, err := managements.SmsMessageManagement.ModifyById(
+	affectedCount, err := myself.messageManagementBase.ModifyById(
 		messageBasePo.Id,
 		messageBasePo.States,
 		finished,
 		errorMessages,
 		messageBasePo.CreatedTime)
 	if nil != err || 0 == affectedCount {
-		fmt.Println("failed to handle error for message(", messageBasePo.Id, "). error: ", err.Error())
+		fmt.Println("failed to modfiy message(", messageBasePo.Id, ") state. error: ", err.Error())
 	}
 }
 

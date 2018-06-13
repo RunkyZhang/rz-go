@@ -21,18 +21,17 @@ func init() {
 	MailMessageManagement.SendChannel = enumerations.Mail
 	MailMessageManagement.keySuffix, err = enumerations.SendChannelToString(MailMessageManagement.SendChannel)
 	common.Assert.IsNilError(err, "")
+	MailMessageManagement.messageRepositoryBase = repositories.MailMessageRepository.MessageRepositoryBase
 }
 
 func (myself *mailMessageManagement) Add(mailMessagePo *models.MailMessagePo) (error) {
 	myself.setPoBase(&mailMessagePo.PoBase)
+	myself.setCallbackBasePo(&mailMessagePo.CallbackBasePo)
+	mailMessagePo.SendChannel = myself.SendChannel
 
 	return repositories.MailMessageRepository.Insert(mailMessagePo)
 }
 
 func (myself *mailMessageManagement) GetById(id int, date time.Time) (*models.MailMessagePo, error) {
 	return repositories.MailMessageRepository.SelectById(id, date)
-}
-
-func (myself *mailMessageManagement) ModifyById(id int, states string, finished bool, errorMessages string, date time.Time) (int64, error) {
-	return repositories.MailMessageRepository.UpdateById(id, states, finished, errorMessages, date)
 }

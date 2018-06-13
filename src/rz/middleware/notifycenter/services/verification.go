@@ -8,7 +8,7 @@ import (
 
 func verifyMessageDto(messageBaseDto *models.MessageBaseDto) (error) {
 	if 0 == len(messageBaseDto.Tos) {
-		return exceptions.ErrorTosEmpty
+		return exceptions.ErrorTosEmpty()
 	}
 
 	return nil
@@ -16,7 +16,7 @@ func verifyMessageDto(messageBaseDto *models.MessageBaseDto) (error) {
 
 func VerifyMailMessageDto(mailMessageDto *models.MailMessageDto) (error) {
 	if nil == mailMessageDto {
-		return exceptions.DtoNull
+		return exceptions.DtoNull()
 	}
 
 	err := verifyMessageDto(&mailMessageDto.MessageBaseDto)
@@ -25,7 +25,7 @@ func VerifyMailMessageDto(mailMessageDto *models.MailMessageDto) (error) {
 	}
 
 	if common.IsStringBlank(mailMessageDto.Subject) {
-		return exceptions.SubjectBlank
+		return exceptions.SubjectBlank()
 	}
 
 	return nil
@@ -33,7 +33,7 @@ func VerifyMailMessageDto(mailMessageDto *models.MailMessageDto) (error) {
 
 func VerifySmsMessageDto(smsMessageDto *models.SmsMessageDto) (error) {
 	if nil == smsMessageDto {
-		return exceptions.DtoNull
+		return exceptions.DtoNull()
 	}
 
 	err := verifyMessageDto(&smsMessageDto.MessageBaseDto)

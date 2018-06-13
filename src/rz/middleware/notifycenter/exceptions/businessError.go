@@ -1,31 +1,40 @@
 package exceptions
 
-import "fmt"
-
-func newBusinessError(message string, code int) (*BusinessError) {
+func newBusinessError(defaultMessage string, code int) (*BusinessError) {
 	return &BusinessError{
-		Message: message,
-		Code:    code,
+		DefaultMessage: defaultMessage,
+		Code:           code,
 	}
 }
 
 // implementation of error
 type BusinessError struct {
-	Message string
-	Code    int
-	Err     error
+	DefaultMessage string
+	message        string
+	Code           int
+	rawError       error
 }
 
-func (businessError *BusinessError) AttachError(err error) (error) {
-	businessError.Err = err
+func (myself *BusinessError) AttachError(rawError error) (*BusinessError) {
+	myself.rawError = rawError
 
-	return businessError
+	return myself
 }
 
-func (businessError *BusinessError) Error() (string) {
-	if nil != businessError.Err {
-		return fmt.Sprintf("%s. error: %s", businessError.Message, businessError.Err.Error())
+func (myself *BusinessError) AttachMessage(message string) (*BusinessError) {
+	myself.message = message
+
+	return myself
+}
+
+func (myself *BusinessError) Error() (string) {
+	errorMessage := "default message: " + myself.DefaultMessage
+	if nil != myself.rawError {
+		errorMessage += ". raw error: " + myself.rawError.Error()
+	}
+	if "" != myself.message {
+		errorMessage += ". message: " + myself.message
 	}
 
-	return businessError.Message
+	return errorMessage
 }

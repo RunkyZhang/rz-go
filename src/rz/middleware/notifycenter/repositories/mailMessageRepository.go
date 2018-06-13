@@ -11,7 +11,7 @@ var (
 )
 
 type mailMessageRepository struct {
-	messageRepositoryBase
+	MessageRepositoryBase
 }
 
 func init() {
@@ -29,22 +29,16 @@ func (myself *mailMessageRepository) SelectById(id int, date time.Time) (*models
 	mailMessagePo := &models.MailMessagePo{}
 
 	err := myself.repositoryBase.SelectById(id, mailMessagePo, date)
-	if nil != err {
-		return nil, err
-	}
 
-	return mailMessagePo, nil
+	return mailMessagePo, err
 }
 
 func (myself *mailMessageRepository) SelectByExpireTimeAndFinished(date time.Time) ([]models.MailMessagePo, error) {
 	var mailMessagePos []models.MailMessagePo
 
-	err := myself.messageRepositoryBase.SelectByExpireTimeAndFinished(mailMessagePos, date)
-	if nil != err {
-		return nil, err
-	}
+	err := myself.MessageRepositoryBase.SelectByExpireTimeAndFinished(mailMessagePos, date)
 
-	return mailMessagePos, nil
+	return mailMessagePos, err
 }
 
 func (myself *mailMessageRepository) getDatabaseKey(shardingParameters ...interface{}) (string) {
