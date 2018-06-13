@@ -36,6 +36,10 @@ type SmsUserMessagePo struct {
 }
 
 func SmsUserMessageDtoToPo(smsUserMessageDto *SmsUserMessageDto) (*SmsUserMessagePo) {
+	if nil == smsUserMessageDto {
+		return nil
+	}
+
 	smsUserMessagePo := &SmsUserMessagePo{}
 	smsUserMessagePo.Id = smsUserMessageDto.Id
 	smsUserMessagePo.NationCode = smsUserMessageDto.NationCode
@@ -51,7 +55,11 @@ func SmsUserMessageDtoToPo(smsUserMessageDto *SmsUserMessageDto) (*SmsUserMessag
 	return smsUserMessagePo
 }
 
-func SmsUserMessageToDto(smsUserMessagePo *SmsUserMessagePo) (*SmsUserMessageDto) {
+func SmsUserMessagePoToDto(smsUserMessagePo *SmsUserMessagePo) (*SmsUserMessageDto) {
+	if nil == smsUserMessagePo {
+		return nil
+	}
+
 	smsUserMessageDto := &SmsUserMessageDto{}
 	smsUserMessageDto.Id = smsUserMessagePo.Id
 	smsUserMessageDto.NationCode = smsUserMessagePo.NationCode

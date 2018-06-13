@@ -16,4 +16,7 @@ var (
 	FailedAddSmsUserMessage = func() (*BusinessError) { return newBusinessError("Failed to add sms user message", 30009) }
 	FailedEnqueueMessageId  = func() (*BusinessError) { return newBusinessError("Failed to enqueue message id", 30010) }
 	InvalidExtend           = func() (*BusinessError) { return newBusinessError("Invalid extend", 30011) }
+	TemplateIdNotExist      = func() (*BusinessError) { return newBusinessError("Template id is not exist", 30012) }
+	InvalidPattern          = func() (*BusinessError) { return newBusinessError("Invalid pattern", 30013) }
+	PatternNotMatch         = func() (*BusinessError) { return newBusinessError("Pattern is not match string", 30014) }
 )

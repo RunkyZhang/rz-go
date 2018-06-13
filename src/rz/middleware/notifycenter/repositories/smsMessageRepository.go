@@ -41,6 +41,18 @@ func (myself *smsMessageRepository) SelectByExpireTimeAndFinished(date time.Time
 	return smsMessagePos, err
 }
 
+func (myself *smsMessageRepository) SelectByIdentifyingCode(templateId int, identifyingCode string, date time.Time) (*models.SmsMessagePo, error) {
+	database, err := myself.getShardingDatabase(date)
+	if nil != err {
+		return nil, err
+	}
+
+	smsMessagePo := &models.SmsMessagePo{}
+	err = database.Where("templateId=? AND identifyingCode=? AND expireTime<? AND deleted=0", templateId, identifyingCode, time.Now()).First(smsMessagePo).Error
+
+	return smsMessagePo, err
+}
+
 func (myself *smsMessageRepository) getDatabaseKey(shardingParameters ...interface{}) (string) {
 	return myself.defaultDatabaseKey
 }

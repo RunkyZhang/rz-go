@@ -1,4 +1,7 @@
 package models
 
-type UserCallbackRequestDto struct {
+type SmsUserCallbackRequestDto struct {
+	Message     *SmsMessageDto
+	Template    *SmsTemplateDto
+	UserMessage *SmsUserMessageDto
 }

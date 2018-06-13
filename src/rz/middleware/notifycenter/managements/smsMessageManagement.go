@@ -35,3 +35,7 @@ func (myself *smsMessageManagement) Add(smsMessagePo *models.SmsMessagePo) (erro
 func (myself *smsMessageManagement) GetById(id int, date time.Time) (*models.SmsMessagePo, error) {
 	return repositories.SmsMessageRepository.SelectById(id, date)
 }
+
+func (myself *smsMessageManagement) GetByIdentifyingCode(templateId int, identifyingCode string, date time.Time) (*models.SmsMessagePo, error) {
+	return repositories.SmsMessageRepository.SelectByIdentifyingCode(templateId, identifyingCode, date)
+}

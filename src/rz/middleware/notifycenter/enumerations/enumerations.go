@@ -80,3 +80,10 @@ func MessageStateToString(messageState MessageState) (string) {
 		return "Unknown"
 	}
 }
+
+type SmsTemplateType int
+
+const (
+	Pattern         SmsTemplateType = iota
+	IdentifyingCode
+)

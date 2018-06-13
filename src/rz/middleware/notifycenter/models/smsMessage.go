@@ -25,6 +25,10 @@ type SmsMessagePo struct {
 }
 
 func SmsMessageDtoToPo(smsMessageDto *SmsMessageDto) (*SmsMessagePo) {
+	if nil == smsMessageDto {
+		return nil
+	}
+
 	smsMessagePo := &SmsMessagePo{}
 	smsMessagePo.MessageBasePo = *MessageBaseDtoToPo(&smsMessageDto.MessageBaseDto)
 	smsMessagePo.Parameters = strings.Join(smsMessageDto.Parameters, ",")
@@ -38,6 +42,10 @@ func SmsMessageDtoToPo(smsMessageDto *SmsMessageDto) (*SmsMessagePo) {
 }
 
 func SmsMessagePoToDto(smsMessagePo *SmsMessagePo) (*SmsMessageDto) {
+	if nil == smsMessagePo {
+		return nil
+	}
+
 	smsMessageDto := &SmsMessageDto{}
 	smsMessageDto.MessageBaseDto = *MessageBasePoToDto(&smsMessagePo.MessageBasePo)
 	smsMessageDto.Parameters = strings.Split(smsMessagePo.Parameters, ",")

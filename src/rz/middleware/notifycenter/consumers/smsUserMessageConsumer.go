@@ -2,10 +2,15 @@ package consumers
 
 import (
 	"regexp"
-	"rz/middleware/notifycenter/managements"
 	"time"
+
+	"git.zhaogangren.com/cloud/cloud.base.utils-go.sdk/httplib"
+
+	"rz/middleware/notifycenter/managements"
 	"rz/middleware/notifycenter/models"
-	"fmt"
+	"rz/middleware/notifycenter/exceptions"
+	"rz/middleware/notifycenter/common"
+	"rz/middleware/notifycenter/enumerations"
 )
 
 var (
@@ -27,10 +32,43 @@ type smsUserMessageConsumer struct {
 	regularExpressions map[string]*regexp.Regexp
 }
 
-func (myself *smsUserMessageConsumer) Send(messageDto interface{}) (error) {
-	smsUserMessageDto := messageDto.(*models.SmsUserMessageDto)
+func (myself *smsUserMessageConsumer) Send(messagePo interface{}) (error) {
+	smsUserMessagePo := messagePo.(*models.SmsUserMessagePo)
 
-	fmt.Println(smsUserMessageDto)
+	smsTemplatePo, err := managements.SmsTemplateManagement.GetByTemplateId(smsUserMessagePo.TemplateId)
+	if nil != err {
+		return exceptions.TemplateIdNotExist().AttachError(err).AttachMessage(common.Int32ToString(smsUserMessagePo.TemplateId))
+	}
+
+	var smsMessagePo *models.SmsMessagePo
+	if enumerations.IdentifyingCode == smsTemplatePo.Type {
+		smsMessagePo, err = managements.SmsMessageManagement.GetByIdentifyingCode(smsTemplatePo.Id, smsUserMessagePo.Content, time.Now())
+	} else if enumerations.Pattern == smsTemplatePo.Type {
+		regularExpression, ok := myself.regularExpressions[smsTemplatePo.Pattern]
+		if !ok {
+			regularExpression, err = regexp.Compile(smsTemplatePo.Pattern)
+			if nil == err {
+				myself.regularExpressions[smsTemplatePo.Pattern] = regularExpression
+			} else {
+				myself.regularExpressions[smsTemplatePo.Pattern] = nil
+			}
+		}
+		if nil == regularExpression {
+			return exceptions.InvalidPattern().AttachMessage(smsTemplatePo.Pattern)
+		}
+		if !regularExpression.MatchString(smsUserMessagePo.Content) {
+			return exceptions.InvalidPattern().AttachMessage(smsUserMessagePo.Content)
+		}
+	}
+
+	smsUserCallbackRequestDto := &models.SmsUserCallbackRequestDto{
+		Message:     models.SmsMessagePoToDto(smsMessagePo),
+		Template:    models.SmsTemplatePoToDto(smsTemplatePo),
+		UserMessage: models.SmsUserMessagePoToDto(smsUserMessagePo),
+	}
+	for _, userCallbackUrl := range smsTemplatePo.UserCallbackUrls {
+		httplib.Post(userCallbackUrl, smsUserCallbackRequestDto)
+	}
 
 	return nil
 }
