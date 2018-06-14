@@ -4,7 +4,6 @@ import (
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/repositories"
 	"rz/middleware/notifycenter/enumerations"
-	"rz/middleware/notifycenter/common"
 	"time"
 )
 
@@ -13,10 +12,8 @@ var (
 )
 
 func init() {
-	var err error
 	SmsMessageManagement.SendChannel = enumerations.Sms
-	SmsMessageManagement.KeySuffix, err = enumerations.SendChannelToString(SmsMessageManagement.SendChannel)
-	common.Assert.IsNilError(err, "")
+	SmsMessageManagement.KeySuffix, _ = enumerations.SendChannelToString(SmsMessageManagement.SendChannel)
 	SmsMessageManagement.messageRepositoryBase = repositories.SmsMessageRepository.MessageRepositoryBase
 }
 

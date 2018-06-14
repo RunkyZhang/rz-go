@@ -13,7 +13,7 @@ var (
 )
 
 func init() {
-	MailMessageService.messageManagementBase = managements.MailMessageManagement.MessageManagementBase
+	MailMessageService.messageManagementBase = &managements.MailMessageManagement.MessageManagementBase
 }
 
 type mailMessageService struct {
@@ -34,7 +34,8 @@ func (myself *mailMessageService) SendMail(mailMessageDto *models.MailMessageDto
 
 	err = managements.MailMessageManagement.EnqueueMessageIds(mailMessagePo.Id, mailMessagePo.ScheduleTime.Unix())
 	if nil != err {
-		myself.modifyMessageFlow(
+		managements.ModifyMessageFlowAsync(
+			myself.messageManagementBase,
 			mailMessagePo.Id,
 			&mailMessagePo.PoBase,
 			&mailMessagePo.CallbackBasePo,

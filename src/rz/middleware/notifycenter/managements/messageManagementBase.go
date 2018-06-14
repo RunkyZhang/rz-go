@@ -8,6 +8,8 @@ import (
 	"sort"
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/repositories"
+	"fmt"
+	"errors"
 )
 
 type MessageManagementBase struct {
@@ -62,4 +64,85 @@ func (myself *MessageManagementBase) EnqueueMessageIds(messageId int, score int6
 		global.RedisKeyMessageIds+myself.KeySuffix,
 		common.Int32ToString(messageId),
 		float64(score))
+}
+
+type MessageFlowJobParameter struct {
+	MessageManagementBase *MessageManagementBase
+	MessageId             int
+	PoBase                *models.PoBase
+	CallbackBasePo        *models.CallbackBasePo
+	MessageState          enumerations.MessageState
+	Finished              bool
+	ErrorMessage          string
+}
+
+func ModifyMessageFlowAsync(
+	messageManagementBase *MessageManagementBase,
+	messageId int,
+	poBase *models.PoBase,
+	callbackBasePo *models.CallbackBasePo,
+	messageState enumerations.MessageState,
+	finished bool,
+	errorMessage string) {
+	messageFlowJobParameter := &MessageFlowJobParameter{
+		MessageManagementBase: messageManagementBase,
+		MessageId:             messageId,
+		PoBase:                poBase,
+		CallbackBasePo:        callbackBasePo,
+		MessageState:          messageState,
+		Finished:              finished,
+		ErrorMessage:          errorMessage,
+	}
+
+	asyncJob := &common.AsyncJob{
+		Name:      common.Int32ToString(messageId),
+		Type:      "ModifyMessageFlow",
+		RunFunc:   modifyMessageFlow,
+		Parameter: messageFlowJobParameter,
+	}
+
+	global.AsyncWorker.Add(asyncJob)
+}
+
+func modifyMessageFlow(parameter interface{}) (error) {
+	messageFlowJobParameter := parameter.(*MessageFlowJobParameter)
+	err := common.Assert.IsNotNilToError(messageFlowJobParameter, "messageFlowJobParameter")
+	if nil != err {
+		return err
+	}
+	err = common.Assert.IsNotNilToError(messageFlowJobParameter.MessageManagementBase, "messageFlowJobParameter.messageManagementBase")
+	if nil != err {
+		return err
+	}
+	err = common.Assert.IsNotNilToError(messageFlowJobParameter.PoBase, "messageFlowJobParameter.PoBase")
+	if nil != err {
+		return err
+	}
+	err = common.Assert.IsNotNilToError(messageFlowJobParameter.CallbackBasePo, "messageFlowJobParameter.messageManagementBase")
+	if nil != err {
+		return err
+	}
+
+	state := enumerations.MessageStateToString(messageFlowJobParameter.MessageState)
+	messageFlowJobParameter.CallbackBasePo.States = messageFlowJobParameter.CallbackBasePo.States + "+" + state
+	var errorMessages string
+	if "" == messageFlowJobParameter.ErrorMessage {
+		errorMessages = ""
+	} else {
+		messageFlowJobParameter.CallbackBasePo.ErrorMessages =
+			messageFlowJobParameter.CallbackBasePo.ErrorMessages + "+++" + messageFlowJobParameter.ErrorMessage
+		errorMessages = messageFlowJobParameter.CallbackBasePo.ErrorMessages
+	}
+
+	affectedCount, err := messageFlowJobParameter.MessageManagementBase.ModifyById(
+		messageFlowJobParameter.MessageId,
+		messageFlowJobParameter.CallbackBasePo.States,
+		messageFlowJobParameter.Finished,
+		errorMessages,
+		messageFlowJobParameter.PoBase.CreatedTime)
+	if nil != err || 0 == affectedCount {
+		return errors.New(fmt.Sprintf("failed to modify message(%d) state. error: %s", messageFlowJobParameter.MessageId, err))
+	}
+
+	return nil
 }

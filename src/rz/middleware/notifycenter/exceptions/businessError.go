@@ -28,7 +28,7 @@ func (myself *BusinessError) AttachMessage(message string) (*BusinessError) {
 }
 
 func (myself *BusinessError) Error() (string) {
-	errorMessage := "default message: " + myself.DefaultMessage
+	errorMessage := myself.DefaultMessage
 	if nil != myself.rawError {
 		errorMessage += ". raw error: " + myself.rawError.Error()
 	}

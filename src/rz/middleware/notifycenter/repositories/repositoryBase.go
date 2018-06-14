@@ -3,7 +3,6 @@ package repositories
 import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
-	"rz/middleware/notifycenter/common"
 	"errors"
 	"fmt"
 )
@@ -15,8 +14,6 @@ var (
 func Init(connectionStrings map[string]string) {
 	if nil == Databases {
 		Databases = make(map[string]*gorm.DB)
-		common.Assert.IsNotNil(connectionStrings, "connectionStrings")
-
 		for key, value := range connectionStrings {
 			//database, err := gorm.Open("mysql", "ua_notifycenter:ekIxrgWsJ03u@tcp(10.0.34.44:3306)/notifycenter")
 			database, err := gorm.Open("mysql", value)

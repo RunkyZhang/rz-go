@@ -9,7 +9,6 @@ import (
 	"rz/middleware/notifycenter/web"
 	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/repositories"
-	"rz/middleware/notifycenter/consumers"
 )
 
 // http://work.weixin.qq.com/api/doc
@@ -17,6 +16,11 @@ import (
 // 202067351   Zgadmin0719   qcloud.com
 func main() {
 	var err error
+
+	//var asd interface{}
+	//asd = nil
+	//aj, ok := asd.(*common.AsyncJob)
+	//fmt.Println(aj, ok)
 	//ree := managements.SmsTemplateManagement.Set(11722, 3333, nil, "")
 	//fmt.Println(ree)
 	//jsonString, ree := global.GetRedisClient().HashGet(global.RedisKeySmsTemplates, common.Int32ToString(117232))
@@ -26,6 +30,8 @@ func main() {
 
 	//err = exceptions.DtoNull().AttachMessage("asdasdasd")
 	//fmt.Printf("failed to get message ids. error: %s", err)
+
+	global.AsyncWorker.Start()
 
 	repositories.Init(
 		map[string]string{
@@ -46,7 +52,7 @@ func main() {
 	//repositories.SmsMessageRepository.UpdateById(smsMessagePo.Id, "Test", false, "", time.Now())
 	//fmt.Println(smsMessagePo, err)
 
-	consumers.ConsumerStart()
+	//consumers.ConsumerStart()
 
 	fmt.Println("start listening", global.Config.Web.Listen, "...")
 	controllers.MessageController.Enable()
@@ -61,6 +67,8 @@ func main() {
 	if nil != err {
 		fmt.Println("Failed to shutdown web server. error: ", err, ".")
 	}
+
+	global.AsyncWorker.CloseAndWait()
 
 	fmt.Println("stoped...")
 }

@@ -13,7 +13,7 @@ var (
 )
 
 func init() {
-	SmsMessageService.messageManagementBase = managements.SmsMessageManagement.MessageManagementBase
+	SmsMessageService.messageManagementBase = &managements.SmsMessageManagement.MessageManagementBase
 }
 
 type smsMessageService struct {
@@ -32,9 +32,19 @@ func (myself *smsMessageService) SendSms(smsMessageDto *models.SmsMessageDto) (i
 		return 0, err
 	}
 
+	managements.ModifyMessageFlowAsync(
+		myself.messageManagementBase,
+		smsMessagePo.Id,
+		&smsMessagePo.PoBase,
+		&smsMessagePo.CallbackBasePo,
+		enumerations.Error,
+		true,
+		"Test")
+
 	err = managements.SmsMessageManagement.EnqueueMessageIds(smsMessagePo.Id, smsMessagePo.ScheduleTime.Unix())
 	if nil != err {
-		myself.modifyMessageFlow(
+		managements.ModifyMessageFlowAsync(
+			myself.messageManagementBase,
 			smsMessagePo.Id,
 			&smsMessagePo.PoBase,
 			&smsMessagePo.CallbackBasePo,

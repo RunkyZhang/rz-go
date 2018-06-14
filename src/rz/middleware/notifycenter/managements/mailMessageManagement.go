@@ -2,7 +2,6 @@ package managements
 
 import (
 	"rz/middleware/notifycenter/enumerations"
-	"rz/middleware/notifycenter/common"
 	"rz/middleware/notifycenter/repositories"
 	"rz/middleware/notifycenter/models"
 	"time"
@@ -17,10 +16,8 @@ type mailMessageManagement struct {
 }
 
 func init() {
-	var err error
 	MailMessageManagement.SendChannel = enumerations.Mail
-	MailMessageManagement.KeySuffix, err = enumerations.SendChannelToString(MailMessageManagement.SendChannel)
-	common.Assert.IsNilError(err, "")
+	MailMessageManagement.KeySuffix, _ = enumerations.SendChannelToString(MailMessageManagement.SendChannel)
 	MailMessageManagement.messageRepositoryBase = repositories.MailMessageRepository.MessageRepositoryBase
 }
 

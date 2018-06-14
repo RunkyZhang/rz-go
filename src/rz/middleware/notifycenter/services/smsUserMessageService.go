@@ -14,7 +14,7 @@ var (
 )
 
 func init() {
-	SmsUserMessageService.messageManagementBase = managements.SmsUserMessageManagement.MessageManagementBase
+	SmsUserMessageService.messageManagementBase = &managements.SmsUserMessageManagement.MessageManagementBase
 }
 
 type smsUserMessageService struct {
@@ -58,7 +58,8 @@ func (myself *smsUserMessageService) Add(
 	if false == smsUserMessagePo.Finished {
 		err = managements.SmsUserMessageManagement.EnqueueMessageIds(smsUserMessagePo.Id, smsUserMessagePo.CreatedTime.Unix())
 		if nil != err {
-			myself.modifyMessageFlow(
+			managements.ModifyMessageFlowAsync(
+				myself.messageManagementBase,
 				smsUserMessagePo.Id,
 				&smsUserMessagePo.PoBase,
 				&smsUserMessagePo.CallbackBasePo,

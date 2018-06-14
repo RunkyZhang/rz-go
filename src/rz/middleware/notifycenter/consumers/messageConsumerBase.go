@@ -71,13 +71,27 @@ func (myself *messageConsumerBase) start() {
 				messageState = enumerations.Error
 			}
 
-			myself.modifyMessageFlow(messageId, poBase, callbackBasePo, messageState, true, flagError.Error())
+			managements.ModifyMessageFlowAsync(
+				myself.messageManagementBase,
+				messageId,
+				poBase,
+				callbackBasePo,
+				messageState,
+				true,
+				flagError.Error())
 		}
 	}
 }
 
 func (myself *messageConsumerBase) consume(messagePo interface{}, messageId int, poBase *models.PoBase, callbackBasePo *models.CallbackBasePo) (error) {
-	myself.modifyMessageFlow(messageId, poBase, callbackBasePo, enumerations.Consuming, false, "")
+	managements.ModifyMessageFlowAsync(
+		myself.messageManagementBase,
+		messageId,
+		poBase,
+		callbackBasePo,
+		enumerations.Consuming,
+		false,
+		"")
 
 	if time.Now().Unix() > callbackBasePo.ExpireTime.Unix() {
 		return exceptions.MessageExpire().AttachMessage(common.Int32ToString(messageId))
@@ -88,36 +102,16 @@ func (myself *messageConsumerBase) consume(messagePo interface{}, messageId int,
 		return err
 	}
 
-	myself.modifyMessageFlow(messageId, poBase, callbackBasePo, enumerations.Sent, true, "")
-	return nil
-}
-
-func (myself *messageConsumerBase) modifyMessageFlow(
-	messageId int,
-	poBase *models.PoBase,
-	callbackBasePo *models.CallbackBasePo,
-	messageState enumerations.MessageState,
-	finished bool,
-	errorMessage string) {
-	state := enumerations.MessageStateToString(messageState)
-	callbackBasePo.States = callbackBasePo.States + "+" + state
-	var errorMessages string
-	if "" == errorMessage {
-		errorMessages = ""
-	} else {
-		callbackBasePo.ErrorMessages = callbackBasePo.ErrorMessages + "+++" + errorMessage
-		errorMessages = callbackBasePo.ErrorMessages
-	}
-
-	affectedCount, err := myself.messageManagementBase.ModifyById(
+	managements.ModifyMessageFlowAsync(
+		myself.messageManagementBase,
 		messageId,
-		callbackBasePo.States,
-		finished,
-		errorMessages,
-		poBase.CreatedTime)
-	if nil != err || 0 == affectedCount {
-		fmt.Printf("failed to modify message(%d) state. error: %s", messageId, err)
-	}
+		poBase,
+		callbackBasePo,
+		enumerations.Sent,
+		true,
+		"")
+
+	return nil
 }
 
 func ConsumerStart() {
