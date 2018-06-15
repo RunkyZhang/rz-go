@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	AsyncWorker = common.NewAsyncJobWorker(5 * time.Second)
+	MessageFlowAsyncWorker = common.NewAsyncJobWorker(5, 1*time.Second)
+	HttpRequestAsyncWorker = common.NewAsyncJobWorker(5, 1*time.Second)
 
 	redisClient *common.RedisClient = nil
 	redisLock   sync.Mutex

@@ -101,7 +101,7 @@ func ModifyMessageFlowAsync(
 		Parameter: messageFlowJobParameter,
 	}
 
-	global.AsyncWorker.Add(asyncJob)
+	global.MessageFlowAsyncWorker.Add(asyncJob)
 }
 
 func modifyMessageFlow(parameter interface{}) (error) {

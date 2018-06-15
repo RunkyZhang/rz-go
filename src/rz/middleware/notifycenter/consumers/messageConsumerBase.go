@@ -3,14 +3,13 @@ package consumers
 import (
 	"time"
 	"fmt"
-	"runtime"
-
 	"rz/middleware/notifycenter/enumerations"
-	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/exceptions"
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/managements"
 	"rz/middleware/notifycenter/common"
+	"runtime"
+	"errors"
 )
 
 type convertFunc func(int, time.Time) (interface{}, *models.PoBase, *models.CallbackBasePo, error)
@@ -20,21 +19,25 @@ type messageConsumerBase struct {
 	convertFunc           convertFunc
 	sendFunc              sendFunc
 	messageManagementBase *managements.MessageManagementBase
+	asyncJobWorker        *common.AsyncJobWorker
 }
 
-func (myself *messageConsumerBase) Start(duration time.Duration) {
-	timer := time.NewTimer(duration)
-
-	for {
-		select {
-		case <-timer.C:
-			myself.start()
-			timer.Reset(duration)
-		}
+func (myself *messageConsumerBase) Start(duration time.Duration) (error) {
+	if nil == myself.messageManagementBase {
+		return errors.New("[myself.messageManagementBase] is nil")
 	}
+
+	asyncJob := &common.AsyncJob{
+		Name:    myself.messageManagementBase.KeySuffix,
+		Type:    "Consumer",
+		RunFunc: myself.start,
+	}
+	myself.asyncJobWorker = common.NewAsyncJobWorker(runtime.NumCPU(), duration, asyncJob)
+
+	return nil
 }
 
-func (myself *messageConsumerBase) start() {
+func (myself *messageConsumerBase) start(parameter interface{}) (error) {
 	now := time.Now()
 	messageIds, err := myself.messageManagementBase.DequeueMessageIds(now)
 	if nil != err {
@@ -81,6 +84,8 @@ func (myself *messageConsumerBase) start() {
 				flagError.Error())
 		}
 	}
+
+	return nil
 }
 
 func (myself *messageConsumerBase) consume(messagePo interface{}, messageId int, poBase *models.PoBase, callbackBasePo *models.CallbackBasePo) (error) {
@@ -114,11 +119,11 @@ func (myself *messageConsumerBase) consume(messagePo interface{}, messageId int,
 	return nil
 }
 
-func ConsumerStart() {
-	duration := time.Duration(global.Config.ConsumingInterval) * time.Second
-	for i := 0; i < runtime.NumCPU(); i++ {
-		go MailMessageConsumer.Start(duration)
-		go SmsMessageConsumer.Start(duration)
-		time.Sleep(2 * time.Second)
-	}
-}
+//func ConsumerStart() {
+//	duration := time.Duration(global.Config.ConsumingInterval) * time.Second
+//	for i := 0; i < runtime.NumCPU(); i++ {
+//		go MailMessageConsumer.Start(duration)
+//		go SmsMessageConsumer.Start(duration)
+//		time.Sleep(2 * time.Second)
+//	}
+//}

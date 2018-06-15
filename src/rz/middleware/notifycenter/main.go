@@ -9,6 +9,9 @@ import (
 	"rz/middleware/notifycenter/web"
 	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/repositories"
+	"rz/middleware/notifycenter/common"
+	"time"
+	"errors"
 )
 
 // http://work.weixin.qq.com/api/doc
@@ -31,7 +34,37 @@ func main() {
 	//err = exceptions.DtoNull().AttachMessage("asdasdasd")
 	//fmt.Printf("failed to get message ids. error: %s", err)
 
-	global.AsyncWorker.Start()
+	asyncJob := &common.AsyncJob{
+		Name: "666",
+		Type: "777",
+		RunFunc: func(parameter interface{}) error {
+			time.Sleep(5 * time.Second)
+			//fmt.Println(time.Now())
+
+			return errors.New("test")
+		},
+	}
+
+	global.MessageFlowAsyncWorker.Add(asyncJob)
+	global.MessageFlowAsyncWorker.Add(asyncJob)
+	global.MessageFlowAsyncWorker.Add(asyncJob)
+	global.MessageFlowAsyncWorker.Add(asyncJob)
+	global.MessageFlowAsyncWorker.Add(asyncJob)
+	global.MessageFlowAsyncWorker.Add(asyncJob)
+
+	global.MessageFlowAsyncWorker.Add(asyncJob)
+	global.MessageFlowAsyncWorker.Add(asyncJob)
+	global.MessageFlowAsyncWorker.Add(asyncJob)
+	global.MessageFlowAsyncWorker.Add(asyncJob)
+	global.MessageFlowAsyncWorker.Add(asyncJob)
+	global.MessageFlowAsyncWorker.Add(asyncJob)
+
+	global.MessageFlowAsyncWorker.Add(asyncJob)
+	global.MessageFlowAsyncWorker.Add(asyncJob)
+	global.MessageFlowAsyncWorker.Add(asyncJob)
+	global.MessageFlowAsyncWorker.Add(asyncJob)
+	global.MessageFlowAsyncWorker.Add(asyncJob)
+	global.MessageFlowAsyncWorker.Add(asyncJob)
 
 	repositories.Init(
 		map[string]string{
@@ -68,7 +101,13 @@ func main() {
 		fmt.Println("Failed to shutdown web server. error: ", err, ".")
 	}
 
-	global.AsyncWorker.CloseAndWait()
+	fmt.Printf("there are (%d) jobs in [MessageFlowAsyncWorker]. waiting it done...\n", global.MessageFlowAsyncWorker.QueueLength())
+	global.MessageFlowAsyncWorker.CloseAndWait()
+	fmt.Printf("[MessageFlowAsyncWorker] done...")
+
+	fmt.Printf("there are (%d) jobs in [HttpRequestAsyncWorker]. waiting it done...\n", global.HttpRequestAsyncWorker.QueueLength())
+	global.HttpRequestAsyncWorker.CloseAndWait()
+	fmt.Printf("[HttpRequestAsyncWorker] done...\n")
 
 	fmt.Println("stoped...")
 }
