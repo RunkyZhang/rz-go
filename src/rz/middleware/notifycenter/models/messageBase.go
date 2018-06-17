@@ -30,15 +30,14 @@ type MessageBasePo struct {
 	PoBase
 	CallbackBasePo
 
-	Id                   int                      `gorm:"column:id;primary_key;auto_increment"`
-	SendChannel          enumerations.SendChannel `gorm:"column:sendChannel"`
-	Content              string                   `gorm:"column:content"`
-	Tos                  string                   `gorm:"column:tos"`
-	ToType               enumerations.ToType      `gorm:"column:toType"`
-	ScheduleTime         time.Time                `gorm:"column:scheduleTime"`
-	Extra                string                   `gorm:"column:extra"`
-	SystemAlias          string                   `gorm:"column:systemAlias"`
-	FinishedCallbackUrls string                   `gorm:"column:finishedCallbackUrls"`
+	Id           int                      `gorm:"column:id;primary_key;auto_increment"`
+	SendChannel  enumerations.SendChannel `gorm:"column:sendChannel"`
+	Content      string                   `gorm:"column:content"`
+	Tos          string                   `gorm:"column:tos"`
+	ToType       enumerations.ToType      `gorm:"column:toType"`
+	ScheduleTime time.Time                `gorm:"column:scheduleTime"`
+	Extra        string                   `gorm:"column:extra"`
+	SystemAlias  string                   `gorm:"column:systemAlias"`
 }
 
 func MessageBaseDtoToPo(messageBaseDto *MessageBaseDto) (*MessageBasePo) {

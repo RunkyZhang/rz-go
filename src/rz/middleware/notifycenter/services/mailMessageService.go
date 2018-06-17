@@ -6,6 +6,7 @@ import (
 	"rz/middleware/notifycenter/enumerations"
 	"rz/middleware/notifycenter/exceptions"
 	"rz/middleware/notifycenter/common"
+	"time"
 )
 
 var (
@@ -41,6 +42,7 @@ func (myself *mailMessageService) SendMail(mailMessageDto *models.MailMessageDto
 			&mailMessagePo.CallbackBasePo,
 			enumerations.Error,
 			true,
+			time.Now(),
 			exceptions.FailedEnqueueMessageId().AttachError(err).AttachMessage(common.Int32ToString(mailMessagePo.Id)).Error())
 
 		return 0, err

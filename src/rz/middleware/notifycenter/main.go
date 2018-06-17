@@ -12,6 +12,7 @@ import (
 	"rz/middleware/notifycenter/common"
 	"time"
 	"errors"
+	"rz/middleware/notifycenter/consumers"
 )
 
 // http://work.weixin.qq.com/api/doc
@@ -45,26 +46,26 @@ func main() {
 		},
 	}
 
-	global.MessageFlowAsyncWorker.Add(asyncJob)
-	global.MessageFlowAsyncWorker.Add(asyncJob)
-	global.MessageFlowAsyncWorker.Add(asyncJob)
-	global.MessageFlowAsyncWorker.Add(asyncJob)
-	global.MessageFlowAsyncWorker.Add(asyncJob)
-	global.MessageFlowAsyncWorker.Add(asyncJob)
+	global.AsyncWorker.Add(asyncJob)
+	global.AsyncWorker.Add(asyncJob)
+	global.AsyncWorker.Add(asyncJob)
+	global.AsyncWorker.Add(asyncJob)
+	global.AsyncWorker.Add(asyncJob)
+	global.AsyncWorker.Add(asyncJob)
 
-	global.MessageFlowAsyncWorker.Add(asyncJob)
-	global.MessageFlowAsyncWorker.Add(asyncJob)
-	global.MessageFlowAsyncWorker.Add(asyncJob)
-	global.MessageFlowAsyncWorker.Add(asyncJob)
-	global.MessageFlowAsyncWorker.Add(asyncJob)
-	global.MessageFlowAsyncWorker.Add(asyncJob)
+	global.AsyncWorker.Add(asyncJob)
+	global.AsyncWorker.Add(asyncJob)
+	global.AsyncWorker.Add(asyncJob)
+	global.AsyncWorker.Add(asyncJob)
+	global.AsyncWorker.Add(asyncJob)
+	global.AsyncWorker.Add(asyncJob)
 
-	global.MessageFlowAsyncWorker.Add(asyncJob)
-	global.MessageFlowAsyncWorker.Add(asyncJob)
-	global.MessageFlowAsyncWorker.Add(asyncJob)
-	global.MessageFlowAsyncWorker.Add(asyncJob)
-	global.MessageFlowAsyncWorker.Add(asyncJob)
-	global.MessageFlowAsyncWorker.Add(asyncJob)
+	global.AsyncWorker.Add(asyncJob)
+	global.AsyncWorker.Add(asyncJob)
+	global.AsyncWorker.Add(asyncJob)
+	global.AsyncWorker.Add(asyncJob)
+	global.AsyncWorker.Add(asyncJob)
+	global.AsyncWorker.Add(asyncJob)
 
 	repositories.Init(
 		map[string]string{
@@ -85,7 +86,9 @@ func main() {
 	//repositories.SmsMessageRepository.UpdateById(smsMessagePo.Id, "Test", false, "", time.Now())
 	//fmt.Println(smsMessagePo, err)
 
-	//consumers.ConsumerStart()
+	consumers.SmsMessageConsumer.Start(5 * time.Second)
+	consumers.MailMessageConsumer.Start(5 * time.Second)
+	consumers.SmsUserMessageConsumer.Start(5 * time.Second)
 
 	fmt.Println("start listening", global.Config.Web.Listen, "...")
 	controllers.MessageController.Enable()
@@ -101,13 +104,9 @@ func main() {
 		fmt.Println("Failed to shutdown web server. error: ", err, ".")
 	}
 
-	fmt.Printf("there are (%d) jobs in [MessageFlowAsyncWorker]. waiting it done...\n", global.MessageFlowAsyncWorker.QueueLength())
-	global.MessageFlowAsyncWorker.CloseAndWait()
-	fmt.Printf("[MessageFlowAsyncWorker] done...")
-
-	fmt.Printf("there are (%d) jobs in [HttpRequestAsyncWorker]. waiting it done...\n", global.HttpRequestAsyncWorker.QueueLength())
-	global.HttpRequestAsyncWorker.CloseAndWait()
-	fmt.Printf("[HttpRequestAsyncWorker] done...\n")
+	fmt.Printf("there are (%d) jobs in [AsyncWorker]. waiting it done...\n", global.AsyncWorker.QueueLength())
+	global.AsyncWorker.CloseAndWait()
+	fmt.Printf("[AsyncWorker] done...")
 
 	fmt.Println("stoped...")
 }

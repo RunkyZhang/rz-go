@@ -20,8 +20,8 @@ type MessageManagementBase struct {
 	messageRepositoryBase repositories.MessageRepositoryBase
 }
 
-func (myself *MessageManagementBase) ModifyById(id int, states string, finished bool, errorMessages string, date time.Time) (int64, error) {
-	return repositories.SmsMessageRepository.UpdateById(id, states, finished, errorMessages, date)
+func (myself *MessageManagementBase) ModifyById(id int, states string, finished bool, finishedTime time.Time, errorMessages string, date time.Time) (int64, error) {
+	return myself.messageRepositoryBase.UpdateById(id, states, finished, finishedTime, errorMessages, date)
 }
 
 func (myself *MessageManagementBase) setCallbackBasePo(callbackBasePo *models.CallbackBasePo) {
@@ -73,6 +73,7 @@ type MessageFlowJobParameter struct {
 	CallbackBasePo        *models.CallbackBasePo
 	MessageState          enumerations.MessageState
 	Finished              bool
+	FinishedTime          time.Time
 	ErrorMessage          string
 }
 
@@ -83,6 +84,7 @@ func ModifyMessageFlowAsync(
 	callbackBasePo *models.CallbackBasePo,
 	messageState enumerations.MessageState,
 	finished bool,
+	finishedTime time.Time,
 	errorMessage string) {
 	messageFlowJobParameter := &MessageFlowJobParameter{
 		MessageManagementBase: messageManagementBase,
@@ -91,6 +93,7 @@ func ModifyMessageFlowAsync(
 		CallbackBasePo:        callbackBasePo,
 		MessageState:          messageState,
 		Finished:              finished,
+		FinishedTime:          finishedTime,
 		ErrorMessage:          errorMessage,
 	}
 
@@ -101,7 +104,7 @@ func ModifyMessageFlowAsync(
 		Parameter: messageFlowJobParameter,
 	}
 
-	global.MessageFlowAsyncWorker.Add(asyncJob)
+	global.AsyncWorker.Add(asyncJob)
 }
 
 func modifyMessageFlow(parameter interface{}) (error) {
@@ -123,22 +126,21 @@ func modifyMessageFlow(parameter interface{}) (error) {
 		return err
 	}
 
+	messageFlowJobParameter.CallbackBasePo.Finished = messageFlowJobParameter.Finished
+	messageFlowJobParameter.CallbackBasePo.FinishedTime = messageFlowJobParameter.FinishedTime
 	state := enumerations.MessageStateToString(messageFlowJobParameter.MessageState)
 	messageFlowJobParameter.CallbackBasePo.States = messageFlowJobParameter.CallbackBasePo.States + "+" + state
-	var errorMessages string
-	if "" == messageFlowJobParameter.ErrorMessage {
-		errorMessages = ""
-	} else {
-		messageFlowJobParameter.CallbackBasePo.ErrorMessages =
-			messageFlowJobParameter.CallbackBasePo.ErrorMessages + "+++" + messageFlowJobParameter.ErrorMessage
-		errorMessages = messageFlowJobParameter.CallbackBasePo.ErrorMessages
+	if "" != messageFlowJobParameter.ErrorMessage {
+		messageFlowJobParameter.CallbackBasePo.ErrorMessages = messageFlowJobParameter.CallbackBasePo.ErrorMessages + "+++" + messageFlowJobParameter.ErrorMessage
 	}
+	messageFlowJobParameter.CallbackBasePo.FinishedTime = time.Now()
 
 	affectedCount, err := messageFlowJobParameter.MessageManagementBase.ModifyById(
 		messageFlowJobParameter.MessageId,
 		messageFlowJobParameter.CallbackBasePo.States,
-		messageFlowJobParameter.Finished,
-		errorMessages,
+		messageFlowJobParameter.CallbackBasePo.Finished,
+		messageFlowJobParameter.CallbackBasePo.FinishedTime,
+		messageFlowJobParameter.CallbackBasePo.ErrorMessages,
 		messageFlowJobParameter.PoBase.CreatedTime)
 	if nil != err || 0 == affectedCount {
 		return errors.New(fmt.Sprintf("failed to modify message(%d) state. error: %s", messageFlowJobParameter.MessageId, err))

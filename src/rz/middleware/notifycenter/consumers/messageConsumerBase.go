@@ -10,16 +10,20 @@ import (
 	"rz/middleware/notifycenter/common"
 	"runtime"
 	"errors"
+	"strings"
 )
 
-type convertFunc func(int, time.Time) (interface{}, *models.PoBase, *models.CallbackBasePo, error)
+type getMessageFunc func(int, time.Time) (interface{}, *models.PoBase, *models.CallbackBasePo, error)
 type sendFunc func(interface{}) (error)
+type poToDtoFunc func(interface{}) (interface{})
 
 type messageConsumerBase struct {
-	convertFunc           convertFunc
+	getMessageFunc        getMessageFunc
 	sendFunc              sendFunc
+	poToDtoFunc           poToDtoFunc
 	messageManagementBase *managements.MessageManagementBase
 	asyncJobWorker        *common.AsyncJobWorker
+	httpClient            *common.HttpClient
 }
 
 func (myself *messageConsumerBase) Start(duration time.Duration) (error) {
@@ -37,15 +41,19 @@ func (myself *messageConsumerBase) Start(duration time.Duration) (error) {
 	return nil
 }
 
+func (myself *messageConsumerBase) CloseAndWait() {
+	myself.asyncJobWorker.CloseAndWait()
+}
+
 func (myself *messageConsumerBase) start(parameter interface{}) (error) {
 	now := time.Now()
 	messageIds, err := myself.messageManagementBase.DequeueMessageIds(now)
 	if nil != err {
 		fmt.Printf("failed to get message(%s) ids. error: %s", myself.messageManagementBase.KeySuffix, err.Error())
-		return
+		return err
 	}
 	if nil == messageIds {
-		return
+		return nil
 	}
 
 	for _, messageId := range messageIds {
@@ -55,23 +63,41 @@ func (myself *messageConsumerBase) start(parameter interface{}) (error) {
 			continue
 		}
 
-		messagePo, poBase, callbackBasePo, flagError := myself.convertFunc(messageId, now)
+		messagePo, poBase, callbackBasePo, flagError := myself.getMessageFunc(messageId, now)
 		if nil == flagError {
 			flagError = myself.consume(messagePo, messageId, poBase, callbackBasePo)
-			if nil == flagError {
-				fmt.Printf("success to consume message(%d)", messageId)
-			}
 		}
 
-		if nil != flagError {
-			fmt.Printf("failed to consume message(%d). error: %s", messageId, flagError.Error())
+		var messageState enumerations.MessageState
+		if nil == flagError {
+			fmt.Printf("success to consume message(%d)\n", messageId)
+			messageState = enumerations.Sent
+		} else {
+			fmt.Printf("failed to consume message(%d). error: %s\n", messageId, flagError.Error())
+			messageState = enumerations.Error
+		}
+		managements.ModifyMessageFlowAsync(
+			myself.messageManagementBase,
+			messageId,
+			poBase,
+			callbackBasePo,
+			messageState,
+			true,
+			time.Now(),
+			flagError.Error())
 
-			var messageState enumerations.MessageState
-			businessError, ok := flagError.(*exceptions.BusinessError)
-			if ok && exceptions.MessageExpire().Code == businessError.Code {
-				messageState = enumerations.Expire
-			} else {
-				messageState = enumerations.Error
+		if "" != callbackBasePo.FinishedCallbackUrls {
+			errorMessages := ""
+			urls := strings.Split(callbackBasePo.FinishedCallbackUrls, ",")
+			for _, url := range urls {
+				messageStateCallbackRequestDto := &models.MessageStateCallbackRequestDto{
+					Message:      myself.poToDtoFunc(messagePo),
+					MessageState: messageState,
+				}
+				_, err = myself.httpClient.Post(url, messageStateCallbackRequestDto)
+				if nil != err {
+					errorMessages += errorMessages + fmt.Sprintf("+++failed to invoke url(%s)", url)
+				}
 			}
 
 			managements.ModifyMessageFlowAsync(
@@ -79,10 +105,12 @@ func (myself *messageConsumerBase) start(parameter interface{}) (error) {
 				messageId,
 				poBase,
 				callbackBasePo,
-				messageState,
+				enumerations.FinishedCallbackInvoked,
 				true,
-				flagError.Error())
+				callbackBasePo.FinishedTime,
+				errorMessages)
 		}
+
 	}
 
 	return nil
@@ -96,6 +124,7 @@ func (myself *messageConsumerBase) consume(messagePo interface{}, messageId int,
 		callbackBasePo,
 		enumerations.Consuming,
 		false,
+		time.Unix(0, 0),
 		"")
 
 	if time.Now().Unix() > callbackBasePo.ExpireTime.Unix() {
@@ -107,23 +136,5 @@ func (myself *messageConsumerBase) consume(messagePo interface{}, messageId int,
 		return err
 	}
 
-	managements.ModifyMessageFlowAsync(
-		myself.messageManagementBase,
-		messageId,
-		poBase,
-		callbackBasePo,
-		enumerations.Sent,
-		true,
-		"")
-
 	return nil
 }
-
-//func ConsumerStart() {
-//	duration := time.Duration(global.Config.ConsumingInterval) * time.Second
-//	for i := 0; i < runtime.NumCPU(); i++ {
-//		go MailMessageConsumer.Start(duration)
-//		go SmsMessageConsumer.Start(duration)
-//		time.Sleep(2 * time.Second)
-//	}
-//}

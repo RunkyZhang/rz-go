@@ -7,6 +7,7 @@ import (
 	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/managements"
 	"time"
+	"rz/middleware/notifycenter/common"
 )
 
 var (
@@ -22,9 +23,11 @@ func init() {
 		From:        global.Config.Mail.From,
 		ContentType: global.Config.Mail.ContentType,
 	}
-	MailMessageConsumer.convertFunc = MailMessageConsumer.convert
+	MailMessageConsumer.getMessageFunc = MailMessageConsumer.getMessage
 	MailMessageConsumer.sendFunc = MailMessageConsumer.Send
+	MailMessageConsumer.poToDtoFunc = MailMessageConsumer.poToDto
 	MailMessageConsumer.messageManagementBase = &managements.MailMessageManagement.MessageManagementBase
+	MailMessageConsumer.httpClient = common.NewHttpClient()
 	MailMessageConsumer.dialer = gomail.NewDialer(MailMessageConsumer.Host, MailMessageConsumer.Port, MailMessageConsumer.UserName, MailMessageConsumer.password)
 	MailMessageConsumer.dialer.Auth = &unencryptedAuth{
 		smtp.PlainAuth(
@@ -64,11 +67,17 @@ func (myself *mailMessageConsumer) Send(messageDto interface{}) error {
 	return myself.dialer.DialAndSend(message)
 }
 
-func (myself *mailMessageConsumer) convert(messageId int, date time.Time) (interface{}, *models.PoBase, *models.CallbackBasePo, error){
+func (myself *mailMessageConsumer) getMessage(messageId int, date time.Time) (interface{}, *models.PoBase, *models.CallbackBasePo, error) {
 	mailMessagePo, err := managements.MailMessageManagement.GetById(messageId, date)
 	if nil != err {
 		return nil, nil, nil, err
 	}
 
 	return mailMessagePo, &mailMessagePo.PoBase, &mailMessagePo.CallbackBasePo, nil
+}
+
+func (myself *mailMessageConsumer) poToDto(messagePo interface{}) (interface{}) {
+	mailMessagePo := messagePo.(*models.MailMessagePo)
+
+	return models.MailMessagePoToDto(mailMessagePo)
 }

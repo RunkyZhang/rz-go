@@ -8,7 +8,7 @@ type MessageRepositoryBase struct {
 	repositoryBase
 }
 
-func (myself *MessageRepositoryBase) UpdateById(id int, states string, finished bool, errorMessages string, date time.Time) (int64, error) {
+func (myself *MessageRepositoryBase) UpdateById(id int, states string, finished bool, finishedTime time.Time, errorMessages string, date time.Time) (int64, error) {
 	database, err := myself.getShardingDatabase(date)
 	if nil != err {
 		return 0, err
@@ -17,6 +17,7 @@ func (myself *MessageRepositoryBase) UpdateById(id int, states string, finished 
 	keyValues := map[string]interface{}{}
 	keyValues["states"] = states
 	keyValues["finished"] = finished
+	keyValues["finishedTime"] = finishedTime
 	keyValues["errorMessages"] = errorMessages
 	keyValues["updatedTime"] = time.Now()
 	database = database.Where("id=?", id).Updates(keyValues)

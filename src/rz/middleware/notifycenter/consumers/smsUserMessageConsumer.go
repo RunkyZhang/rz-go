@@ -4,13 +4,14 @@ import (
 	"regexp"
 	"time"
 
-	"git.zhaogangren.com/cloud/cloud.base.utils-go.sdk/httplib"
-
 	"rz/middleware/notifycenter/managements"
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/exceptions"
 	"rz/middleware/notifycenter/common"
 	"rz/middleware/notifycenter/enumerations"
+	"strings"
+	"fmt"
+	"errors"
 )
 
 var (
@@ -21,9 +22,11 @@ func init() {
 	SmsUserMessageConsumer = &smsUserMessageConsumer{
 		regularExpressions: make(map[string]*regexp.Regexp),
 	}
-	SmsUserMessageConsumer.convertFunc = SmsUserMessageConsumer.convert
+	SmsUserMessageConsumer.getMessageFunc = SmsUserMessageConsumer.getMessage
 	SmsUserMessageConsumer.sendFunc = SmsUserMessageConsumer.Send
+	SmsUserMessageConsumer.poToDtoFunc = SmsUserMessageConsumer.poToDto
 	SmsUserMessageConsumer.messageManagementBase = &managements.SmsUserMessageManagement.MessageManagementBase
+	SmsUserMessageConsumer.httpClient = common.NewHttpClient()
 }
 
 type smsUserMessageConsumer struct {
@@ -66,20 +69,37 @@ func (myself *smsUserMessageConsumer) Send(messagePo interface{}) (error) {
 		Template:    models.SmsTemplatePoToDto(smsTemplatePo),
 		UserMessage: models.SmsUserMessagePoToDto(smsUserMessagePo),
 	}
-	for _, userCallbackUrl := range smsTemplatePo.UserCallbackUrls {
-		httplib.Post(userCallbackUrl, smsUserCallbackRequestDto)
+
+	errorMessages := ""
+	urls := strings.Split(smsTemplatePo.UserCallbackUrls, ",")
+	for _, url := range urls {
+		_, err = myself.httpClient.Post(url, smsUserCallbackRequestDto)
+		if nil != err {
+			errorMessages += errorMessages + fmt.Sprintf("+++failed to invoke url(%s)", url)
+		}
+	}
+
+	if "" != errorMessages {
+		return errors.New(errorMessages)
 	}
 
 	return nil
 }
 
-func (myself *smsUserMessageConsumer) convert(messageId int, date time.Time) (interface{}, *models.PoBase, *models.CallbackBasePo, error) {
+func (myself *smsUserMessageConsumer) getMessage(messageId int, date time.Time) (interface{}, *models.PoBase, *models.CallbackBasePo, error) {
 	smsUserMessagePo, err := managements.SmsUserMessageManagement.GetById(messageId, date)
 	if nil != err {
 		return nil, nil, nil, err
 	}
 
 	return smsUserMessagePo, &smsUserMessagePo.PoBase, &smsUserMessagePo.CallbackBasePo, nil
+}
+
+
+func (myself *smsUserMessageConsumer) poToDto(messagePo interface{}) (interface{}) {
+	smsUserMessagePo := messagePo.(*models.SmsUserMessagePo)
+
+	return models.SmsUserMessagePoToDto(smsUserMessagePo)
 }
 
 //func (myself *smsUserCallbackConsumer) Start(duration time.Duration) {

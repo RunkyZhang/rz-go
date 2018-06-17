@@ -6,6 +6,7 @@ import (
 	"rz/middleware/notifycenter/enumerations"
 	"rz/middleware/notifycenter/exceptions"
 	"rz/middleware/notifycenter/common"
+	"time"
 )
 
 var (
@@ -32,15 +33,6 @@ func (myself *smsMessageService) SendSms(smsMessageDto *models.SmsMessageDto) (i
 		return 0, err
 	}
 
-	managements.ModifyMessageFlowAsync(
-		myself.messageManagementBase,
-		smsMessagePo.Id,
-		&smsMessagePo.PoBase,
-		&smsMessagePo.CallbackBasePo,
-		enumerations.Error,
-		true,
-		"Test")
-
 	err = managements.SmsMessageManagement.EnqueueMessageIds(smsMessagePo.Id, smsMessagePo.ScheduleTime.Unix())
 	if nil != err {
 		managements.ModifyMessageFlowAsync(
@@ -50,6 +42,7 @@ func (myself *smsMessageService) SendSms(smsMessageDto *models.SmsMessageDto) (i
 			&smsMessagePo.CallbackBasePo,
 			enumerations.Error,
 			true,
+			time.Now(),
 			exceptions.FailedEnqueueMessageId().AttachError(err).AttachMessage(common.Int32ToString(smsMessagePo.Id)).Error())
 
 		return 0, err

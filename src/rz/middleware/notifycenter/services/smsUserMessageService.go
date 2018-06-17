@@ -7,6 +7,7 @@ import (
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/exceptions"
 	"rz/middleware/notifycenter/enumerations"
+	"time"
 )
 
 var (
@@ -65,6 +66,7 @@ func (myself *smsUserMessageService) Add(
 				&smsUserMessagePo.CallbackBasePo,
 				enumerations.Error,
 				true,
+				time.Now(),
 				exceptions.FailedEnqueueMessageId().AttachError(err).AttachMessage(common.Int32ToString(smsUserMessagePo.Id)).Error())
 
 			return &external.SmsUserCallbackMessageResponseExternalDto{

@@ -28,10 +28,6 @@ func NewAsyncJobWorker(workerCount int, duration time.Duration, defaultAsyncJob 
 	asyncJobWorker.workerCount = workerCount
 	asyncJobWorker.closedChan = make(chan bool, asyncJobWorker.workerCount)
 
-	for i := 0; i < asyncJobWorker.workerCount; i++ {
-		go asyncJobWorker.start(i)
-	}
-
 	return asyncJobWorker
 }
 
@@ -39,14 +35,33 @@ type AsyncJobWorker struct {
 	queue           Queue
 	duration        time.Duration
 	closed          bool
+	started         bool
 	closedChan      chan bool
 	workerCount     int
 	defaultAsyncJob *AsyncJob
 	lock            sync.Mutex
 }
 
+func (myself *AsyncJobWorker) Start() {
+	if myself.started {
+		return
+	}
+
+	myself.lock.Lock()
+	defer myself.lock.Unlock()
+
+	if myself.started {
+		return
+	}
+
+	for i := 0; i < myself.workerCount; i++ {
+		go myself.start(i)
+	}
+
+}
+
 func (myself *AsyncJobWorker) start(id int) {
-	var aysncJob *AsyncJob
+	var currentAaysncJob *AsyncJob
 
 	defer func() {
 		err := recover()
@@ -58,10 +73,10 @@ func (myself *AsyncJobWorker) start(id int) {
 					myself.defaultAsyncJob.Name,
 					id,
 					err)
-			} else if nil != aysncJob {
+			} else if nil != currentAaysncJob {
 				fmt.Printf("panic on job(type: %s; name: %s) in goroutine(%d). error: %s\n",
-					aysncJob.Type,
-					aysncJob.Name,
+					currentAaysncJob.Type,
+					currentAaysncJob.Name,
 					id,
 					err)
 			} else {
@@ -78,12 +93,12 @@ func (myself *AsyncJobWorker) start(id int) {
 		} else {
 			for ; 0 < myself.queue.Length(); {
 				item := myself.queue.Dequeue()
-				aysncJob = item.(*AsyncJob)
-				if nil == aysncJob {
+				currentAaysncJob = item.(*AsyncJob)
+				if nil == currentAaysncJob {
 					continue
 				}
 
-				err := aysncJob.RunFunc(aysncJob.Parameter)
+				err := currentAaysncJob.RunFunc(currentAaysncJob.Parameter)
 				fmt.Printf("failed to run job in goroutine(%d). error: %s\n", id, err)
 			}
 		}

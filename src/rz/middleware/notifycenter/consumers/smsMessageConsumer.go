@@ -10,8 +10,6 @@ import (
 	"errors"
 	"strings"
 
-	"git.zhaogangren.com/cloud/cloud.base.utils-go.sdk/httplib"
-
 	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/models/external"
 	"rz/middleware/notifycenter/models"
@@ -30,10 +28,11 @@ func init() {
 		AppKey:            global.Config.Sms.AppKey,
 		DefaultNationCode: global.Config.Sms.DefaultNationCode,
 	}
-
-	SmsMessageConsumer.convertFunc = SmsMessageConsumer.convert
+	SmsMessageConsumer.getMessageFunc = SmsMessageConsumer.getMessage
 	SmsMessageConsumer.sendFunc = SmsMessageConsumer.Send
+	SmsMessageConsumer.poToDtoFunc = SmsMessageConsumer.poToDto
 	SmsMessageConsumer.messageManagementBase = &managements.SmsMessageManagement.MessageManagementBase
+	SmsMessageConsumer.httpClient = common.NewHttpClient()
 }
 
 type smsMessageConsumer struct {
@@ -43,6 +42,7 @@ type smsMessageConsumer struct {
 	AppKey            string
 	AppId             string
 	DefaultNationCode string
+	httpClient        *common.HttpClient
 }
 
 func (myself *smsMessageConsumer) Send(messagePo interface{}) (error) {
@@ -52,7 +52,7 @@ func (myself *smsMessageConsumer) Send(messagePo interface{}) (error) {
 	smsMessageRequestExternalDto := myself.buildSmsMessageRequestExternalDto(smsMessagePo, randomNumber)
 
 	url := fmt.Sprintf("%s?sdkappid=%s&random=%s", myself.Url, myself.AppId, randomNumber)
-	bytes, err := httplib.Post(url, smsMessageRequestExternalDto)
+	bytes, err := myself.httpClient.Post(url, smsMessageRequestExternalDto)
 	if nil != err {
 		return err
 	}
@@ -123,11 +123,17 @@ func (myself *smsMessageConsumer) buildPhoneNumberPackExternalDtos(smsMessagePo 
 	return phoneNumberPackExternalDtos
 }
 
-func (myself *smsMessageConsumer) convert(messageId int, date time.Time) (interface{}, *models.PoBase, *models.CallbackBasePo, error) {
+func (myself *smsMessageConsumer) getMessage(messageId int, date time.Time) (interface{}, *models.PoBase, *models.CallbackBasePo, error) {
 	smsMessagePo, err := managements.SmsMessageManagement.GetById(messageId, date)
 	if nil != err {
 		return nil, nil, nil, err
 	}
 
 	return smsMessagePo, &smsMessagePo.PoBase, &smsMessagePo.CallbackBasePo, nil
+}
+
+func (myself *smsMessageConsumer) poToDto(messagePo interface{}) (interface{}) {
+	smsMessagePo := messagePo.(*models.SmsMessagePo)
+
+	return models.SmsMessagePoToDto(smsMessagePo)
 }
