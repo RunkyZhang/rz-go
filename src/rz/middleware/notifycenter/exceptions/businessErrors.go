@@ -19,4 +19,5 @@ var (
 	TemplateIdNotExist      = func() (*BusinessError) { return newBusinessError("Template id is not exist", 30012) }
 	InvalidPattern          = func() (*BusinessError) { return newBusinessError("Invalid pattern", 30013) }
 	PatternNotMatch         = func() (*BusinessError) { return newBusinessError("Pattern is not match string", 30014) }
+	FailedInvokeController  = func() (*BusinessError) { return newBusinessError("Failed invoke controller", 30015) }
 )

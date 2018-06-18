@@ -9,6 +9,7 @@ import (
 
 var (
 	AsyncWorker = common.NewAsyncJobWorker(5, 1*time.Second)
+	WebService  = common.NewWebService(Config.Web.Listen)
 
 	redisClient *common.RedisClient = nil
 	redisLock   sync.Mutex

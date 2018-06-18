@@ -6,7 +6,6 @@ import (
 	"os/signal"
 
 	"rz/middleware/notifycenter/controllers"
-	"rz/middleware/notifycenter/web"
 	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/repositories"
 	"rz/middleware/notifycenter/common"
@@ -93,13 +92,13 @@ func main() {
 	fmt.Println("start listening", global.Config.Web.Listen, "...")
 	controllers.MessageController.Enable()
 
-	web.Start()
+	global.WebService.Start()
 
 	exit := make(chan os.Signal)
 	signal.Notify(exit, os.Interrupt, os.Kill)
 	<-exit
 
-	err = web.Stop()
+	err = global.WebService.Stop()
 	if nil != err {
 		fmt.Println("Failed to shutdown web server. error: ", err, ".")
 	}

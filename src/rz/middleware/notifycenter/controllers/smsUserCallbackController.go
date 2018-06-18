@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"rz/middleware/notifycenter/web"
 	"rz/middleware/notifycenter/services"
 	"rz/middleware/notifycenter/models/external"
+	"rz/middleware/notifycenter/common"
 )
 
 func smsUserCallback(dto interface{}) (interface{}, error) {
@@ -15,7 +15,7 @@ func smsUserCallback(dto interface{}) (interface{}, error) {
 // MVC structure
 var (
 	SmsUserCallbackController = smsUserCallbackController{
-		SmsUserCallbackControllerPack: &web.ControllerPack{
+		SmsUserCallbackControllerPack: &common.ControllerPack{
 			Pattern:          "/message/sms-callback",
 			ControllerFunc:   smsUserCallback,
 			ConvertToDtoFunc: ConvertToSmsCallbackMessageDto,
@@ -26,7 +26,7 @@ var (
 type smsUserCallbackController struct {
 	ControllerBase
 
-	SmsUserCallbackControllerPack *web.ControllerPack
+	SmsUserCallbackControllerPack *common.ControllerPack
 }
 
 func (smsCallbackController *smsUserCallbackController) Enable() {

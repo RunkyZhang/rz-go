@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"rz/middleware/notifycenter/models"
-	"rz/middleware/notifycenter/web"
 	"rz/middleware/notifycenter/services"
+	"rz/middleware/notifycenter/common"
 )
 
 func sendMail(dto interface{}) (interface{}, error) {
@@ -21,12 +21,12 @@ func sendSms(dto interface{}) (interface{}, error) {
 // MVC structure
 var (
 	MessageController = messageController{
-		SendMailControllerPack: &web.ControllerPack{
+		SendMailControllerPack: &common.ControllerPack{
 			Pattern:          "/message/send-mail",
 			ControllerFunc:   sendMail,
 			ConvertToDtoFunc: ConvertToMailMessageDto,
 		},
-		SendSmsControllerPack: &web.ControllerPack{
+		SendSmsControllerPack: &common.ControllerPack{
 			Pattern:          "/message/send-sms",
 			ControllerFunc:   sendSms,
 			ConvertToDtoFunc: ConvertToSmsMessageDto,
@@ -37,8 +37,8 @@ var (
 type messageController struct {
 	ControllerBase
 
-	SendMailControllerPack *web.ControllerPack
-	SendSmsControllerPack  *web.ControllerPack
+	SendMailControllerPack *common.ControllerPack
+	SendSmsControllerPack  *common.ControllerPack
 }
 
 func (messageController *messageController) Enable() {

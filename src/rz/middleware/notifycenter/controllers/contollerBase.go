@@ -3,7 +3,8 @@ package controllers
 import (
 	"reflect"
 
-	"rz/middleware/notifycenter/web"
+	"rz/middleware/notifycenter/global"
+	"rz/middleware/notifycenter/common"
 )
 
 type ControllerBase struct {
@@ -17,9 +18,9 @@ func (*ControllerBase) Enable(controller interface{}) {
 		field := messageControllerType.Field(i)
 		// CanInterface check the field is public or private
 		if field.CanInterface() {
-			controllerPack, ok := field.Interface().(*web.ControllerPack)
+			controllerPack, ok := field.Interface().(*common.ControllerPack)
 			if ok {
-				web.RegisterController(controllerPack)
+				global.WebService.RegisterStandardController(controllerPack)
 			}
 		}
 	}
