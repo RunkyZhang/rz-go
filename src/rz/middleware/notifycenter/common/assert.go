@@ -14,16 +14,16 @@ type assert struct {
 
 func (*assert) IsNotNilToPanic(value interface{}, name string) {
 	if nil == value {
-		panic("the parameter[" + name + "] is nil")
+		panic(fmt.Sprintf("the parameter(%s) is nil", name))
 	}
 }
 
 func (*assert) IsNilErrorToPanic(err error, message string) {
 	if nil != err {
 		if "" == message {
-			panic("the err[" + err.Error() + "] is nil")
+			panic(fmt.Sprintf("the err(%s) is nil", err.Error()))
 		} else {
-			panic("the err[" + err.Error() + "] is nil. message: " + message)
+			panic(fmt.Sprintf("the err(%s) is nil. message: %s", err.Error(), message))
 		}
 	}
 }

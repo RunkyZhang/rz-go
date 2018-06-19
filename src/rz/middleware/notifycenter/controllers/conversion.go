@@ -7,23 +7,36 @@ import (
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/models/external"
 	"rz/middleware/notifycenter/exceptions"
+	"rz/middleware/notifycenter/common"
 )
 
 func ConvertToMailMessageDto(body io.ReadCloser) (interface{}, error) {
-	var mailMessageDto models.MailMessageDto
+	err := common.Assert.IsNotNilToError(body, "body")
+	if nil != err {
+		return nil, err
+	}
 
+	var mailMessageDto models.MailMessageDto
 	return convertToDto(body, &mailMessageDto)
 }
 
 func ConvertToSmsMessageDto(body io.ReadCloser) (interface{}, error) {
-	var smsMessageDto models.SmsMessageDto
+	err := common.Assert.IsNotNilToError(body, "body")
+	if nil != err {
+		return nil, err
+	}
 
+	var smsMessageDto models.SmsMessageDto
 	return convertToDto(body, &smsMessageDto)
 }
 
 func ConvertToSmsCallbackMessageDto(body io.ReadCloser) (interface{}, error) {
-	var smsUserCallbackMessageRequestExternalDto external.SmsUserCallbackMessageRequestExternalDto
+	err := common.Assert.IsNotNilToError(body, "body")
+	if nil != err {
+		return nil, err
+	}
 
+	var smsUserCallbackMessageRequestExternalDto external.SmsUserCallbackMessageRequestExternalDto
 	return convertToDto(body, &smsUserCallbackMessageRequestExternalDto)
 }
 

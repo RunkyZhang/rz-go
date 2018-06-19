@@ -1,22 +1,10 @@
 package controllers
 
 import (
-	"rz/middleware/notifycenter/models"
-	"rz/middleware/notifycenter/services"
 	"rz/middleware/notifycenter/common"
+	"rz/middleware/notifycenter/services"
+	"rz/middleware/notifycenter/models"
 )
-
-func sendMail(dto interface{}) (interface{}, error) {
-	mailMessageDto := dto.(*models.MailMessageDto)
-
-	return services.MailMessageService.SendMail(mailMessageDto)
-}
-
-func sendSms(dto interface{}) (interface{}, error) {
-	smsMessageDto := dto.(*models.SmsMessageDto)
-
-	return services.SmsMessageService.SendSms(smsMessageDto)
-}
 
 // MVC structure
 var (
@@ -41,6 +29,22 @@ type messageController struct {
 	SendSmsControllerPack  *common.ControllerPack
 }
 
-func (messageController *messageController) Enable() {
-	messageController.ControllerBase.Enable(MessageController)
+func sendMail(dto interface{}) (interface{}, error) {
+	mailMessageDto := dto.(*models.MailMessageDto)
+	err := common.Assert.IsNotNilToError(mailMessageDto, "mailMessageDto")
+	if nil != err {
+		return nil, err
+	}
+
+	return services.MailMessageService.SendMail(mailMessageDto)
+}
+
+func sendSms(dto interface{}) (interface{}, error) {
+	smsMessageDto := dto.(*models.SmsMessageDto)
+	err := common.Assert.IsNotNilToError(smsMessageDto, "smsMessageDto")
+	if nil != err {
+		return nil, err
+	}
+
+	return services.SmsMessageService.SendSms(smsMessageDto)
 }

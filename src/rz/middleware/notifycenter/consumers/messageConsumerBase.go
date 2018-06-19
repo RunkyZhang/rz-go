@@ -117,6 +117,19 @@ func (myself *messageConsumerBase) start(parameter interface{}) (error) {
 }
 
 func (myself *messageConsumerBase) consume(messagePo interface{}, messageId int, poBase *models.PoBase, callbackBasePo *models.CallbackBasePo) (error) {
+	err := common.Assert.IsNotNilToError(messagePo, "messagePo")
+	if nil != err {
+		return err
+	}
+	err = common.Assert.IsNotNilToError(poBase, "poBase")
+	if nil != err {
+		return err
+	}
+	err = common.Assert.IsNotNilToError(callbackBasePo, "callbackBasePo")
+	if nil != err {
+		return err
+	}
+
 	managements.ModifyMessageFlowAsync(
 		myself.messageManagementBase,
 		messageId,
@@ -131,7 +144,7 @@ func (myself *messageConsumerBase) consume(messagePo interface{}, messageId int,
 		return exceptions.MessageExpire().AttachMessage(common.Int32ToString(messageId))
 	}
 
-	err := myself.sendFunc(messagePo)
+	err = myself.sendFunc(messagePo)
 	if nil != err {
 		return err
 	}

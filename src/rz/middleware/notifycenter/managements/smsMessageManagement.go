@@ -5,6 +5,7 @@ import (
 	"rz/middleware/notifycenter/repositories"
 	"rz/middleware/notifycenter/enumerations"
 	"time"
+	"rz/middleware/notifycenter/common"
 )
 
 var (
@@ -22,6 +23,19 @@ type smsMessageManagement struct {
 }
 
 func (myself *smsMessageManagement) Add(smsMessagePo *models.SmsMessagePo) (error) {
+	err := common.Assert.IsNotNilToError(smsMessagePo, "smsMessagePo")
+	if nil != err {
+		return err
+	}
+	err = common.Assert.IsNotNilToError(smsMessagePo.PoBase, "smsMessagePo.PoBase")
+	if nil != err {
+		return err
+	}
+	err = common.Assert.IsNotNilToError(smsMessagePo.CallbackBasePo, "smsMessagePo.CallbackBasePo")
+	if nil != err {
+		return err
+	}
+
 	myself.setPoBase(&smsMessagePo.PoBase)
 	myself.setCallbackBasePo(&smsMessagePo.CallbackBasePo)
 	smsMessagePo.SendChannel = myself.SendChannel

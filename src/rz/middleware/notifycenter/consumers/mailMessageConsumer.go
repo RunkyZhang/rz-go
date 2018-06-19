@@ -54,8 +54,10 @@ type mailMessageConsumer struct {
 
 func (myself *mailMessageConsumer) Send(messageDto interface{}) error {
 	mailMessageDto := messageDto.(*models.MailMessageDto)
-
-	return nil
+	err := common.Assert.IsNotNilToError(mailMessageDto, "mailMessageDto")
+	if nil != err {
+		return err
+	}
 
 	message := gomail.NewMessage()
 	message.SetHeader("From", myself.From)

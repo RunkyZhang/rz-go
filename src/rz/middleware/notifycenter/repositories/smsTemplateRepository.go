@@ -3,6 +3,7 @@ package repositories
 import (
 	"time"
 	"rz/middleware/notifycenter/models"
+	"rz/middleware/notifycenter/common"
 )
 
 var (
@@ -19,6 +20,11 @@ type smsTemplateRepository struct {
 }
 
 func (myself *smsTemplateRepository) Insert(smsTemplatePo *models.SmsTemplatePo) (error) {
+	err := common.Assert.IsNotNilToError(smsTemplatePo, "smsTemplatePo")
+	if nil != err {
+		return err
+	}
+
 	return myself.repositoryBase.Insert(smsTemplatePo, nil)
 }
 

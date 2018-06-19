@@ -37,6 +37,10 @@ type smsUserMessageConsumer struct {
 
 func (myself *smsUserMessageConsumer) Send(messagePo interface{}) (error) {
 	smsUserMessagePo := messagePo.(*models.SmsUserMessagePo)
+	err := common.Assert.IsNotNilToError(messagePo, "smsMessagePo")
+	if nil != err {
+		return err
+	}
 
 	smsTemplatePo, err := managements.SmsTemplateManagement.GetByTemplateId(smsUserMessagePo.TemplateId)
 	if nil != err {

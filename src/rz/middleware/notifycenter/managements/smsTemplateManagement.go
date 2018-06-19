@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"errors"
 	"rz/middleware/notifycenter/repositories"
+	"rz/middleware/notifycenter/common"
 )
 
 var (
@@ -25,6 +26,15 @@ type smsTemplateManagement struct {
 }
 
 func (myself *smsTemplateManagement) Add(smsTemplatePo *models.SmsTemplatePo) (error) {
+	err := common.Assert.IsNotNilToError(smsTemplatePo, "smsTemplatePo")
+	if nil != err {
+		return err
+	}
+	err = common.Assert.IsNotNilToError(smsTemplatePo.PoBase, "smsTemplatePo.PoBase")
+	if nil != err {
+		return err
+	}
+
 	myself.setPoBase(&smsTemplatePo.PoBase)
 
 	return repositories.SmsTemplateRepository.Insert(smsTemplatePo)

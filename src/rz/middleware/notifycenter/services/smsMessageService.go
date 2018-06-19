@@ -22,7 +22,12 @@ type smsMessageService struct {
 }
 
 func (myself *smsMessageService) SendSms(smsMessageDto *models.SmsMessageDto) (int, error) {
-	err := VerifySmsMessageDto(smsMessageDto)
+	err := common.Assert.IsNotNilToError(smsMessageDto, "smsMessageDto")
+	if nil != err {
+		return 0, err
+	}
+
+	err = VerifySmsMessageDto(smsMessageDto)
 	if nil != err {
 		return 0, err
 	}

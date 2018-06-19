@@ -5,6 +5,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"errors"
 	"fmt"
+	"rz/middleware/notifycenter/common"
 )
 
 var (
@@ -46,6 +47,11 @@ type repositoryBase struct {
 }
 
 func (myself *repositoryBase) Insert(po interface{}, shardingParameters ...interface{}) (error) {
+	err := common.Assert.IsNotNilToError(po, "po")
+	if nil != err {
+		return err
+	}
+
 	database, err := myself.getShardingDatabase(shardingParameters...)
 	if nil != err {
 		return err
@@ -55,6 +61,11 @@ func (myself *repositoryBase) Insert(po interface{}, shardingParameters ...inter
 }
 
 func (myself *repositoryBase) Update(po interface{}, shardingParameters ...interface{}) (error) {
+	err := common.Assert.IsNotNilToError(po, "po")
+	if nil != err {
+		return err
+	}
+
 	database, err := myself.getShardingDatabase(shardingParameters...)
 	if nil != err {
 		return err
@@ -64,6 +75,11 @@ func (myself *repositoryBase) Update(po interface{}, shardingParameters ...inter
 }
 
 func (myself *repositoryBase) SelectById(id int, po interface{}, shardingParameters ...interface{}) (error) {
+	err := common.Assert.IsNotNilToError(po, "po")
+	if nil != err {
+		return err
+	}
+
 	database, err := myself.getShardingDatabase(shardingParameters...)
 	if nil != err {
 		return err
@@ -73,6 +89,11 @@ func (myself *repositoryBase) SelectById(id int, po interface{}, shardingParamet
 }
 
 func (myself *repositoryBase) SelectAll(pos interface{}, shardingParameters ...interface{}) (error) {
+	err := common.Assert.IsNotNilToError(pos, "pos")
+	if nil != err {
+		return err
+	}
+
 	database, err := myself.getShardingDatabase(shardingParameters...)
 	if nil != err {
 		return err

@@ -24,17 +24,13 @@ func (myself *MessageManagementBase) ModifyById(id int, states string, finished 
 	return myself.messageRepositoryBase.UpdateById(id, states, finished, finishedTime, errorMessages, date)
 }
 
-func (myself *MessageManagementBase) setCallbackBasePo(callbackBasePo *models.CallbackBasePo) {
-	callbackBasePo.States = enumerations.MessageStateToString(enumerations.Initial)
-}
-
 func (myself *MessageManagementBase) RemoveMessageId(messageId int) (int64, error) {
-	return global.GetRedisClient().SortedSetRemoveByValue(global.RedisKeyMessageIds+myself.KeySuffix, common.Int32ToString(messageId))
+	return global.RedisClient.SortedSetRemoveByValue(global.RedisKeyMessageIds+myself.KeySuffix, common.Int32ToString(messageId))
 }
 
 func (myself *MessageManagementBase) DequeueMessageIds(now time.Time) ([]int, error) {
 	max := float64(now.Unix())
-	messageIds, err := global.GetRedisClient().SortedSetRangeByScore(global.RedisKeyMessageIds+myself.KeySuffix, 0, max)
+	messageIds, err := global.RedisClient.SortedSetRangeByScore(global.RedisKeyMessageIds+myself.KeySuffix, 0, max)
 	if nil != err {
 		return nil, err
 	}
@@ -60,10 +56,14 @@ func (myself *MessageManagementBase) DequeueMessageIds(now time.Time) ([]int, er
 }
 
 func (myself *MessageManagementBase) EnqueueMessageIds(messageId int, score int64) (error) {
-	return global.GetRedisClient().SortedSetAdd(
+	return global.RedisClient.SortedSetAdd(
 		global.RedisKeyMessageIds+myself.KeySuffix,
 		common.Int32ToString(messageId),
 		float64(score))
+}
+
+func (myself *MessageManagementBase) setCallbackBasePo(callbackBasePo *models.CallbackBasePo) {
+	callbackBasePo.States = enumerations.MessageStateToString(enumerations.Initial)
 }
 
 type MessageFlowJobParameter struct {
@@ -121,7 +121,7 @@ func modifyMessageFlow(parameter interface{}) (error) {
 	if nil != err {
 		return err
 	}
-	err = common.Assert.IsNotNilToError(messageFlowJobParameter.CallbackBasePo, "messageFlowJobParameter.messageManagementBase")
+	err = common.Assert.IsNotNilToError(messageFlowJobParameter.CallbackBasePo, "messageFlowJobParameter.CallbackBasePo")
 	if nil != err {
 		return err
 	}

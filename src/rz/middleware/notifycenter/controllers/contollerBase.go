@@ -10,7 +10,7 @@ import (
 type ControllerBase struct {
 }
 
-func (*ControllerBase) Enable(controller interface{}) {
+func (myself *ControllerBase) Enable(controller interface{}) {
 	messageControllerType := reflect.ValueOf(controller)
 	fieldCount := messageControllerType.NumField()
 

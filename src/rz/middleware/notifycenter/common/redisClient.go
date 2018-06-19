@@ -12,7 +12,7 @@ type doFunc func(redis.Conn) (interface{}, error)
 type RedisClient struct {
 	redisPool *redis.Pool
 
-	RedisClientSettings RedisClientSettings
+	RedisClientSettings *RedisClientSettings
 }
 
 type RedisClientSettings struct {
@@ -26,20 +26,28 @@ type RedisClientSettings struct {
 	Address         string
 }
 
-func (myself *RedisClient) Init() {
-	myself.redisPool = &redis.Pool{
-		MaxActive:   myself.RedisClientSettings.PoolMaxActive,
-		MaxIdle:     myself.RedisClientSettings.PoolMaxIdle,
-		Wait:        myself.RedisClientSettings.PoolWait,
-		IdleTimeout: myself.RedisClientSettings.PoolIdleTimeout,
+func NewRedisClient(redisClientSettings *RedisClientSettings) (*RedisClient, error) {
+	err := Assert.IsNotNilToError(redisClientSettings, "redisClientSettings")
+	if nil != err {
+		return nil, err
+	}
+
+	redisClient := &RedisClient{
+		RedisClientSettings: redisClientSettings,
+	}
+	redisClient.redisPool = &redis.Pool{
+		MaxActive:   redisClient.RedisClientSettings.PoolMaxActive,
+		MaxIdle:     redisClient.RedisClientSettings.PoolMaxIdle,
+		Wait:        redisClient.RedisClientSettings.PoolWait,
+		IdleTimeout: redisClient.RedisClientSettings.PoolIdleTimeout,
 
 		Dial: func() (redis.Conn, error) {
 			conn, err := redis.Dial(
 				"tcp",
-				myself.RedisClientSettings.Address,
-				redis.DialDatabase(myself.RedisClientSettings.DatabaseId),
-				redis.DialPassword(myself.RedisClientSettings.Password),
-				redis.DialConnectTimeout(myself.RedisClientSettings.ConnectTimeout))
+				redisClient.RedisClientSettings.Address,
+				redis.DialDatabase(redisClient.RedisClientSettings.DatabaseId),
+				redis.DialPassword(redisClient.RedisClientSettings.Password),
+				redis.DialConnectTimeout(redisClient.RedisClientSettings.ConnectTimeout))
 			if nil != err {
 				return nil, err
 			}
@@ -47,6 +55,8 @@ func (myself *RedisClient) Init() {
 			return conn, nil
 		},
 	}
+
+	return redisClient, nil
 }
 
 func (myself *RedisClient) Ping() (bool, error) {

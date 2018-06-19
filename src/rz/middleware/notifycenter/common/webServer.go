@@ -109,6 +109,19 @@ func (myself *webService) RegisterCommonController(controllerPack *ControllerPac
 	})
 }
 
+func (myself *webService) Start() {
+	go myself.start()
+}
+
+func (myself *webService) Stop() (error) {
+	if nil == myself.server {
+		return errors.New("the server is not started")
+	}
+
+	timeoutContext, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	return myself.server.Shutdown(timeoutContext)
+}
+
 func (*webService) toResponseDto(err error) ResponseDto {
 	businessError, ok := err.(*exceptions.BusinessError)
 	if ok {
@@ -125,19 +138,6 @@ func (*webService) toResponseDto(err error) ResponseDto {
 		Message: exceptionsInternalServerError.Error(),
 		Data:    nil,
 	}
-}
-
-func (myself *webService) Start() {
-	go myself.start()
-}
-
-func (myself *webService) Stop() (error) {
-	if nil == myself.server {
-		return errors.New("the server is not started")
-	}
-
-	timeoutContext, _ := context.WithTimeout(context.Background(), 5*time.Second)
-	return myself.server.Shutdown(timeoutContext)
 }
 
 func (myself *webService) wrapResponseWriter(responseWriter http.ResponseWriter, body interface{}) {

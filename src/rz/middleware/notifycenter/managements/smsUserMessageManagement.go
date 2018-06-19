@@ -1,11 +1,11 @@
 package managements
 
 import (
-	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/repositories"
 	"rz/middleware/notifycenter/enumerations"
 	"time"
+	"rz/middleware/notifycenter/common"
 )
 
 var (
@@ -23,6 +23,19 @@ type smsUserMessageManagement struct {
 }
 
 func (myself *smsUserMessageManagement) Add(smsUserMessagePo *models.SmsUserMessagePo) (error) {
+	err := common.Assert.IsNotNilToError(smsUserMessagePo, "smsUserMessagePo")
+	if nil != err {
+		return err
+	}
+	err = common.Assert.IsNotNilToError(smsUserMessagePo.PoBase, "smsUserMessagePo.PoBase")
+	if nil != err {
+		return err
+	}
+	err = common.Assert.IsNotNilToError(smsUserMessagePo.CallbackBasePo, "smsUserMessagePo.CallbackBasePo")
+	if nil != err {
+		return err
+	}
+
 	myself.setPoBase(&smsUserMessagePo.PoBase)
 	myself.setCallbackBasePo(&smsUserMessagePo.CallbackBasePo)
 
@@ -31,12 +44,6 @@ func (myself *smsUserMessageManagement) Add(smsUserMessagePo *models.SmsUserMess
 
 func (myself *smsUserMessageManagement) GetByPhoneNumber(nationCode string, phoneNumber string) ([]models.SmsUserMessagePo, error) {
 	return repositories.SmsUserMessageRepository.SelectByPhoneNumber(nationCode, phoneNumber)
-}
-
-func (myself *smsUserMessageManagement) RemoveById(id string) (bool, error) {
-	count, err := global.GetRedisClient().HashDelete(global.RedisKeySmsUserCallbackMessages, id)
-
-	return 0 < count, err
 }
 
 func (myself *smsUserMessageManagement) GetById(id int, date time.Time) (*models.SmsUserMessagePo, error) {

@@ -24,6 +24,14 @@ type smsUserMessageService struct {
 
 func (myself *smsUserMessageService) Add(
 	smsUserCallbackMessageRequestExternalDto *external.SmsUserCallbackMessageRequestExternalDto) (*external.SmsUserCallbackMessageResponseExternalDto) {
+	err := common.Assert.IsNotNilToError(smsUserCallbackMessageRequestExternalDto, "smsUserCallbackMessageRequestExternalDto")
+	if nil != err {
+		return &external.SmsUserCallbackMessageResponseExternalDto{
+			Result: 1,
+			Errmsg: "invalid request body",
+		}
+	}
+
 	extend, err := common.StringToInt32(smsUserCallbackMessageRequestExternalDto.Extend)
 	if nil != err {
 		return &external.SmsUserCallbackMessageResponseExternalDto{

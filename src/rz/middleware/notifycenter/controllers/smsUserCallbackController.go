@@ -6,12 +6,6 @@ import (
 	"rz/middleware/notifycenter/common"
 )
 
-func smsUserCallback(dto interface{}) (interface{}, error) {
-	smsUserCallbackMessageRequestExternalDto := dto.(*external.SmsUserCallbackMessageRequestExternalDto)
-
-	return services.SmsUserMessageService.Add(smsUserCallbackMessageRequestExternalDto), nil
-}
-
 // MVC structure
 var (
 	SmsUserCallbackController = smsUserCallbackController{
@@ -29,6 +23,8 @@ type smsUserCallbackController struct {
 	SmsUserCallbackControllerPack *common.ControllerPack
 }
 
-func (smsCallbackController *smsUserCallbackController) Enable() {
-	smsCallbackController.ControllerBase.Enable(MessageController)
+func smsUserCallback(dto interface{}) (interface{}, error) {
+	smsUserCallbackMessageRequestExternalDto := dto.(*external.SmsUserCallbackMessageRequestExternalDto)
+
+	return services.SmsUserMessageService.Add(smsUserCallbackMessageRequestExternalDto), nil
 }

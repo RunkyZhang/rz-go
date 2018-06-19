@@ -22,7 +22,12 @@ type mailMessageService struct {
 }
 
 func (myself *mailMessageService) SendMail(mailMessageDto *models.MailMessageDto) (int, error) {
-	err := VerifyMailMessageDto(mailMessageDto)
+	err := common.Assert.IsNotNilToError(mailMessageDto, "mailMessageDto")
+	if nil != err {
+		return 0, err
+	}
+
+	err = VerifyMailMessageDto(mailMessageDto)
 	if nil != err {
 		return 0, err
 	}

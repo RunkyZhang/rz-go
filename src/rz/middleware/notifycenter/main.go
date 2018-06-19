@@ -90,7 +90,7 @@ func main() {
 	consumers.SmsUserMessageConsumer.Start(5 * time.Second)
 
 	fmt.Println("start listening", global.Config.Web.Listen, "...")
-	controllers.MessageController.Enable()
+	controllers.MessageController.Enable(controllers.MessageController)
 
 	global.WebService.Start()
 

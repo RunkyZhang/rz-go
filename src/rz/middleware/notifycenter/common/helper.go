@@ -2,7 +2,7 @@ package common
 
 import (
 	"strings"
-	s_bytes "bytes"
+	"bytes"
 	"io"
 	"os"
 	"io/ioutil"
@@ -15,7 +15,11 @@ func IsStringBlank(value string) (bool) {
 }
 
 func ReaderToString(reader io.Reader) (string) {
-	buffer := new(s_bytes.Buffer)
+	if nil == reader {
+		return ""
+	}
+
+	buffer := new(bytes.Buffer)
 	buffer.ReadFrom(reader)
 
 	return buffer.String()
@@ -27,21 +31,21 @@ func IsExistPath(path string) bool {
 }
 
 func ReadFileContent(filePath string) (string, error) {
-	bytes, err := ioutil.ReadFile(filePath)
+	buffer, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return "", err
 	}
 
-	return string(bytes), nil
+	return string(buffer), nil
 }
 
 func ObjectToJsonString(value interface{}) (string, error) {
-	bytes, err := json.Marshal(value)
+	buffer, err := json.Marshal(value)
 	if nil == err {
 		return "", err
 	}
 
-	return string(bytes), nil
+	return string(buffer), nil
 }
 
 func Float64ToString(value float64) (string) {

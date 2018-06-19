@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"time"
+	"rz/middleware/notifycenter/common"
 )
 
 type MessageRepositoryBase struct {
@@ -26,6 +27,11 @@ func (myself *MessageRepositoryBase) UpdateById(id int, states string, finished 
 }
 
 func (myself *MessageRepositoryBase) SelectByExpireTimeAndFinished(pos interface{}, date time.Time) (error) {
+	err := common.Assert.IsNotNilToError(pos, "pos")
+	if nil != err {
+		return err
+	}
+
 	database, err := myself.getShardingDatabase(nil)
 	if nil != err {
 		return err

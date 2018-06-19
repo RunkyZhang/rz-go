@@ -47,6 +47,10 @@ type smsMessageConsumer struct {
 
 func (myself *smsMessageConsumer) Send(messagePo interface{}) (error) {
 	smsMessagePo := messagePo.(*models.SmsMessagePo)
+	err := common.Assert.IsNotNilToError(smsMessagePo, "smsMessagePo")
+	if nil != err {
+		return err
+	}
 
 	var randomNumber = common.Int32ToString(rand.Intn(1024))
 	smsMessageRequestExternalDto := myself.buildSmsMessageRequestExternalDto(smsMessagePo, randomNumber)
