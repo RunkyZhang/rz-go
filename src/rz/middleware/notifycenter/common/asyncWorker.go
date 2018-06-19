@@ -58,6 +58,7 @@ func (myself *AsyncJobWorker) Start() {
 		go myself.start(i)
 	}
 
+	myself.started = true
 }
 
 func (myself *AsyncJobWorker) start(id int) {
@@ -87,7 +88,7 @@ func (myself *AsyncJobWorker) start(id int) {
 		}
 	}()
 
-	for ; false == myself.closed; {
+	for ; ; {
 		if nil != myself.defaultAsyncJob {
 			myself.defaultAsyncJob.RunFunc(myself.defaultAsyncJob.Parameter)
 		} else {
@@ -101,6 +102,10 @@ func (myself *AsyncJobWorker) start(id int) {
 				err := currentAaysncJob.RunFunc(currentAaysncJob.Parameter)
 				fmt.Printf("failed to run job in goroutine(%d). error: %s\n", id, err)
 			}
+		}
+
+		if myself.closed {
+			break
 		}
 
 		time.Sleep(myself.duration)
@@ -128,6 +133,9 @@ func (myself *AsyncJobWorker) WorkerCount() (int) {
 }
 
 func (myself *AsyncJobWorker) CloseAndWait() {
+	if !myself.started {
+		return
+	}
 	if myself.closed {
 		return
 	}
@@ -135,6 +143,9 @@ func (myself *AsyncJobWorker) CloseAndWait() {
 	myself.lock.Lock()
 	defer myself.lock.Unlock()
 
+	if !myself.started {
+		return
+	}
 	if myself.closed {
 		return
 	}

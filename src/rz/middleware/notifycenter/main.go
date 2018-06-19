@@ -8,9 +8,7 @@ import (
 	"rz/middleware/notifycenter/controllers"
 	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/repositories"
-	"rz/middleware/notifycenter/common"
 	"time"
-	"errors"
 	"rz/middleware/notifycenter/consumers"
 )
 
@@ -34,37 +32,37 @@ func main() {
 	//err = exceptions.DtoNull().AttachMessage("asdasdasd")
 	//fmt.Printf("failed to get message ids. error: %s", err)
 
-	asyncJob := &common.AsyncJob{
-		Name: "666",
-		Type: "777",
-		RunFunc: func(parameter interface{}) error {
-			time.Sleep(5 * time.Second)
-			//fmt.Println(time.Now())
+	//asyncJob := &common.AsyncJob{
+	//	Name: "666",
+	//	Type: "777",
+	//	RunFunc: func(parameter interface{}) error {
+	//		time.Sleep(5 * time.Second)
+	//		//fmt.Println(time.Now())
+	//
+	//		return errors.New("test")
+	//	},
+	//}
 
-			return errors.New("test")
-		},
-	}
-
-	global.AsyncWorker.Add(asyncJob)
-	global.AsyncWorker.Add(asyncJob)
-	global.AsyncWorker.Add(asyncJob)
-	global.AsyncWorker.Add(asyncJob)
-	global.AsyncWorker.Add(asyncJob)
-	global.AsyncWorker.Add(asyncJob)
-
-	global.AsyncWorker.Add(asyncJob)
-	global.AsyncWorker.Add(asyncJob)
-	global.AsyncWorker.Add(asyncJob)
-	global.AsyncWorker.Add(asyncJob)
-	global.AsyncWorker.Add(asyncJob)
-	global.AsyncWorker.Add(asyncJob)
-
-	global.AsyncWorker.Add(asyncJob)
-	global.AsyncWorker.Add(asyncJob)
-	global.AsyncWorker.Add(asyncJob)
-	global.AsyncWorker.Add(asyncJob)
-	global.AsyncWorker.Add(asyncJob)
-	global.AsyncWorker.Add(asyncJob)
+	//global.AsyncWorker.Add(asyncJob)
+	//global.AsyncWorker.Add(asyncJob)
+	//global.AsyncWorker.Add(asyncJob)
+	//global.AsyncWorker.Add(asyncJob)
+	//global.AsyncWorker.Add(asyncJob)
+	//global.AsyncWorker.Add(asyncJob)
+	//
+	//global.AsyncWorker.Add(asyncJob)
+	//global.AsyncWorker.Add(asyncJob)
+	//global.AsyncWorker.Add(asyncJob)
+	//global.AsyncWorker.Add(asyncJob)
+	//global.AsyncWorker.Add(asyncJob)
+	//global.AsyncWorker.Add(asyncJob)
+	//
+	//global.AsyncWorker.Add(asyncJob)
+	//global.AsyncWorker.Add(asyncJob)
+	//global.AsyncWorker.Add(asyncJob)
+	//global.AsyncWorker.Add(asyncJob)
+	//global.AsyncWorker.Add(asyncJob)
+	//global.AsyncWorker.Add(asyncJob)
 
 	repositories.Init(
 		map[string]string{
@@ -85,13 +83,13 @@ func main() {
 	//repositories.SmsMessageRepository.UpdateById(smsMessagePo.Id, "Test", false, "", time.Now())
 	//fmt.Println(smsMessagePo, err)
 
+	global.AsyncWorker.Start()
 	consumers.SmsMessageConsumer.Start(5 * time.Second)
 	consumers.MailMessageConsumer.Start(5 * time.Second)
 	consumers.SmsUserMessageConsumer.Start(5 * time.Second)
 
 	fmt.Println("start listening", global.Config.Web.Listen, "...")
 	controllers.MessageController.Enable(controllers.MessageController)
-
 	global.WebService.Start()
 
 	exit := make(chan os.Signal)

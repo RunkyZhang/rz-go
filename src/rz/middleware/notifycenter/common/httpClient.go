@@ -1,6 +1,6 @@
 package common
 
-//import "git.zhaogangren.com/cloud/cloud.base.utils-go.sdk/httplib"
+import "git.zhaogangren.com/cloud/cloud.base.utils-go.sdk/httplib"
 
 func NewHttpClient() (*HttpClient) {
 	httpClient := &HttpClient{}
@@ -16,9 +16,7 @@ func (myself *HttpClient) Get(uri string) ([]byte, error) {
 }
 
 func (myself *HttpClient) Post(uri string, body interface{}) ([]byte, error) {
-	//return httplib.Post(uri, body)
-
-	return nil, nil
+	return httplib.Post(uri, body)
 }
 
 func (myself *HttpClient) Put(uri string, body interface{}) ([]byte, error) {

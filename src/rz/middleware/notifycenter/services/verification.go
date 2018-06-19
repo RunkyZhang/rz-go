@@ -4,6 +4,7 @@ import (
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/common"
 	"rz/middleware/notifycenter/exceptions"
+	"time"
 )
 
 func VerifyMailMessageDto(mailMessageDto *models.MailMessageDto) (error) {
@@ -40,7 +41,13 @@ func VerifySmsMessageDto(smsMessageDto *models.SmsMessageDto) (error) {
 
 func verifyMessageDto(messageBaseDto *models.MessageBaseDto) (error) {
 	if 0 == len(messageBaseDto.Tos) {
-		return exceptions.ErrorTosEmpty()
+		return exceptions.TosEmpty()
+	}
+	if "" == messageBaseDto.SystemAlias {
+		return exceptions.InvalidSystemAlias()
+	}
+	if time.Now().Unix() > messageBaseDto.ExpireTime {
+		return exceptions.InvalidMessageExpireTime().AttachMessage(common.Int64ToString(messageBaseDto.ExpireTime))
 	}
 
 	return nil
