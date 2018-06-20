@@ -22,4 +22,5 @@ var (
 	FailedInvokeController   = func() (*BusinessError) { return newBusinessError("Failed invoke controller", 30015) }
 	InvalidSystemAlias       = func() (*BusinessError) { return newBusinessError("Invalid [SystemAlias]", 30016) }
 	InvalidMessageExpireTime = func() (*BusinessError) { return newBusinessError("Invalid message expire time", 30017) }
+	InvalidIdentifyingCode   = func() (*BusinessError) { return newBusinessError("Invalid identifying code", 30018) }
 )

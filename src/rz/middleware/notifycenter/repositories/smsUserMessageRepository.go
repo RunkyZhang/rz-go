@@ -12,7 +12,9 @@ var (
 
 func init() {
 	SmsUserMessageRepository.defaultDatabaseKey = "default"
-	SmsUserMessageRepository.rawTableName = "smsUserMessage"
+	SmsUserMessageRepository.rawTableName = "smsUserMessagePo"
+	SmsUserMessageRepository.getDatabaseKeyFunc = SmsUserMessageRepository.getDatabaseKey
+	SmsUserMessageRepository.getTableNameFunc = SmsUserMessageRepository.getTableName
 }
 
 type smsUserMessageRepository struct {
@@ -25,7 +27,7 @@ func (myself *smsUserMessageRepository) Insert(smsUserMessagePo *models.SmsUserM
 		return err
 	}
 
-	return myself.repositoryBase.Insert(smsUserMessagePo, nil)
+	return myself.repositoryBase.Insert(smsUserMessagePo, smsUserMessagePo.CreatedTime)
 }
 
 func (myself *smsUserMessageRepository) SelectById(id int, date time.Time) (*models.SmsUserMessagePo, error) {
@@ -46,4 +48,21 @@ func (myself *smsUserMessageRepository) SelectByPhoneNumber(nationCode string, p
 	err = database.Where("phoneNumber=? AND nationCode=?", phoneNumber, nationCode).Find(smsUserMessagePos).Error
 
 	return smsUserMessagePos, err
+}
+
+func (myself *smsUserMessageRepository) getDatabaseKey(shardingParameters ...interface{}) (string) {
+	return myself.defaultDatabaseKey
+}
+
+func (myself *smsUserMessageRepository) getTableName(shardingParameters ...interface{}) (string) {
+	if nil == shardingParameters || 0 == len(shardingParameters) {
+		return ""
+	}
+
+	date, ok := shardingParameters[0].(time.Time)
+	if !ok {
+		return ""
+	}
+
+	return myself.rawTableName + "_" + common.Int32ToString(date.Year())
 }

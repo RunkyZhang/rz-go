@@ -50,6 +50,9 @@ func (myself *smsUserMessageConsumer) Send(messagePo interface{}) (error) {
 	var smsMessagePo *models.SmsMessagePo
 	if enumerations.IdentifyingCode == smsTemplatePo.Type {
 		smsMessagePo, err = managements.SmsMessageManagement.GetByIdentifyingCode(smsTemplatePo.Id, smsUserMessagePo.Content, time.Now())
+		if nil != err {
+			return exceptions.InvalidIdentifyingCode().AttachMessage(smsUserMessagePo.Content).AttachError(err)
+		}
 	} else if enumerations.Pattern == smsTemplatePo.Type {
 		regularExpression, ok := myself.regularExpressions[smsTemplatePo.Pattern]
 		if !ok {
@@ -64,7 +67,7 @@ func (myself *smsUserMessageConsumer) Send(messagePo interface{}) (error) {
 			return exceptions.InvalidPattern().AttachMessage(smsTemplatePo.Pattern)
 		}
 		if !regularExpression.MatchString(smsUserMessagePo.Content) {
-			return exceptions.InvalidPattern().AttachMessage(smsUserMessagePo.Content)
+			return exceptions.PatternNotMatch().AttachMessage(smsUserMessagePo.Content)
 		}
 	}
 

@@ -53,7 +53,7 @@ func (myself *smsMessageRepository) SelectByIdentifyingCode(templateId int, iden
 	}
 
 	smsMessagePo := &models.SmsMessagePo{}
-	err = database.Where("templateId=? AND identifyingCode=? AND expireTime<? AND deleted=0", templateId, identifyingCode, time.Now()).First(smsMessagePo).Error
+	err = database.Where("templateId=? AND identifyingCode=? AND expireTime>? AND deleted=0", templateId, identifyingCode, time.Now()).First(smsMessagePo).Error
 
 	return smsMessagePo, err
 }

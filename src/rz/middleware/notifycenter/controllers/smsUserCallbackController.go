@@ -10,7 +10,7 @@ import (
 var (
 	SmsUserCallbackController = smsUserCallbackController{
 		SmsUserCallbackControllerPack: &common.ControllerPack{
-			Pattern:          "/message/sms-callback",
+			Pattern:          "/message/sms-user-callback",
 			ControllerFunc:   smsUserCallback,
 			ConvertToDtoFunc: ConvertToSmsCallbackMessageDto,
 		},
@@ -30,5 +30,5 @@ func smsUserCallback(dto interface{}) (interface{}, error) {
 		return nil, err
 	}
 
-	return services.SmsUserMessageService.Add(smsUserCallbackMessageRequestExternalDto), nil
+	return services.SmsUserMessageService.Callback(smsUserCallbackMessageRequestExternalDto), nil
 }

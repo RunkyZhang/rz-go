@@ -60,13 +60,13 @@ func (myself *webService) RegisterStandardController(controllerPack *ControllerP
 	var responseDto ResponseDto
 
 	http.HandleFunc(controllerPack.Pattern, func(responseWriter http.ResponseWriter, request *http.Request) {
-		defer func() {
-			value := recover()
-			if nil != value {
-				responseDto = myself.errorToResponseDto(value)
-				myself.wrapResponseWriter(responseWriter, &responseDto)
-			}
-		}()
+		//defer func() {
+		//	value := recover()
+		//	if nil != value {
+		//		responseDto = myself.errorToResponseDto(value)
+		//		myself.wrapResponseWriter(responseWriter, &responseDto)
+		//	}
+		//}()
 
 		dto, err := controllerPack.ConvertToDtoFunc(request.Body)
 		if nil != err {
@@ -96,12 +96,12 @@ func (myself *webService) RegisterStandardController(controllerPack *ControllerP
 
 func (myself *webService) RegisterCommonController(controllerPack *ControllerPack) {
 	http.HandleFunc(controllerPack.Pattern, func(responseWriter http.ResponseWriter, request *http.Request) {
-		defer func() {
-			value := recover()
-			if nil != value {
-				http.Error(responseWriter, fmt.Sprintln(value), http.StatusInternalServerError)
-			}
-		}()
+		//defer func() {
+		//	value := recover()
+		//	if nil != value {
+		//		http.Error(responseWriter, fmt.Sprintln(value), http.StatusInternalServerError)
+		//	}
+		//}()
 
 		dto, err := controllerPack.ConvertToDtoFunc(request.Body)
 		if nil != err {
@@ -184,21 +184,21 @@ func (myself *webService) health() {
 	http.HandleFunc("/health", func(responseWriter http.ResponseWriter, request *http.Request) {
 		var healthReports []*HealthReport
 
-		defer func() {
-			value := recover()
-			if nil != value {
-				healthReport := &HealthReport{
-					Ok:      false,
-					Name:    "unknown error",
-					Message: fmt.Sprintln(value),
-					Type:    "panic",
-					Level:   0,
-				}
-				healthReports = append(healthReports, healthReport)
-
-				myself.wrapResponseWriter(responseWriter, healthReports)
-			}
-		}()
+		//defer func() {
+		//	value := recover()
+		//	if nil != value {
+		//		healthReport := &HealthReport{
+		//			Ok:      false,
+		//			Name:    "unknown error",
+		//			Message: fmt.Sprintln(value),
+		//			Type:    "panic",
+		//			Level:   0,
+		//		}
+		//		healthReports = append(healthReports, healthReport)
+		//
+		//		myself.wrapResponseWriter(responseWriter, healthReports)
+		//	}
+		//}()
 
 		length := len(myself.healthIndicators)
 		for i := 0; i < length; i++ {

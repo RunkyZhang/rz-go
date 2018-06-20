@@ -1,10 +1,10 @@
 package global
 
 import (
-	"os"
 	"fmt"
 	"encoding/json"
 	"rz/middleware/notifycenter/common"
+	"errors"
 )
 
 var (
@@ -35,7 +35,7 @@ type sms struct {
 	Url               string `json:"url"`
 	AppKey            string `json:"appKey"`
 	AppId             string `json:"appId"`
-	DefaultNationCode string    `json:"defaultNationCode"`
+	DefaultNationCode string `json:"defaultNationCode"`
 }
 
 type mail struct {
@@ -57,21 +57,18 @@ func getConfiguration() (Configuration) {
 	filePath := Arguments[ArgumentNameConfig]
 
 	if !common.IsExistPath(filePath) {
-		fmt.Println("Cannot find config file path[", filePath, "].")
-		os.Exit(0)
+		panic(errors.New(fmt.Sprintf("cannot find config file path(%s)\n", filePath)))
 	}
 
 	content, err := common.ReadFileContent(filePath)
 	if nil != err {
-		fmt.Println("Failed to get config file content[", content, "]. error: ", err.Error(), ".")
-		os.Exit(0)
+		panic(errors.New(fmt.Sprintf("failed to get config file content(%s). error: %s\n", content, err.Error())))
 	}
 
 	var configuration Configuration
 	err = json.Unmarshal([]byte(content), &configuration)
 	if nil != err {
-		fmt.Println("Invaild config file content[", content, "]. error: ", err.Error(), ".")
-		os.Exit(0)
+		panic(errors.New(fmt.Sprintf("invaild config file content(%s). error: %s", content, err.Error())))
 	}
 
 	return configuration

@@ -22,8 +22,7 @@ type smsUserMessageService struct {
 	MessageServiceBase
 }
 
-func (myself *smsUserMessageService) Add(
-	smsUserCallbackMessageRequestExternalDto *external.SmsUserCallbackMessageRequestExternalDto) (*external.SmsUserCallbackMessageResponseExternalDto) {
+func (myself *smsUserMessageService) Callback(smsUserCallbackMessageRequestExternalDto *external.SmsUserCallbackMessageRequestExternalDto) (*external.SmsUserCallbackMessageResponseExternalDto) {
 	err := common.Assert.IsNotNilToError(smsUserCallbackMessageRequestExternalDto, "smsUserCallbackMessageRequestExternalDto")
 	if nil != err {
 		return &external.SmsUserCallbackMessageResponseExternalDto{
@@ -31,7 +30,6 @@ func (myself *smsUserMessageService) Add(
 			Errmsg: "invalid request body",
 		}
 	}
-
 	extend, err := common.StringToInt32(smsUserCallbackMessageRequestExternalDto.Extend)
 	if nil != err {
 		return &external.SmsUserCallbackMessageResponseExternalDto{
@@ -41,12 +39,14 @@ func (myself *smsUserMessageService) Add(
 	}
 
 	smsUserMessagePo := &models.SmsUserMessagePo{
-		Content:    smsUserCallbackMessageRequestExternalDto.Text,
-		Sign:       smsUserCallbackMessageRequestExternalDto.Sign,
-		Time:       smsUserCallbackMessageRequestExternalDto.Time,
-		NationCode: smsUserCallbackMessageRequestExternalDto.Nationcode,
-		Extend:     extend,
+		Content:     smsUserCallbackMessageRequestExternalDto.Text,
+		Sign:        smsUserCallbackMessageRequestExternalDto.Sign,
+		Time:        smsUserCallbackMessageRequestExternalDto.Time,
+		NationCode:  smsUserCallbackMessageRequestExternalDto.Nationcode,
+		PhoneNumber: smsUserCallbackMessageRequestExternalDto.Mobile,
+		Extend:      extend,
 	}
+	smsUserMessagePo.ExpireTime = time.Now().Add(7 * 24 * time.Hour)
 
 	smsTemplatePo, err := managements.SmsTemplateManagement.GetByExtend(extend)
 	if nil != err {
@@ -60,7 +60,7 @@ func (myself *smsUserMessageService) Add(
 	if nil != err {
 		return &external.SmsUserCallbackMessageResponseExternalDto{
 			Result: 1,
-			Errmsg: exceptions.FailedAddSmsUserMessage().Error(),
+			Errmsg: exceptions.FailedAddSmsUserMessage().AttachError(err).Error(),
 		}
 	}
 

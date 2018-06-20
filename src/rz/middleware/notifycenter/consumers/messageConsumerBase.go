@@ -37,6 +37,7 @@ func (myself *messageConsumerBase) Start(duration time.Duration) (error) {
 		RunFunc: myself.start,
 	}
 	myself.asyncJobWorker = common.NewAsyncJobWorker(runtime.NumCPU(), duration, asyncJob)
+	myself.asyncJobWorker.Start()
 
 	return nil
 }
@@ -49,7 +50,7 @@ func (myself *messageConsumerBase) start(parameter interface{}) (error) {
 	now := time.Now()
 	messageIds, err := myself.messageManagementBase.DequeueMessageIds(now)
 	if nil != err {
-		fmt.Printf("failed to get message(%s) ids. error: %s", myself.messageManagementBase.KeySuffix, err.Error())
+		fmt.Printf("failed to get message(%s) ids. error: %s\n", myself.messageManagementBase.KeySuffix, err.Error())
 		return err
 	}
 	if nil == messageIds {
@@ -59,7 +60,7 @@ func (myself *messageConsumerBase) start(parameter interface{}) (error) {
 	for _, messageId := range messageIds {
 		affectedCount, err := myself.messageManagementBase.RemoveMessageId(messageId)
 		if nil != err || 0 == affectedCount {
-			fmt.Printf("failed to remove message(%d). error: %s", messageId, err)
+			fmt.Printf("failed to remove message(%d). error: %s\n", messageId, err)
 			continue
 		}
 
@@ -69,12 +70,15 @@ func (myself *messageConsumerBase) start(parameter interface{}) (error) {
 		}
 
 		var messageState enumerations.MessageState
+		var errorMessage string
 		if nil == flagError {
 			fmt.Printf("success to consume message(%d)\n", messageId)
 			messageState = enumerations.Sent
+			errorMessage = ""
 		} else {
 			fmt.Printf("failed to consume message(%d). error: %s\n", messageId, flagError.Error())
 			messageState = enumerations.Error
+			errorMessage = flagError.Error()
 		}
 		managements.ModifyMessageFlowAsync(
 			myself.messageManagementBase,
@@ -84,7 +88,7 @@ func (myself *messageConsumerBase) start(parameter interface{}) (error) {
 			messageState,
 			true,
 			time.Now(),
-			flagError.Error())
+			errorMessage)
 
 		if "" != callbackBasePo.FinishedCallbackUrls {
 			errorMessages := ""

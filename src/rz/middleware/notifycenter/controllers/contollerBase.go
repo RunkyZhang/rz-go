@@ -3,14 +3,14 @@ package controllers
 import (
 	"reflect"
 
-	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/common"
+	"rz/middleware/notifycenter/global"
 )
 
 type ControllerBase struct {
 }
 
-func (myself *ControllerBase) Enable(controller interface{}) {
+func (myself *ControllerBase) Enable(controller interface{}, isStandard bool) {
 	messageControllerType := reflect.ValueOf(controller)
 	fieldCount := messageControllerType.NumField()
 
@@ -20,7 +20,11 @@ func (myself *ControllerBase) Enable(controller interface{}) {
 		if field.CanInterface() {
 			controllerPack, ok := field.Interface().(*common.ControllerPack)
 			if ok {
-				global.WebService.RegisterStandardController(controllerPack)
+				if isStandard {
+					global.WebService.RegisterStandardController(controllerPack)
+				} else {
+					global.WebService.RegisterCommonController(controllerPack)
+				}
 			}
 		}
 	}
