@@ -108,8 +108,8 @@ func ModifyMessageFlowAsync(
 }
 
 func modifyMessageFlow(parameter interface{}) (error) {
-	messageFlowJobParameter := parameter.(*MessageFlowJobParameter)
-	err := common.Assert.IsNotNilToError(messageFlowJobParameter, "messageFlowJobParameter")
+	messageFlowJobParameter, ok := parameter.(*MessageFlowJobParameter)
+	err := common.Assert.IsTrueToError(ok, "parameter.(*MessageFlowJobParameter)")
 	if nil != err {
 		return err
 	}

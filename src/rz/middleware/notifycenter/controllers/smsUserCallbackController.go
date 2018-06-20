@@ -24,7 +24,11 @@ type smsUserCallbackController struct {
 }
 
 func smsUserCallback(dto interface{}) (interface{}, error) {
-	smsUserCallbackMessageRequestExternalDto := dto.(*external.SmsUserCallbackMessageRequestExternalDto)
+	smsUserCallbackMessageRequestExternalDto, ok := dto.(*external.SmsUserCallbackMessageRequestExternalDto)
+	err := common.Assert.IsTrueToError(ok, "dto.(*external.SmsUserCallbackMessageRequestExternalDto)")
+	if nil != err {
+		return nil, err
+	}
 
 	return services.SmsUserMessageService.Add(smsUserCallbackMessageRequestExternalDto), nil
 }

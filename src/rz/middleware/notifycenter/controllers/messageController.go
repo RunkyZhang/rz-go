@@ -30,8 +30,8 @@ type messageController struct {
 }
 
 func sendMail(dto interface{}) (interface{}, error) {
-	mailMessageDto := dto.(*models.MailMessageDto)
-	err := common.Assert.IsNotNilToError(mailMessageDto, "mailMessageDto")
+	mailMessageDto, ok := dto.(*models.MailMessageDto)
+	err := common.Assert.IsTrueToError(ok, "dto.(*models.MailMessageDto)")
 	if nil != err {
 		return nil, err
 	}
@@ -40,8 +40,8 @@ func sendMail(dto interface{}) (interface{}, error) {
 }
 
 func sendSms(dto interface{}) (interface{}, error) {
-	smsMessageDto := dto.(*models.SmsMessageDto)
-	err := common.Assert.IsNotNilToError(smsMessageDto, "smsMessageDto")
+	smsMessageDto, ok := dto.(*models.SmsMessageDto)
+	err := common.Assert.IsTrueToError(ok, "dto.(*models.SmsMessageDto)")
 	if nil != err {
 		return nil, err
 	}

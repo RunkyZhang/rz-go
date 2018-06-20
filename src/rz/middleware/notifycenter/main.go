@@ -10,6 +10,7 @@ import (
 	"rz/middleware/notifycenter/repositories"
 	"time"
 	"rz/middleware/notifycenter/consumers"
+	"rz/middleware/notifycenter/healths"
 )
 
 // http://work.weixin.qq.com/api/doc
@@ -88,8 +89,18 @@ func main() {
 	consumers.MailMessageConsumer.Start(5 * time.Second)
 	consumers.SmsUserMessageConsumer.Start(5 * time.Second)
 
-	fmt.Println("start listening", global.Config.Web.Listen, "...")
 	controllers.MessageController.Enable(controllers.MessageController)
+
+	redisHealthIndicator, err := healths.NewRedisHealthIndicator(global.RedisClient)
+	if nil == err {
+		global.WebService.RegisterHealthIndicator(redisHealthIndicator)
+	}
+	mysqlHealthIndicator, err := healths.NewMySQLHealthIndicator(repositories.Databases)
+	if nil == err {
+		global.WebService.RegisterHealthIndicator(mysqlHealthIndicator)
+	}
+
+	fmt.Println("start listening", global.Config.Web.Listen, "...")
 	global.WebService.Start()
 
 	exit := make(chan os.Signal)

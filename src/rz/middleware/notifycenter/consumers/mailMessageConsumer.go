@@ -53,8 +53,8 @@ type mailMessageConsumer struct {
 }
 
 func (myself *mailMessageConsumer) Send(messageDto interface{}) error {
-	mailMessageDto := messageDto.(*models.MailMessageDto)
-	err := common.Assert.IsNotNilToError(mailMessageDto, "mailMessageDto")
+	mailMessageDto, ok := messageDto.(*models.MailMessageDto)
+	err := common.Assert.IsTrueToError(ok, "messageDto.(*models.MailMessageDto)")
 	if nil != err {
 		return err
 	}
@@ -79,7 +79,10 @@ func (myself *mailMessageConsumer) getMessage(messageId int, date time.Time) (in
 }
 
 func (myself *mailMessageConsumer) poToDto(messagePo interface{}) (interface{}) {
-	mailMessagePo := messagePo.(*models.MailMessagePo)
+	mailMessagePo, ok := messagePo.(*models.MailMessagePo)
+	if !ok {
+		return nil
+	}
 
 	return models.MailMessagePoToDto(mailMessagePo)
 }

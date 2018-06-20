@@ -62,26 +62,26 @@ func (myself *AsyncJobWorker) Start() {
 }
 
 func (myself *AsyncJobWorker) start(id int) {
-	var currentAaysncJob *AsyncJob
+	var currentAysncJob *AsyncJob
 
 	defer func() {
-		err := recover()
-		if nil != err {
+		value := recover()
+		if nil != value {
 			if nil != myself.defaultAsyncJob {
 				fmt.Printf(
 					"panic on job(type: %s; name: %s) in goroutine(%d). error: %s\n",
 					myself.defaultAsyncJob.Type,
 					myself.defaultAsyncJob.Name,
 					id,
-					err)
-			} else if nil != currentAaysncJob {
+					fmt.Sprintln(value))
+			} else if nil != currentAysncJob {
 				fmt.Printf("panic on job(type: %s; name: %s) in goroutine(%d). error: %s\n",
-					currentAaysncJob.Type,
-					currentAaysncJob.Name,
+					currentAysncJob.Type,
+					currentAysncJob.Name,
 					id,
-					err)
+					fmt.Sprintln(value))
 			} else {
-				fmt.Printf("panic in goroutine(%d). error: %s\n", id, err)
+				fmt.Printf("panic in goroutine(%d). error: %s\n", id, fmt.Sprintln(value))
 			}
 
 			myself.start(id)
@@ -94,12 +94,13 @@ func (myself *AsyncJobWorker) start(id int) {
 		} else {
 			for ; 0 < myself.queue.Length(); {
 				item := myself.queue.Dequeue()
-				currentAaysncJob = item.(*AsyncJob)
-				if nil == currentAaysncJob {
+				var ok bool
+				currentAysncJob, ok = item.(*AsyncJob)
+				if !ok {
 					continue
 				}
 
-				err := currentAaysncJob.RunFunc(currentAaysncJob.Parameter)
+				err := currentAysncJob.RunFunc(currentAysncJob.Parameter)
 				fmt.Printf("failed to run job in goroutine(%d). error: %s\n", id, err)
 			}
 		}

@@ -46,8 +46,8 @@ type smsMessageConsumer struct {
 }
 
 func (myself *smsMessageConsumer) Send(messagePo interface{}) (error) {
-	smsMessagePo := messagePo.(*models.SmsMessagePo)
-	err := common.Assert.IsNotNilToError(smsMessagePo, "smsMessagePo")
+	smsMessagePo, ok := messagePo.(*models.SmsMessagePo)
+	err := common.Assert.IsTrueToError(ok, "messagePo.(*models.SmsMessagePo)")
 	if nil != err {
 		return err
 	}
@@ -137,7 +137,10 @@ func (myself *smsMessageConsumer) getMessage(messageId int, date time.Time) (int
 }
 
 func (myself *smsMessageConsumer) poToDto(messagePo interface{}) (interface{}) {
-	smsMessagePo := messagePo.(*models.SmsMessagePo)
+	smsMessagePo, ok := messagePo.(*models.SmsMessagePo)
+	if !ok {
+		return nil
+	}
 
 	return models.SmsMessagePoToDto(smsMessagePo)
 }

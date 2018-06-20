@@ -24,21 +24,36 @@ type ControllerPack struct {
 
 type ResponseDto struct {
 	Code    int         `json:"code"`
-	Data    interface{} `json:"data"`
 	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
+
+type HealthReport struct {
+	Ok      bool                   `json:"ok"`
+	Name    string                 `json:"name"`
+	Message string                 `json:"message"`
+	Type    string                 `json:"type"`
+	Level   int                    `json:"level"`
+	Detail  map[string]interface{} `json:"detail"`
+}
+
+type HealthIndicator interface {
+	Indicate() (*HealthReport)
 }
 
 func NewWebService(address string) (*webService) {
 	webService := &webService{
-		address: address,
+		address:          address,
+		healthIndicators: []HealthIndicator{},
 	}
 
 	return webService
 }
 
 type webService struct {
-	server  *http.Server
-	address string
+	server           *http.Server
+	address          string
+	healthIndicators []HealthIndicator
 }
 
 func (myself *webService) RegisterStandardController(controllerPack *ControllerPack) {
@@ -46,19 +61,16 @@ func (myself *webService) RegisterStandardController(controllerPack *ControllerP
 
 	http.HandleFunc(controllerPack.Pattern, func(responseWriter http.ResponseWriter, request *http.Request) {
 		defer func() {
-			err := recover().(error)
-			if nil == err {
-				http.Error(responseWriter, "unknown error", http.StatusInternalServerError)
-				return
+			value := recover()
+			if nil != value {
+				responseDto = myself.errorToResponseDto(value)
+				myself.wrapResponseWriter(responseWriter, &responseDto)
 			}
-
-			responseDto = myself.toResponseDto(err)
-			myself.wrapResponseWriter(responseWriter, &responseDto)
 		}()
 
 		dto, err := controllerPack.ConvertToDtoFunc(request.Body)
 		if nil != err {
-			responseDto = myself.toResponseDto(err)
+			responseDto = myself.errorToResponseDto(err)
 			myself.wrapResponseWriter(responseWriter, &responseDto)
 
 			return
@@ -66,7 +78,7 @@ func (myself *webService) RegisterStandardController(controllerPack *ControllerP
 
 		result, err := controllerPack.ControllerFunc(dto)
 		if nil != err {
-			responseDto = myself.toResponseDto(err)
+			responseDto = myself.errorToResponseDto(err)
 			myself.wrapResponseWriter(responseWriter, &responseDto)
 
 			return
@@ -85,10 +97,10 @@ func (myself *webService) RegisterStandardController(controllerPack *ControllerP
 func (myself *webService) RegisterCommonController(controllerPack *ControllerPack) {
 	http.HandleFunc(controllerPack.Pattern, func(responseWriter http.ResponseWriter, request *http.Request) {
 		defer func() {
-			err := recover().(error)
-			errorMessage := fmt.Sprintf("unknown error: %s", err)
-
-			http.Error(responseWriter, errorMessage, http.StatusInternalServerError)
+			value := recover()
+			if nil != value {
+				http.Error(responseWriter, fmt.Sprintln(value), http.StatusInternalServerError)
+			}
 		}()
 
 		dto, err := controllerPack.ConvertToDtoFunc(request.Body)
@@ -109,6 +121,14 @@ func (myself *webService) RegisterCommonController(controllerPack *ControllerPac
 	})
 }
 
+func (myself *webService) RegisterHealthIndicator(healthIndicator HealthIndicator) {
+	if nil == healthIndicator {
+		return
+	}
+
+	myself.healthIndicators = append(myself.healthIndicators, healthIndicator)
+}
+
 func (myself *webService) Start() {
 	go myself.start()
 }
@@ -122,8 +142,8 @@ func (myself *webService) Stop() (error) {
 	return myself.server.Shutdown(timeoutContext)
 }
 
-func (*webService) toResponseDto(err error) ResponseDto {
-	businessError, ok := err.(*exceptions.BusinessError)
+func (*webService) errorToResponseDto(value interface{}) ResponseDto {
+	businessError, ok := value.(*exceptions.BusinessError)
 	if ok {
 		return ResponseDto{
 			Code:    businessError.Code,
@@ -132,10 +152,19 @@ func (*webService) toResponseDto(err error) ResponseDto {
 		}
 	}
 
-	exceptionsInternalServerError := exceptions.InternalServerError().AttachError(err)
+	exceptionsInternalServerError := exceptions.InternalServerError()
+	err, ok := value.(error)
+	if ok {
+		return ResponseDto{
+			Code:    exceptionsInternalServerError.Code,
+			Message: exceptionsInternalServerError.AttachError(err).Error(),
+			Data:    nil,
+		}
+	}
+
 	return ResponseDto{
 		Code:    exceptionsInternalServerError.Code,
-		Message: exceptionsInternalServerError.Error(),
+		Message: exceptionsInternalServerError.AttachMessage(fmt.Sprintln(value)).Error(),
 		Data:    nil,
 	}
 }
@@ -151,10 +180,38 @@ func (myself *webService) wrapResponseWriter(responseWriter http.ResponseWriter,
 	responseWriter.Write(bytes)
 }
 
-func (myself *webService) start() (error) {
+func (myself *webService) health() {
 	http.HandleFunc("/health", func(responseWriter http.ResponseWriter, request *http.Request) {
-		responseWriter.Write([]byte("ok"))
+		var healthReports []*HealthReport
+
+		defer func() {
+			value := recover()
+			if nil != value {
+				healthReport := &HealthReport{
+					Ok:      false,
+					Name:    "unknown error",
+					Message: fmt.Sprintln(value),
+					Type:    "panic",
+					Level:   0,
+				}
+				healthReports = append(healthReports, healthReport)
+
+				myself.wrapResponseWriter(responseWriter, healthReports)
+			}
+		}()
+
+		length := len(myself.healthIndicators)
+		for i := 0; i < length; i++ {
+			healthIndicator := myself.healthIndicators[i]
+			healthReports = append(healthReports, healthIndicator.Indicate())
+		}
+
+		myself.wrapResponseWriter(responseWriter, healthReports)
 	})
+}
+
+func (myself *webService) start() (error) {
+	myself.health()
 
 	myself.server = &http.Server{
 		Addr: myself.address,

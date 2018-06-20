@@ -2,7 +2,6 @@ package common
 
 import (
 	"time"
-	"errors"
 	"strings"
 	"github.com/garyburd/redigo/redis"
 )
@@ -329,17 +328,4 @@ func (myself *RedisClient) safeDo(doFunc doFunc) (interface{}, error) {
 	defer conn.Close()
 
 	return doFunc(conn)
-}
-
-func (*RedisClient) resultToString(result interface{}, err error) (string, error) {
-	if nil != err {
-		return "", err
-	}
-
-	value, ok := result.(string)
-	if !ok {
-		return "", errors.New("cannot convert to string")
-	}
-
-	return value, nil
 }

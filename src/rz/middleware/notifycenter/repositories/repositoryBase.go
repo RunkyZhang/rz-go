@@ -16,11 +16,10 @@ func Init(connectionStrings map[string]string) {
 	if nil == Databases {
 		Databases = make(map[string]*gorm.DB)
 		for key, value := range connectionStrings {
-			//database, err := gorm.Open("mysql", "ua_notifycenter:ekIxrgWsJ03u@tcp(10.0.34.44:3306)/notifycenter")
 			database, err := gorm.Open("mysql", value)
 			if nil != err {
 				closeDatabase()
-				panic("failed to open database, error: " + err.Error())
+				panic(errors.New("failed to open database, error: " + err.Error()))
 			}
 			database.DB().SetMaxIdleConns(2)
 			database.DB().SetMaxOpenConns(10)
