@@ -26,7 +26,6 @@ func init() {
 	SmsUserMessageConsumer.sendFunc = SmsUserMessageConsumer.Send
 	SmsUserMessageConsumer.poToDtoFunc = SmsUserMessageConsumer.poToDto
 	SmsUserMessageConsumer.messageManagementBase = &managements.SmsUserMessageManagement.MessageManagementBase
-	SmsUserMessageConsumer.httpClient = common.NewHttpClient()
 }
 
 type smsUserMessageConsumer struct {
@@ -80,7 +79,7 @@ func (myself *smsUserMessageConsumer) Send(messagePo interface{}) (error) {
 	errorMessages := ""
 	urls := strings.Split(smsTemplatePo.UserCallbackUrls, ",")
 	for _, url := range urls {
-		_, err = myself.httpClient.Post(url, smsUserCallbackRequestDto)
+		_, err = httpClient.Post(url, smsUserCallbackRequestDto)
 		if nil != err {
 			errorMessages += errorMessages + fmt.Sprintf("+++failed to invoke url(%s)", url)
 		}

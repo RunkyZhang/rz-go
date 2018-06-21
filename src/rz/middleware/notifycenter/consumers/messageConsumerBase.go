@@ -3,19 +3,21 @@ package consumers
 import (
 	"time"
 	"fmt"
-	"rz/middleware/notifycenter/enumerations"
-	"rz/middleware/notifycenter/exceptions"
-	"rz/middleware/notifycenter/models"
-	"rz/middleware/notifycenter/managements"
-	"rz/middleware/notifycenter/common"
 	"runtime"
 	"errors"
 	"strings"
+
+	"rz/middleware/notifycenter/models"
+	"rz/middleware/notifycenter/common"
+	"rz/middleware/notifycenter/managements"
+	"rz/middleware/notifycenter/enumerations"
 )
 
 type getMessageFunc func(int, time.Time) (interface{}, *models.PoBase, *models.CallbackBasePo, error)
 type sendFunc func(interface{}) (error)
 type poToDtoFunc func(interface{}) (interface{})
+
+var httpClient = common.NewHttpClient(nil)
 
 type messageConsumerBase struct {
 	getMessageFunc        getMessageFunc
@@ -23,7 +25,6 @@ type messageConsumerBase struct {
 	poToDtoFunc           poToDtoFunc
 	messageManagementBase *managements.MessageManagementBase
 	asyncJobWorker        *common.AsyncJobWorker
-	httpClient            *common.HttpClient
 }
 
 func (myself *messageConsumerBase) Start(duration time.Duration) (error) {
@@ -59,8 +60,12 @@ func (myself *messageConsumerBase) start(parameter interface{}) (error) {
 
 	for _, messageId := range messageIds {
 		affectedCount, err := myself.messageManagementBase.RemoveMessageId(messageId)
-		if nil != err || 0 == affectedCount {
+		if nil != err {
 			fmt.Printf("failed to remove message(%d). error: %s\n", messageId, err)
+			continue
+		}
+		// 0 mean: the other consumer remove it, ignore
+		if 0 == affectedCount {
 			continue
 		}
 
@@ -98,7 +103,7 @@ func (myself *messageConsumerBase) start(parameter interface{}) (error) {
 					Message:      myself.poToDtoFunc(messagePo),
 					MessageState: messageState,
 				}
-				_, err = myself.httpClient.Post(url, messageStateCallbackRequestDto)
+				_, err = httpClient.Post(url, messageStateCallbackRequestDto)
 				if nil != err {
 					errorMessages += errorMessages + fmt.Sprintf("+++failed to invoke url(%s)", url)
 				}
@@ -114,7 +119,6 @@ func (myself *messageConsumerBase) start(parameter interface{}) (error) {
 				callbackBasePo.FinishedTime,
 				errorMessages)
 		}
-
 	}
 
 	return nil

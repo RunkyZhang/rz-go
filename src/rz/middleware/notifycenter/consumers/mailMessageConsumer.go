@@ -27,7 +27,6 @@ func init() {
 	MailMessageConsumer.sendFunc = MailMessageConsumer.Send
 	MailMessageConsumer.poToDtoFunc = MailMessageConsumer.poToDto
 	MailMessageConsumer.messageManagementBase = &managements.MailMessageManagement.MessageManagementBase
-	MailMessageConsumer.httpClient = common.NewHttpClient()
 	MailMessageConsumer.dialer = gomail.NewDialer(MailMessageConsumer.Host, MailMessageConsumer.Port, MailMessageConsumer.UserName, MailMessageConsumer.password)
 	MailMessageConsumer.dialer.Auth = &unencryptedAuth{
 		smtp.PlainAuth(

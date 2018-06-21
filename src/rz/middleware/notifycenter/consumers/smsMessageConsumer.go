@@ -32,7 +32,7 @@ func init() {
 	SmsMessageConsumer.sendFunc = SmsMessageConsumer.Send
 	SmsMessageConsumer.poToDtoFunc = SmsMessageConsumer.poToDto
 	SmsMessageConsumer.messageManagementBase = &managements.SmsMessageManagement.MessageManagementBase
-	SmsMessageConsumer.httpClient = common.NewHttpClient()
+	SmsMessageConsumer.httpClient = common.NewHttpClient(nil)
 }
 
 type smsMessageConsumer struct {
@@ -66,8 +66,21 @@ func (myself *smsMessageConsumer) Send(messagePo interface{}) (error) {
 	if nil != err {
 		return err
 	}
+
+	if 0 != smsMessageResponseExternalDto.ErrorCode {
+		message := fmt.Sprintf(
+			"ErrorInfo: %s; ActionStatus: %s; ErrorCode: %d",
+			smsMessageResponseExternalDto.ErrorInfo,
+			smsMessageResponseExternalDto.ActionStatus,
+			smsMessageResponseExternalDto.ErrorCode)
+		return errors.New(message)
+	}
 	if 0 != smsMessageResponseExternalDto.Result {
-		return errors.New(smsMessageResponseExternalDto.Errmsg)
+		message := fmt.Sprintf(
+			"Errmsg: %s; Result: %d",
+			smsMessageResponseExternalDto.Errmsg,
+			smsMessageResponseExternalDto.Result)
+		return errors.New(message)
 	}
 
 	return nil

@@ -112,8 +112,6 @@ func (myself *AsyncJobWorker) start(id int) {
 		}
 
 		time.Sleep(myself.duration)
-
-		fmt.Println(id, time.Now())
 	}
 
 	fmt.Printf("the goroutine(%d) is closing\n", id)

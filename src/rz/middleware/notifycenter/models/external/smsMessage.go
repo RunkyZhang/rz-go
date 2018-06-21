@@ -21,6 +21,10 @@ type SmsMessageResponseExternalDto struct {
 	Errmsg string                              `json:"errmsg"`
 	Ext    string                              `json:"ext"`
 	Detail []SmsMessageResultDetailExternalDto `json:"detail"`
+
+	ActionStatus string `json:"ActionStatus"`
+	ErrorCode    int    `json:"ErrorCode"`
+	ErrorInfo    string `json:"ErrorInfo"`
 }
 
 type SmsMessageResultDetailExternalDto struct {
