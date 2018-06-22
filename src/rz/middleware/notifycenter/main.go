@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"time"
 
 	"rz/middleware/notifycenter/controllers"
 	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/repositories"
-	"time"
 	"rz/middleware/notifycenter/consumers"
 	"rz/middleware/notifycenter/healths"
 )

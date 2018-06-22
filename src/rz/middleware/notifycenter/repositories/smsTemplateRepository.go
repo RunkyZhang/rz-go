@@ -29,7 +29,7 @@ func (myself *smsTemplateRepository) Insert(smsTemplatePo *models.SmsTemplatePo)
 }
 
 func (myself *smsTemplateRepository) UpdateById(id int, userCallbackUrls string, pattern string) (error) {
-	database, err := myself.getShardingDatabase(nil)
+	database, err := myself.getShardDatabase(nil)
 	if nil != err {
 		return err
 	}

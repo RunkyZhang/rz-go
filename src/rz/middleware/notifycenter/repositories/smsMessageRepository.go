@@ -47,7 +47,7 @@ func (myself *smsMessageRepository) SelectByExpireTimeAndFinished(date time.Time
 }
 
 func (myself *smsMessageRepository) SelectByIdentifyingCode(templateId int, identifyingCode string, date time.Time) (*models.SmsMessagePo, error) {
-	database, err := myself.getShardingDatabase(date)
+	database, err := myself.getShardDatabase(date)
 	if nil != err {
 		return nil, err
 	}
@@ -58,16 +58,16 @@ func (myself *smsMessageRepository) SelectByIdentifyingCode(templateId int, iden
 	return smsMessagePo, err
 }
 
-func (myself *smsMessageRepository) getDatabaseKey(shardingParameters ...interface{}) (string) {
+func (myself *smsMessageRepository) getDatabaseKey(shardParameters ...interface{}) (string) {
 	return myself.defaultDatabaseKey
 }
 
-func (myself *smsMessageRepository) getTableName(shardingParameters ...interface{}) (string) {
-	if nil == shardingParameters || 0 == len(shardingParameters) {
+func (myself *smsMessageRepository) getTableName(shardParameters ...interface{}) (string) {
+	if nil == shardParameters || 0 == len(shardParameters) {
 		return ""
 	}
 
-	date, ok := shardingParameters[0].(time.Time)
+	date, ok := shardParameters[0].(time.Time)
 	if !ok {
 		return ""
 	}

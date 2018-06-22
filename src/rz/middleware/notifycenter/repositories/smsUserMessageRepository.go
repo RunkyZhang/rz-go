@@ -39,7 +39,7 @@ func (myself *smsUserMessageRepository) SelectById(id int, date time.Time) (*mod
 }
 
 func (myself *smsUserMessageRepository) SelectByPhoneNumber(nationCode string, phoneNumber string) ([]models.SmsUserMessagePo, error) {
-	database, err := myself.getShardingDatabase(nil)
+	database, err := myself.getShardDatabase(nil)
 	if nil != err {
 		return nil, err
 	}
@@ -50,16 +50,16 @@ func (myself *smsUserMessageRepository) SelectByPhoneNumber(nationCode string, p
 	return smsUserMessagePos, err
 }
 
-func (myself *smsUserMessageRepository) getDatabaseKey(shardingParameters ...interface{}) (string) {
+func (myself *smsUserMessageRepository) getDatabaseKey(shardParameters ...interface{}) (string) {
 	return myself.defaultDatabaseKey
 }
 
-func (myself *smsUserMessageRepository) getTableName(shardingParameters ...interface{}) (string) {
-	if nil == shardingParameters || 0 == len(shardingParameters) {
+func (myself *smsUserMessageRepository) getTableName(shardParameters ...interface{}) (string) {
+	if nil == shardParameters || 0 == len(shardParameters) {
 		return ""
 	}
 
-	date, ok := shardingParameters[0].(time.Time)
+	date, ok := shardParameters[0].(time.Time)
 	if !ok {
 		return ""
 	}

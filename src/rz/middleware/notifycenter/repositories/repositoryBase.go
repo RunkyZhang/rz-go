@@ -45,13 +45,13 @@ type repositoryBase struct {
 	getTableNameFunc   getTableNameFunc
 }
 
-func (myself *repositoryBase) Insert(po interface{}, shardingParameters ...interface{}) (error) {
+func (myself *repositoryBase) Insert(po interface{}, shardParameters ...interface{}) (error) {
 	err := common.Assert.IsNotNilToError(po, "po")
 	if nil != err {
 		return err
 	}
 
-	database, err := myself.getShardingDatabase(shardingParameters...)
+	database, err := myself.getShardDatabase(shardParameters...)
 	if nil != err {
 		return err
 	}
@@ -59,13 +59,13 @@ func (myself *repositoryBase) Insert(po interface{}, shardingParameters ...inter
 	return database.Create(po).Error
 }
 
-func (myself *repositoryBase) Update(po interface{}, shardingParameters ...interface{}) (error) {
+func (myself *repositoryBase) Update(po interface{}, shardParameters ...interface{}) (error) {
 	err := common.Assert.IsNotNilToError(po, "po")
 	if nil != err {
 		return err
 	}
 
-	database, err := myself.getShardingDatabase(shardingParameters...)
+	database, err := myself.getShardDatabase(shardParameters...)
 	if nil != err {
 		return err
 	}
@@ -73,13 +73,13 @@ func (myself *repositoryBase) Update(po interface{}, shardingParameters ...inter
 	return database.Update(po).Error
 }
 
-func (myself *repositoryBase) SelectById(id int, po interface{}, shardingParameters ...interface{}) (error) {
+func (myself *repositoryBase) SelectById(id int, po interface{}, shardParameters ...interface{}) (error) {
 	err := common.Assert.IsNotNilToError(po, "po")
 	if nil != err {
 		return err
 	}
 
-	database, err := myself.getShardingDatabase(shardingParameters...)
+	database, err := myself.getShardDatabase(shardParameters...)
 	if nil != err {
 		return err
 	}
@@ -87,13 +87,13 @@ func (myself *repositoryBase) SelectById(id int, po interface{}, shardingParamet
 	return database.Where("id=? and deleted=0", id).First(po).Error
 }
 
-func (myself *repositoryBase) SelectAll(pos interface{}, shardingParameters ...interface{}) (error) {
+func (myself *repositoryBase) SelectAll(pos interface{}, shardParameters ...interface{}) (error) {
 	err := common.Assert.IsNotNilToError(pos, "pos")
 	if nil != err {
 		return err
 	}
 
-	database, err := myself.getShardingDatabase(shardingParameters...)
+	database, err := myself.getShardDatabase(shardParameters...)
 	if nil != err {
 		return err
 	}
@@ -101,10 +101,10 @@ func (myself *repositoryBase) SelectAll(pos interface{}, shardingParameters ...i
 	return database.Where("deleted=0").Find(pos).Error
 }
 
-func (myself *repositoryBase) getShardingDatabase(shardingParameters ...interface{}) (*gorm.DB, error) {
+func (myself *repositoryBase) getShardDatabase(shardParameters ...interface{}) (*gorm.DB, error) {
 	var defaultDatabaseKey string
 	if nil != myself.getDatabaseKeyFunc {
-		defaultDatabaseKey = myself.getDatabaseKeyFunc(shardingParameters...)
+		defaultDatabaseKey = myself.getDatabaseKeyFunc(shardParameters...)
 	} else {
 		defaultDatabaseKey = myself.defaultDatabaseKey
 	}
@@ -116,7 +116,7 @@ func (myself *repositoryBase) getShardingDatabase(shardingParameters ...interfac
 
 	var tableName string
 	if nil != myself.getTableNameFunc {
-		tableName = myself.getTableNameFunc(shardingParameters...)
+		tableName = myself.getTableNameFunc(shardParameters...)
 	} else {
 		tableName = myself.rawTableName
 	}

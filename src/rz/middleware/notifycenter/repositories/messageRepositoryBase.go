@@ -10,7 +10,7 @@ type MessageRepositoryBase struct {
 }
 
 func (myself *MessageRepositoryBase) UpdateById(id int, states string, finished bool, finishedTime time.Time, errorMessages string, date time.Time) (int64, error) {
-	database, err := myself.getShardingDatabase(date)
+	database, err := myself.getShardDatabase(date)
 	if nil != err {
 		return 0, err
 	}
@@ -32,7 +32,7 @@ func (myself *MessageRepositoryBase) SelectByExpireTimeAndFinished(pos interface
 		return err
 	}
 
-	database, err := myself.getShardingDatabase(nil)
+	database, err := myself.getShardDatabase(nil)
 	if nil != err {
 		return err
 	}

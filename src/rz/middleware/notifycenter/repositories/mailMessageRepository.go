@@ -46,16 +46,16 @@ func (myself *mailMessageRepository) SelectByExpireTimeAndFinished(date time.Tim
 	return mailMessagePos, err
 }
 
-func (myself *mailMessageRepository) getDatabaseKey(shardingParameters ...interface{}) (string) {
+func (myself *mailMessageRepository) getDatabaseKey(shardParameters ...interface{}) (string) {
 	return myself.defaultDatabaseKey
 }
 
-func (myself *mailMessageRepository) getTableName(shardingParameters ...interface{}) (string) {
-	if nil == shardingParameters || 0 == len(shardingParameters) {
+func (myself *mailMessageRepository) getTableName(shardParameters ...interface{}) (string) {
+	if nil == shardParameters || 0 == len(shardParameters) {
 		return ""
 	}
 
-	date, ok := shardingParameters[0].(time.Time)
+	date, ok := shardParameters[0].(time.Time)
 	if !ok {
 		return ""
 	}
