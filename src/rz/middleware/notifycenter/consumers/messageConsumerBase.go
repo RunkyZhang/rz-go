@@ -11,6 +11,7 @@ import (
 	"rz/middleware/notifycenter/common"
 	"rz/middleware/notifycenter/managements"
 	"rz/middleware/notifycenter/enumerations"
+	"rz/middleware/notifycenter/exceptions"
 )
 
 type getMessageFunc func(int, time.Time) (interface{}, *models.PoBase, *models.CallbackBasePo, error)
