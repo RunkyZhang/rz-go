@@ -1,6 +1,6 @@
-package exceptions
+package common
 
-func newBusinessError(defaultMessage string, code int) (*BusinessError) {
+func NewBusinessError(defaultMessage string, code int) (*BusinessError) {
 	return &BusinessError{
 		DefaultMessage: defaultMessage,
 		Code:           code,

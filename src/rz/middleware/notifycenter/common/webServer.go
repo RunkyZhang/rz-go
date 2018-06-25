@@ -5,14 +5,13 @@ import (
 	"net/http"
 	"context"
 	"time"
-	"io"
-
-	"rz/middleware/notifycenter/exceptions"
 	"errors"
 	"fmt"
+	"bytes"
+	"math/rand"
 )
 
-type ConvertToDtoFunc func(body io.ReadCloser) (interface{}, error)
+type ConvertToDtoFunc func(body []byte) (interface{}, error)
 
 type ControllerFunc func(interface{}) (interface{}, error)
 
@@ -57,21 +56,33 @@ type webService struct {
 }
 
 func (myself *webService) RegisterStandardController(controllerPack *ControllerPack) {
+	id := myself.buildRequestId()
 	var responseDto ResponseDto
 
 	http.HandleFunc(controllerPack.Pattern, func(responseWriter http.ResponseWriter, request *http.Request) {
-		//defer func() {
-		//	value := recover()
-		//	if nil != value {
-		//		responseDto = myself.errorToResponseDto(value)
-		//		myself.wrapResponseWriter(responseWriter, &responseDto)
-		//	}
-		//}()
+		defer func() {
+			value := recover()
+			if nil != value {
+				responseDto = myself.errorToResponseDto(value)
+				myself.wrapResponseWriter(responseWriter, request, id, &responseDto, nil, "")
+			}
+		}()
 
-		dto, err := controllerPack.ConvertToDtoFunc(request.Body)
+		buffer := new(bytes.Buffer)
+		_, err := buffer.ReadFrom(request.Body)
 		if nil != err {
 			responseDto = myself.errorToResponseDto(err)
-			myself.wrapResponseWriter(responseWriter, &responseDto)
+			myself.wrapResponseWriter(responseWriter, request, id, &responseDto, nil, "")
+
+			return
+		}
+
+		myself.log("Start", id, request.URL.String(), request.Method, buffer.Bytes())
+
+		dto, err := controllerPack.ConvertToDtoFunc(buffer.Bytes())
+		if nil != err {
+			responseDto = myself.errorToResponseDto(err)
+			myself.wrapResponseWriter(responseWriter, request, id, &responseDto, nil, "")
 
 			return
 		}
@@ -79,45 +90,53 @@ func (myself *webService) RegisterStandardController(controllerPack *ControllerP
 		result, err := controllerPack.ControllerFunc(dto)
 		if nil != err {
 			responseDto = myself.errorToResponseDto(err)
-			myself.wrapResponseWriter(responseWriter, &responseDto)
+			myself.wrapResponseWriter(responseWriter, request, id, &responseDto, nil, "")
 
 			return
 		}
 
-		exceptionsOk := exceptions.Ok()
 		responseDto = ResponseDto{
-			Code:    exceptionsOk.Code,
-			Message: exceptionsOk.Error(),
+			Code:    0,
+			Message: "Ok",
 			Data:    result,
 		}
-		myself.wrapResponseWriter(responseWriter, &responseDto)
+		myself.wrapResponseWriter(responseWriter, request, id, &responseDto, nil, "")
 	})
 }
 
 func (myself *webService) RegisterCommonController(controllerPack *ControllerPack) {
+	id := myself.buildRequestId()
+
 	http.HandleFunc(controllerPack.Pattern, func(responseWriter http.ResponseWriter, request *http.Request) {
-		//defer func() {
-		//	value := recover()
-		//	if nil != value {
-		//		http.Error(responseWriter, fmt.Sprintln(value), http.StatusInternalServerError)
-		//	}
-		//}()
+		defer func() {
+			value := recover()
+			if nil != value {
+				myself.wrapResponseWriter(responseWriter, request, id, nil, value, "failed by panic")
+			}
+		}()
 
-		dto, err := controllerPack.ConvertToDtoFunc(request.Body)
+		buffer := new(bytes.Buffer)
+		_, err := buffer.ReadFrom(request.Body)
 		if nil != err {
-			http.Error(responseWriter, exceptions.InvalidDtoType().AttachError(err).Error(), http.StatusInternalServerError)
+			myself.wrapResponseWriter(responseWriter, request, id, nil, err.Error(), "failed to read bytes from body")
+			return
+		}
 
+		myself.log("Start", id, request.URL.String(), request.Method, buffer.Bytes())
+
+		dto, err := controllerPack.ConvertToDtoFunc(buffer.Bytes())
+		if nil != err {
+			myself.wrapResponseWriter(responseWriter, request, id, nil, err.Error(), "failed to convert body to [Dto]")
 			return
 		}
 
 		result, err := controllerPack.ControllerFunc(dto)
 		if nil != err {
-			http.Error(responseWriter, exceptions.FailedInvokeController().AttachError(err).Error(), http.StatusInternalServerError)
-
+			myself.wrapResponseWriter(responseWriter, request, id, nil, err.Error(), "failed to invoke controller")
 			return
 		}
 
-		myself.wrapResponseWriter(responseWriter, result)
+		myself.wrapResponseWriter(responseWriter, request, id, result, nil, "")
 	})
 }
 
@@ -142,8 +161,42 @@ func (myself *webService) Stop() (error) {
 	return myself.server.Shutdown(timeoutContext)
 }
 
+func (myself *webService) health() {
+	id := myself.buildRequestId()
+
+	http.HandleFunc("/health", func(responseWriter http.ResponseWriter, request *http.Request) {
+		var healthReports []*HealthReport
+
+		defer func() {
+			value := recover()
+			if nil != value {
+				healthReport := &HealthReport{
+					Ok:      false,
+					Name:    "unknown error",
+					Message: fmt.Sprintln(value),
+					Type:    "panic",
+					Level:   0,
+				}
+				healthReports = append(healthReports, healthReport)
+
+				myself.wrapResponseWriter(responseWriter, request, id, healthReports, nil, "")
+			}
+		}()
+
+		myself.log("Start", id, request.URL.String(), request.Method, nil)
+
+		length := len(myself.healthIndicators)
+		for i := 0; i < length; i++ {
+			healthIndicator := myself.healthIndicators[i]
+			healthReports = append(healthReports, healthIndicator.Indicate())
+		}
+
+		myself.wrapResponseWriter(responseWriter, request, id, healthReports, nil, "")
+	})
+}
+
 func (*webService) errorToResponseDto(value interface{}) ResponseDto {
-	businessError, ok := value.(*exceptions.BusinessError)
+	businessError, ok := value.(*BusinessError)
 	if ok {
 		return ResponseDto{
 			Code:    businessError.Code,
@@ -152,62 +205,58 @@ func (*webService) errorToResponseDto(value interface{}) ResponseDto {
 		}
 	}
 
-	exceptionsInternalServerError := exceptions.InternalServerError()
 	err, ok := value.(error)
 	if ok {
 		return ResponseDto{
-			Code:    exceptionsInternalServerError.Code,
-			Message: exceptionsInternalServerError.AttachError(err).Error(),
+			Code:    1,
+			Message: err.Error(),
 			Data:    nil,
 		}
 	}
 
 	return ResponseDto{
-		Code:    exceptionsInternalServerError.Code,
-		Message: exceptionsInternalServerError.AttachMessage(fmt.Sprintln(value)).Error(),
+		Code:    1,
+		Message: fmt.Sprintln(value),
 		Data:    nil,
 	}
 }
 
-func (myself *webService) wrapResponseWriter(responseWriter http.ResponseWriter, body interface{}) {
-	bytes, err := json.Marshal(body)
+func (myself *webService) wrapResponseWriter(responseWriter http.ResponseWriter, request *http.Request, id string, body interface{}, errorValue interface{}, message string) {
+	errorMessage := ""
+	if nil != errorValue {
+		err, ok := errorValue.(error)
+		if ok {
+			errorMessage = fmt.Sprintf("%s; error: %s", message, err.Error())
+			return
+		} else {
+			errorMessage = fmt.Sprintf("%s; error: %s", message, errorValue)
+		}
+	}
+	var buffer []byte
+	buffer, err := json.Marshal(body)
 	if nil != err {
-		http.Error(responseWriter, err.Error(), http.StatusInternalServerError)
+		errorMessage = fmt.Sprintf("failed to convert body to json; error: %s", err.Error())
+	}
+
+	if "" != errorMessage {
+		myself.log("Failed", id, request.URL.String(), request.Method, []byte(errorMessage))
+		http.Error(responseWriter, errorMessage, http.StatusInternalServerError)
 		return
 	}
 
+	responseDto, ok := body.(*ResponseDto)
+	if ok && 0 != responseDto.Code {
+		myself.log("Failed", id, request.URL.String(), request.Method, buffer)
+	} else {
+		myself.log("Success", id, request.URL.String(), request.Method, buffer)
+	}
+
 	responseWriter.Header().Add("Content-Type", "application/json;charset=UTF-8")
-	responseWriter.Write(bytes)
+	responseWriter.Write(buffer)
 }
 
-func (myself *webService) health() {
-	http.HandleFunc("/health", func(responseWriter http.ResponseWriter, request *http.Request) {
-		var healthReports []*HealthReport
-
-		//defer func() {
-		//	value := recover()
-		//	if nil != value {
-		//		healthReport := &HealthReport{
-		//			Ok:      false,
-		//			Name:    "unknown error",
-		//			Message: fmt.Sprintln(value),
-		//			Type:    "panic",
-		//			Level:   0,
-		//		}
-		//		healthReports = append(healthReports, healthReport)
-		//
-		//		myself.wrapResponseWriter(responseWriter, healthReports)
-		//	}
-		//}()
-
-		length := len(myself.healthIndicators)
-		for i := 0; i < length; i++ {
-			healthIndicator := myself.healthIndicators[i]
-			healthReports = append(healthReports, healthIndicator.Indicate())
-		}
-
-		myself.wrapResponseWriter(responseWriter, healthReports)
-	})
+func (myself *webService) log(title string, id string, url string, method string, body []byte) {
+	fmt.Printf("%s-[%s][%s][%s][body: %s]\n", title, id, url, method, body)
 }
 
 func (myself *webService) start() (error) {
@@ -220,4 +269,10 @@ func (myself *webService) start() (error) {
 	}
 	myself.server.SetKeepAlivesEnabled(true)
 	return myself.server.ListenAndServe()
+}
+
+func (myself *webService) buildRequestId() (string) {
+	var randomNumber = Int32ToString(rand.Intn(10000))
+
+	return Int64ToString(time.Now().Unix()) + "-" + randomNumber
 }

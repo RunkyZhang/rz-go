@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"io"
 	"encoding/json"
 
 	"rz/middleware/notifycenter/models"
@@ -10,7 +9,7 @@ import (
 	"rz/middleware/notifycenter/common"
 )
 
-func ConvertToMailMessageDto(body io.ReadCloser) (interface{}, error) {
+func ConvertToMailMessageDto(body []byte) (interface{}, error) {
 	err := common.Assert.IsNotNilToError(body, "body")
 	if nil != err {
 		return nil, err
@@ -20,7 +19,7 @@ func ConvertToMailMessageDto(body io.ReadCloser) (interface{}, error) {
 	return convertToDto(body, &mailMessageDto)
 }
 
-func ConvertToSmsMessageDto(body io.ReadCloser) (interface{}, error) {
+func ConvertToSmsMessageDto(body []byte) (interface{}, error) {
 	err := common.Assert.IsNotNilToError(body, "body")
 	if nil != err {
 		return nil, err
@@ -30,7 +29,7 @@ func ConvertToSmsMessageDto(body io.ReadCloser) (interface{}, error) {
 	return convertToDto(body, &smsMessageDto)
 }
 
-func ConvertToSmsCallbackMessageDto(body io.ReadCloser) (interface{}, error) {
+func ConvertToSmsCallbackMessageDto(body []byte) (interface{}, error) {
 	err := common.Assert.IsNotNilToError(body, "body")
 	if nil != err {
 		return nil, err
@@ -40,9 +39,8 @@ func ConvertToSmsCallbackMessageDto(body io.ReadCloser) (interface{}, error) {
 	return convertToDto(body, &smsUserCallbackMessageRequestExternalDto)
 }
 
-func convertToDto(body io.ReadCloser, messageDto interface{}) (interface{}, error) {
-	decoder := json.NewDecoder(body)
-	err := decoder.Decode(&messageDto)
+func convertToDto(body []byte, messageDto interface{}) (interface{}, error) {
+	err := json.Unmarshal(body, &messageDto)
 	if nil != err {
 		return nil, exceptions.InvalidDtoType().AttachError(err)
 	}
