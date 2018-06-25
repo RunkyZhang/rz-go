@@ -11,12 +11,12 @@ var (
 )
 
 func init() {
-	SmsTemplateRepository.defaultDatabaseKey = "default"
-	SmsTemplateRepository.rawTableName = "smsTemplatePo"
+	SmsTemplateRepository.DefaultDatabaseKey = "default"
+	SmsTemplateRepository.RawTableName = "smsTemplatePo"
 }
 
 type smsTemplateRepository struct {
-	repositoryBase
+	common.RepositoryBase
 }
 
 func (myself *smsTemplateRepository) Insert(smsTemplatePo *models.SmsTemplatePo) (error) {
@@ -25,11 +25,11 @@ func (myself *smsTemplateRepository) Insert(smsTemplatePo *models.SmsTemplatePo)
 		return err
 	}
 
-	return myself.repositoryBase.Insert(smsTemplatePo, nil)
+	return myself.RepositoryBase.Insert(smsTemplatePo, nil)
 }
 
 func (myself *smsTemplateRepository) UpdateById(id int, userCallbackUrls string, pattern string) (error) {
-	database, err := myself.getShardDatabase(nil)
+	database, err := myself.GetShardDatabase(nil)
 	if nil != err {
 		return err
 	}
@@ -44,7 +44,7 @@ func (myself *smsTemplateRepository) UpdateById(id int, userCallbackUrls string,
 
 func (myself *smsTemplateRepository) SelectAll() ([]models.SmsTemplatePo, error) {
 	var smsTemplatePos []models.SmsTemplatePo
-	err := myself.repositoryBase.SelectAll(&smsTemplatePos)
+	err := myself.RepositoryBase.SelectAll(&smsTemplatePos)
 
 	return smsTemplatePos, err
 }

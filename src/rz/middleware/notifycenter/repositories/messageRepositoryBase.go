@@ -6,11 +6,11 @@ import (
 )
 
 type MessageRepositoryBase struct {
-	repositoryBase
+	common.RepositoryBase
 }
 
 func (myself *MessageRepositoryBase) UpdateById(id int, states string, finished bool, finishedTime time.Time, errorMessages string, date time.Time) (int64, error) {
-	database, err := myself.getShardDatabase(date)
+	database, err := myself.GetShardDatabase(date)
 	if nil != err {
 		return 0, err
 	}
@@ -32,7 +32,7 @@ func (myself *MessageRepositoryBase) SelectByExpireTimeAndFinished(pos interface
 		return err
 	}
 
-	database, err := myself.getShardDatabase(nil)
+	database, err := myself.GetShardDatabase(nil)
 	if nil != err {
 		return err
 	}

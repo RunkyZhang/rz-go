@@ -15,10 +15,10 @@ type smsMessageRepository struct {
 }
 
 func init() {
-	SmsMessageRepository.defaultDatabaseKey = "default"
-	SmsMessageRepository.rawTableName = "smsMessagePo"
-	SmsMessageRepository.getDatabaseKeyFunc = SmsMessageRepository.getDatabaseKey
-	SmsMessageRepository.getTableNameFunc = SmsMessageRepository.getTableName
+	SmsMessageRepository.DefaultDatabaseKey = "default"
+	SmsMessageRepository.RawTableName = "smsMessagePo"
+	SmsMessageRepository.GetDatabaseKeyFunc = SmsMessageRepository.getDatabaseKey
+	SmsMessageRepository.GetTableNameFunc = SmsMessageRepository.getTableName
 }
 
 func (myself *smsMessageRepository) Insert(smsMessagePo *models.SmsMessagePo) (error) {
@@ -27,13 +27,13 @@ func (myself *smsMessageRepository) Insert(smsMessagePo *models.SmsMessagePo) (e
 		return err
 	}
 
-	return myself.repositoryBase.Insert(smsMessagePo, smsMessagePo.CreatedTime)
+	return myself.RepositoryBase.Insert(smsMessagePo, smsMessagePo.CreatedTime)
 }
 
 func (myself *smsMessageRepository) SelectById(id int, date time.Time) (*models.SmsMessagePo, error) {
 	smsMessagePo := &models.SmsMessagePo{}
 
-	err := myself.repositoryBase.SelectById(id, smsMessagePo, date)
+	err := myself.RepositoryBase.SelectById(id, smsMessagePo, date)
 
 	return smsMessagePo, err
 }
@@ -47,7 +47,7 @@ func (myself *smsMessageRepository) SelectByExpireTimeAndFinished(date time.Time
 }
 
 func (myself *smsMessageRepository) SelectByIdentifyingCode(templateId int, identifyingCode string, date time.Time) (*models.SmsMessagePo, error) {
-	database, err := myself.getShardDatabase(date)
+	database, err := myself.GetShardDatabase(date)
 	if nil != err {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (myself *smsMessageRepository) SelectByIdentifyingCode(templateId int, iden
 }
 
 func (myself *smsMessageRepository) getDatabaseKey(shardParameters ...interface{}) (string) {
-	return myself.defaultDatabaseKey
+	return myself.DefaultDatabaseKey
 }
 
 func (myself *smsMessageRepository) getTableName(shardParameters ...interface{}) (string) {
@@ -72,5 +72,5 @@ func (myself *smsMessageRepository) getTableName(shardParameters ...interface{})
 		return ""
 	}
 
-	return myself.rawTableName + "_" + common.Int32ToString(date.Year())
+	return myself.RawTableName + "_" + common.Int32ToString(date.Year())
 }

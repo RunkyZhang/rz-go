@@ -11,10 +11,10 @@ var (
 )
 
 func init() {
-	SmsUserMessageRepository.defaultDatabaseKey = "default"
-	SmsUserMessageRepository.rawTableName = "smsUserMessagePo"
-	SmsUserMessageRepository.getDatabaseKeyFunc = SmsUserMessageRepository.getDatabaseKey
-	SmsUserMessageRepository.getTableNameFunc = SmsUserMessageRepository.getTableName
+	SmsUserMessageRepository.DefaultDatabaseKey = "default"
+	SmsUserMessageRepository.RawTableName = "smsUserMessagePo"
+	SmsUserMessageRepository.GetDatabaseKeyFunc = SmsUserMessageRepository.getDatabaseKey
+	SmsUserMessageRepository.GetTableNameFunc = SmsUserMessageRepository.getTableName
 }
 
 type smsUserMessageRepository struct {
@@ -27,19 +27,19 @@ func (myself *smsUserMessageRepository) Insert(smsUserMessagePo *models.SmsUserM
 		return err
 	}
 
-	return myself.repositoryBase.Insert(smsUserMessagePo, smsUserMessagePo.CreatedTime)
+	return myself.RepositoryBase.Insert(smsUserMessagePo, smsUserMessagePo.CreatedTime)
 }
 
 func (myself *smsUserMessageRepository) SelectById(id int, date time.Time) (*models.SmsUserMessagePo, error) {
 	smsUserMessagePo := &models.SmsUserMessagePo{}
 
-	err := myself.repositoryBase.SelectById(id, smsUserMessagePo, date)
+	err := myself.RepositoryBase.SelectById(id, smsUserMessagePo, date)
 
 	return smsUserMessagePo, err
 }
 
 func (myself *smsUserMessageRepository) SelectByPhoneNumber(nationCode string, phoneNumber string) ([]models.SmsUserMessagePo, error) {
-	database, err := myself.getShardDatabase(nil)
+	database, err := myself.GetShardDatabase(nil)
 	if nil != err {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (myself *smsUserMessageRepository) SelectByPhoneNumber(nationCode string, p
 }
 
 func (myself *smsUserMessageRepository) getDatabaseKey(shardParameters ...interface{}) (string) {
-	return myself.defaultDatabaseKey
+	return myself.DefaultDatabaseKey
 }
 
 func (myself *smsUserMessageRepository) getTableName(shardParameters ...interface{}) (string) {
@@ -64,5 +64,5 @@ func (myself *smsUserMessageRepository) getTableName(shardParameters ...interfac
 		return ""
 	}
 
-	return myself.rawTableName + "_" + common.Int32ToString(date.Year())
+	return myself.RawTableName + "_" + common.Int32ToString(date.Year())
 }

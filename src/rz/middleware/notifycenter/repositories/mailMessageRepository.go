@@ -15,10 +15,10 @@ type mailMessageRepository struct {
 }
 
 func init() {
-	MailMessageRepository.defaultDatabaseKey = "default"
-	MailMessageRepository.rawTableName = "mailMessagePo"
-	MailMessageRepository.getDatabaseKeyFunc = MailMessageRepository.getDatabaseKey
-	MailMessageRepository.getTableNameFunc = MailMessageRepository.getTableName
+	MailMessageRepository.DefaultDatabaseKey = "default"
+	MailMessageRepository.RawTableName = "mailMessagePo"
+	MailMessageRepository.GetDatabaseKeyFunc = MailMessageRepository.getDatabaseKey
+	MailMessageRepository.GetTableNameFunc = MailMessageRepository.getTableName
 }
 
 func (myself *mailMessageRepository) Insert(mailMessagePo *models.MailMessagePo) (error) {
@@ -27,13 +27,13 @@ func (myself *mailMessageRepository) Insert(mailMessagePo *models.MailMessagePo)
 		return err
 	}
 
-	return myself.repositoryBase.Insert(mailMessagePo, mailMessagePo.CreatedTime)
+	return myself.RepositoryBase.Insert(mailMessagePo, mailMessagePo.CreatedTime)
 }
 
 func (myself *mailMessageRepository) SelectById(id int, date time.Time) (*models.MailMessagePo, error) {
 	mailMessagePo := &models.MailMessagePo{}
 
-	err := myself.repositoryBase.SelectById(id, mailMessagePo, date)
+	err := myself.RepositoryBase.SelectById(id, mailMessagePo, date)
 
 	return mailMessagePo, err
 }
@@ -47,7 +47,7 @@ func (myself *mailMessageRepository) SelectByExpireTimeAndFinished(date time.Tim
 }
 
 func (myself *mailMessageRepository) getDatabaseKey(shardParameters ...interface{}) (string) {
-	return myself.defaultDatabaseKey
+	return myself.DefaultDatabaseKey
 }
 
 func (myself *mailMessageRepository) getTableName(shardParameters ...interface{}) (string) {
@@ -60,5 +60,5 @@ func (myself *mailMessageRepository) getTableName(shardParameters ...interface{}
 		return ""
 	}
 
-	return myself.rawTableName + "_" + common.Int32ToString(date.Year())
+	return myself.RawTableName + "_" + common.Int32ToString(date.Year())
 }

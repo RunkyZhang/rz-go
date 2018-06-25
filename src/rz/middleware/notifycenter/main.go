@@ -8,9 +8,9 @@ import (
 
 	"rz/middleware/notifycenter/controllers"
 	"rz/middleware/notifycenter/global"
-	"rz/middleware/notifycenter/repositories"
 	"rz/middleware/notifycenter/consumers"
 	"rz/middleware/notifycenter/healths"
+	"rz/middleware/notifycenter/common"
 )
 
 // http://work.weixin.qq.com/api/doc
@@ -32,7 +32,7 @@ func main() {
 
 func start() {
 	// repositories
-	repositories.Init(
+	common.InitDatabases(
 		map[string]string{
 			"default": "ua_notifycenter:ekIxrgWsJ03u@tcp(10.0.34.44:3306)/notifycenter?parseTime=true",
 		})
@@ -54,7 +54,7 @@ func start() {
 	if nil == err {
 		global.WebService.RegisterHealthIndicator(redisHealthIndicator)
 	}
-	mysqlHealthIndicator, err := healths.NewMySQLHealthIndicator(repositories.Databases)
+	mysqlHealthIndicator, err := healths.NewMySQLHealthIndicator(common.Databases)
 	if nil == err {
 		global.WebService.RegisterHealthIndicator(mysqlHealthIndicator)
 	}
