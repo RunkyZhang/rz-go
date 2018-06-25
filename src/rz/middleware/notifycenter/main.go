@@ -32,10 +32,7 @@ func main() {
 
 func start() {
 	// repositories
-	common.InitDatabases(
-		map[string]string{
-			"default": "ua_notifycenter:ekIxrgWsJ03u@tcp(10.0.34.44:3306)/notifycenter?parseTime=true",
-		})
+	common.InitDatabases(global.Config.Databases)
 
 	// asyncWorker
 	global.AsyncWorker.Start()

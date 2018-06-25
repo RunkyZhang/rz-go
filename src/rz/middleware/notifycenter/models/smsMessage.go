@@ -58,3 +58,9 @@ func SmsMessagePoToDto(smsMessagePo *SmsMessagePo) (*SmsMessageDto) {
 
 	return smsMessageDto
 }
+
+type QuerySmsMessageRequestDto struct {
+	Id          int    `json:"id"`
+	SystemAlias string `json:"systemAlias"`
+	CreatedTime int64  `json:"createdTime"`
+}

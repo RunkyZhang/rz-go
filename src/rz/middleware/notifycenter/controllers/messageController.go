@@ -19,6 +19,11 @@ var (
 			ControllerFunc:   sendSms,
 			ConvertToDtoFunc: ConvertToSmsMessageDto,
 		},
+		QuerySmsControllerPack: &common.ControllerPack{
+			Pattern:          "/message/query-sms",
+			ControllerFunc:   querySms,
+			ConvertToDtoFunc: ConvertToQuerySmsMessageRequestDtoDto,
+		},
 	}
 )
 
@@ -27,6 +32,7 @@ type messageController struct {
 
 	SendMailControllerPack *common.ControllerPack
 	SendSmsControllerPack  *common.ControllerPack
+	QuerySmsControllerPack *common.ControllerPack
 }
 
 func sendMail(dto interface{}) (interface{}, error) {
@@ -47,4 +53,14 @@ func sendSms(dto interface{}) (interface{}, error) {
 	}
 
 	return services.SmsMessageService.SendSms(smsMessageDto)
+}
+
+func querySms(dto interface{}) (interface{}, error) {
+	querySmsMessageRequestDto, ok := dto.(*models.QuerySmsMessageRequestDto)
+	err := common.Assert.IsTrueToError(ok, "dto.(*models.QuerySmsMessageRequestDto)")
+	if nil != err {
+		return nil, err
+	}
+
+	return services.SmsMessageService.QuerySms(querySmsMessageRequestDto)
 }

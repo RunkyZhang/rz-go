@@ -56,14 +56,13 @@ type webService struct {
 }
 
 func (myself *webService) RegisterStandardController(controllerPack *ControllerPack) {
-	id := myself.buildRequestId()
-	var responseDto ResponseDto
-
 	http.HandleFunc(controllerPack.Pattern, func(responseWriter http.ResponseWriter, request *http.Request) {
+		id := myself.buildRequestId()
+
 		defer func() {
 			value := recover()
 			if nil != value {
-				responseDto = myself.errorToResponseDto(value)
+				responseDto := myself.errorToResponseDto(value)
 				myself.wrapResponseWriter(responseWriter, request, id, &responseDto, nil, "")
 			}
 		}()
@@ -71,7 +70,7 @@ func (myself *webService) RegisterStandardController(controllerPack *ControllerP
 		buffer := new(bytes.Buffer)
 		_, err := buffer.ReadFrom(request.Body)
 		if nil != err {
-			responseDto = myself.errorToResponseDto(err)
+			responseDto := myself.errorToResponseDto(err)
 			myself.wrapResponseWriter(responseWriter, request, id, &responseDto, nil, "")
 
 			return
@@ -81,7 +80,7 @@ func (myself *webService) RegisterStandardController(controllerPack *ControllerP
 
 		dto, err := controllerPack.ConvertToDtoFunc(buffer.Bytes())
 		if nil != err {
-			responseDto = myself.errorToResponseDto(err)
+			responseDto := myself.errorToResponseDto(err)
 			myself.wrapResponseWriter(responseWriter, request, id, &responseDto, nil, "")
 
 			return
@@ -89,13 +88,13 @@ func (myself *webService) RegisterStandardController(controllerPack *ControllerP
 
 		result, err := controllerPack.ControllerFunc(dto)
 		if nil != err {
-			responseDto = myself.errorToResponseDto(err)
+			responseDto := myself.errorToResponseDto(err)
 			myself.wrapResponseWriter(responseWriter, request, id, &responseDto, nil, "")
 
 			return
 		}
 
-		responseDto = ResponseDto{
+		responseDto := ResponseDto{
 			Code:    0,
 			Message: "Ok",
 			Data:    result,
@@ -105,9 +104,9 @@ func (myself *webService) RegisterStandardController(controllerPack *ControllerP
 }
 
 func (myself *webService) RegisterCommonController(controllerPack *ControllerPack) {
-	id := myself.buildRequestId()
-
 	http.HandleFunc(controllerPack.Pattern, func(responseWriter http.ResponseWriter, request *http.Request) {
+		id := myself.buildRequestId()
+
 		defer func() {
 			value := recover()
 			if nil != value {
@@ -162,9 +161,8 @@ func (myself *webService) Stop() (error) {
 }
 
 func (myself *webService) health() {
-	id := myself.buildRequestId()
-
 	http.HandleFunc("/health", func(responseWriter http.ResponseWriter, request *http.Request) {
+		id := myself.buildRequestId()
 		var healthReports []*HealthReport
 
 		defer func() {

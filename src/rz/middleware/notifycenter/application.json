@@ -8,6 +8,9 @@
     "databaseId": 0,
     "password": ""
   },
+  "databases": {
+    "default": "ua_notifycenter:ekIxrgWsJ03u@tcp(10.0.34.44:3306)/notifycenter?parseTime=true"
+  },
   "sms": {
     "url": "https://yun.tim.qq.com/v5/tlssmssvr/sendmultisms2",
     "appKey": "0e602644340c447b2d9174195f178e4f",

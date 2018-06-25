@@ -29,6 +29,16 @@ func ConvertToSmsMessageDto(body []byte) (interface{}, error) {
 	return convertToDto(body, &smsMessageDto)
 }
 
+func ConvertToQuerySmsMessageRequestDtoDto(body []byte) (interface{}, error) {
+	err := common.Assert.IsNotNilToError(body, "body")
+	if nil != err {
+		return nil, err
+	}
+
+	var querySmsMessageRequestDto models.QuerySmsMessageRequestDto
+	return convertToDto(body, &querySmsMessageRequestDto)
+}
+
 func ConvertToSmsCallbackMessageDto(body []byte) (interface{}, error) {
 	err := common.Assert.IsNotNilToError(body, "body")
 	if nil != err {

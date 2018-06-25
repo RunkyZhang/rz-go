@@ -1,9 +1,10 @@
 package models
 
 import (
-	"rz/middleware/notifycenter/enumerations"
 	"time"
 	"strings"
+
+	"rz/middleware/notifycenter/enumerations"
 )
 
 type MessageBaseDto struct {
@@ -19,7 +20,7 @@ type MessageBaseDto struct {
 	Id            int                      `json:"id"`
 	SendChannel   enumerations.SendChannel `json:"sendChannel"`
 	Finished      bool                     `json:"finished"`
-	FinishedTime  time.Time                `json:"finishedTime"`
+	FinishedTime  int64                    `json:"finishedTime"`
 	States        string                   `json:"states"`
 	ErrorMessages string                   `json:"errorMessages"`
 	CreatedTime   int64                    `json:"createdTime"`
@@ -67,7 +68,7 @@ func MessageBasePoToDto(messageBasePo *MessageBasePo) (*MessageBaseDto) {
 	messageBaseDto.Id = messageBasePo.Id
 	messageBaseDto.SendChannel = messageBasePo.SendChannel
 	messageBaseDto.Finished = messageBasePo.Finished
-	messageBaseDto.FinishedTime = messageBasePo.FinishedTime
+	messageBaseDto.FinishedTime = messageBasePo.FinishedTime.Unix()
 	messageBaseDto.States = messageBasePo.States
 	messageBaseDto.ErrorMessages = messageBasePo.ErrorMessages
 	messageBaseDto.CreatedTime = messageBasePo.CreatedTime.Unix()

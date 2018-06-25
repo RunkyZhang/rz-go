@@ -72,7 +72,7 @@ func (myself *RepositoryBase) Update(po interface{}, shardParameters ...interfac
 	return database.Update(po).Error
 }
 
-func (myself *RepositoryBase) SelectById(id int, po interface{}, shardParameters ...interface{}) (error) {
+func (myself *RepositoryBase) SelectById(id interface{}, po interface{}, shardParameters ...interface{}) (error) {
 	err := Assert.IsNotNilToError(po, "po")
 	if nil != err {
 		return err

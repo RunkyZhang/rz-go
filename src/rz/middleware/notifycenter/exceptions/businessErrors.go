@@ -25,4 +25,5 @@ var (
 	InvalidSystemAlias       = func() (*common.BusinessError) { return common.NewBusinessError("Invalid [SystemAlias]", 30016) }
 	InvalidMessageExpireTime = func() (*common.BusinessError) { return common.NewBusinessError("Invalid message expire time", 30017) }
 	InvalidIdentifyingCode   = func() (*common.BusinessError) { return common.NewBusinessError("Invalid identifying code", 30018) }
+	MessageSystemAliasMotMatch   = func() (*common.BusinessError) { return common.NewBusinessError("Message [systemAlias] is not match", 30019) }
 )

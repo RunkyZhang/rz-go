@@ -1,12 +1,14 @@
 package services
 
 import (
+	"time"
+	"strings"
+
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/managements"
 	"rz/middleware/notifycenter/enumerations"
 	"rz/middleware/notifycenter/exceptions"
 	"rz/middleware/notifycenter/common"
-	"time"
 )
 
 var (
@@ -54,4 +56,17 @@ func (myself *smsMessageService) SendSms(smsMessageDto *models.SmsMessageDto) (i
 	}
 
 	return smsMessagePo.Id, err
+}
+
+func (myself *smsMessageService) QuerySms(querySmsMessageRequestDto *models.QuerySmsMessageRequestDto) (*models.SmsMessageDto, error) {
+	smsMessagePo, err := managements.SmsMessageManagement.GetById(querySmsMessageRequestDto.Id, time.Unix(querySmsMessageRequestDto.CreatedTime, 0))
+	if nil != err {
+		return nil, err
+	}
+
+	if !strings.EqualFold(smsMessagePo.SystemAlias, querySmsMessageRequestDto.SystemAlias) {
+		return nil, exceptions.MessageSystemAliasMotMatch().AttachMessage(querySmsMessageRequestDto.SystemAlias)
+	}
+
+	return models.SmsMessagePoToDto(smsMessagePo), err
 }
