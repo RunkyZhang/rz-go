@@ -1,26 +1,15 @@
 package healths
 
-import "rz/middleware/notifycenter/common"
-
-func NewRedisHealthIndicator(redisClient *common.RedisClient) (*RedisHealthIndicator, error) {
-	err := common.Assert.IsNotNilToError(redisClient, "redisClient")
-	if nil != err {
-		return nil, err
-	}
-
-	redisHealthIndicator := &RedisHealthIndicator{
-		redisClient: redisClient,
-	}
-
-	return redisHealthIndicator, nil
-}
+import (
+	"rz/middleware/notifycenter/common"
+	"rz/middleware/notifycenter/global"
+)
 
 type RedisHealthIndicator struct {
-	redisClient *common.RedisClient
 }
 
 func (myself *RedisHealthIndicator) Indicate() (*common.HealthReport) {
-	ok, err := myself.redisClient.Ping()
+	ok, err := global.GetRedisClient().Ping()
 
 	var message string
 	if nil != err {

@@ -32,7 +32,7 @@ func main() {
 
 func start() {
 	// repositories
-	common.InitDatabases(global.Config.Databases)
+	common.SetConnectionStrings(global.GetConfig().Databases)
 
 	// asyncWorker
 	global.AsyncWorker.Start()
@@ -47,17 +47,11 @@ func start() {
 	controllers.SmsUserCallbackController.Enable(controllers.SmsUserCallbackController, false)
 
 	// healths
-	redisHealthIndicator, err := healths.NewRedisHealthIndicator(global.RedisClient)
-	if nil == err {
-		global.WebService.RegisterHealthIndicator(redisHealthIndicator)
-	}
-	mysqlHealthIndicator, err := healths.NewMySQLHealthIndicator(common.Databases)
-	if nil == err {
-		global.WebService.RegisterHealthIndicator(mysqlHealthIndicator)
-	}
+	global.WebService.RegisterHealthIndicator(&healths.RedisHealthIndicator{})
+	global.WebService.RegisterHealthIndicator(&healths.MySQLHealthIndicator{})
 
 	// web service
-	fmt.Printf("web service listening %s ...\n", global.Config.Web.Listen)
+	fmt.Printf("web service listening %s ...\n", global.GetConfig().Web.Listen)
 	global.WebService.Start()
 }
 

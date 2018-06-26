@@ -3,12 +3,15 @@ package global
 import (
 	"fmt"
 	"encoding/json"
-	"rz/middleware/notifycenter/common"
 	"errors"
+	"sync"
+
+	"rz/middleware/notifycenter/common"
 )
 
 var (
-	Config = getConfiguration()
+	configuration *Configuration = nil
+	configLock    sync.Mutex
 )
 
 type Configuration struct {
@@ -54,7 +57,18 @@ type qyWeixin struct {
 	AgentId    int    `json:"agentId"`
 }
 
-func getConfiguration() (Configuration) {
+func GetConfig() (*Configuration) {
+	if nil != configuration {
+		return configuration
+	}
+
+	configLock.Lock()
+	defer configLock.Unlock()
+
+	if nil != configuration {
+		return configuration
+	}
+
 	filePath := Arguments[ArgumentNameConfig]
 
 	if !common.IsExistPath(filePath) {
@@ -66,11 +80,27 @@ func getConfiguration() (Configuration) {
 		panic(errors.New(fmt.Sprintf("failed to get config file content(%s). error: %s\n", content, err.Error())))
 	}
 
-	var configuration Configuration
+	configuration = &Configuration{}
 	err = json.Unmarshal([]byte(content), &configuration)
 	if nil != err {
 		panic(errors.New(fmt.Sprintf("invaild config file content(%s). error: %s", content, err.Error())))
 	}
 
 	return configuration
+}
+
+func RefreshConfig() {
+	oldConfiguration := configuration
+
+	defer func() {
+		value := recover()
+		if nil != value {
+			fmt.Printf("failed to refresh config file\n")
+
+			configuration = oldConfiguration
+		}
+	}()
+
+	configuration = nil
+	GetConfig()
 }

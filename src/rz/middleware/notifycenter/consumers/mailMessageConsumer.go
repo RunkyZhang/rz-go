@@ -16,12 +16,12 @@ var (
 
 func init() {
 	MailMessageConsumer = &mailMessageConsumer{
-		Host:        global.Config.Mail.Host,
-		Port:        global.Config.Mail.Port,
-		UserName:    global.Config.Mail.UserName,
-		password:    global.Config.Mail.Password,
-		From:        global.Config.Mail.From,
-		ContentType: global.Config.Mail.ContentType,
+		Host:        global.GetConfig().Mail.Host,
+		Port:        global.GetConfig().Mail.Port,
+		UserName:    global.GetConfig().Mail.UserName,
+		password:    global.GetConfig().Mail.Password,
+		From:        global.GetConfig().Mail.From,
+		ContentType: global.GetConfig().Mail.ContentType,
 	}
 	MailMessageConsumer.getMessageFunc = MailMessageConsumer.getMessage
 	MailMessageConsumer.sendFunc = MailMessageConsumer.Send

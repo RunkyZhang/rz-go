@@ -23,10 +23,10 @@ var (
 
 func init() {
 	SmsMessageConsumer = &smsMessageConsumer{
-		Url:               global.Config.Sms.Url,
-		AppId:             global.Config.Sms.AppId,
-		AppKey:            global.Config.Sms.AppKey,
-		DefaultNationCode: global.Config.Sms.DefaultNationCode,
+		Url:               global.GetConfig().Sms.Url,
+		AppId:             global.GetConfig().Sms.AppId,
+		AppKey:            global.GetConfig().Sms.AppKey,
+		DefaultNationCode: global.GetConfig().Sms.DefaultNationCode,
 	}
 	SmsMessageConsumer.getMessageFunc = SmsMessageConsumer.getMessage
 	SmsMessageConsumer.sendFunc = SmsMessageConsumer.Send

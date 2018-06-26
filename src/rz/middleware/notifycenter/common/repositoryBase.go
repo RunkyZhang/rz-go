@@ -5,33 +5,55 @@ import (
 	"github.com/jinzhu/gorm"
 	"errors"
 	"fmt"
+	"sync"
 )
 
 var (
-	Databases map[string]*gorm.DB
+	connectionStrings map[string]string
+	databases         map[string]*gorm.DB
+	databaseLock      sync.Mutex
 )
 
-func InitDatabases(connectionStrings map[string]string) {
-	if nil == Databases {
-		Databases = make(map[string]*gorm.DB)
-		for key, value := range connectionStrings {
-			database, err := gorm.Open("mysql", value)
-			if nil != err {
-				closeDatabase()
-				panic(errors.New("failed to open database, error: " + err.Error()))
-			}
-			database.DB().SetMaxIdleConns(2)
-			database.DB().SetMaxOpenConns(10)
+func SetConnectionStrings(keyConnectionStrings map[string]string) {
+	connectionStrings = keyConnectionStrings
 
-			Databases[key] = database
-		}
-	}
+	GetDatabases()
 }
 
-func closeDatabase() {
-	for _, value := range Databases {
+func GetDatabases() (map[string]*gorm.DB) {
+	if nil != databases {
+		return databases
+	}
+
+	databaseLock.Lock()
+	defer databaseLock.Unlock()
+
+	if nil != databases {
+		return databases
+	}
+
+	databases = make(map[string]*gorm.DB)
+	for key, value := range connectionStrings {
+		database, err := gorm.Open("mysql", value)
+		if nil != err {
+			CloseDatabase()
+			panic(errors.New(fmt.Sprintf("failed to open database; error: %s", err.Error())))
+		}
+		database.DB().SetMaxIdleConns(2)
+		database.DB().SetMaxOpenConns(10)
+
+		databases[key] = database
+	}
+
+	return databases
+}
+
+func CloseDatabase() {
+	for _, value := range databases {
 		value.Close()
 	}
+
+	databases = nil
 }
 
 type getDatabaseKeyFunc func(...interface{}) (string)
@@ -108,7 +130,7 @@ func (myself *RepositoryBase) GetShardDatabase(shardParameters ...interface{}) (
 		defaultDatabaseKey = myself.DefaultDatabaseKey
 	}
 
-	database, ok := Databases[defaultDatabaseKey]
+	database, ok := GetDatabases()[defaultDatabaseKey]
 	if !ok {
 		return nil, errors.New(fmt.Sprintf("failed to get database(%s)", defaultDatabaseKey))
 	}

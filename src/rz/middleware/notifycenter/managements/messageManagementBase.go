@@ -25,12 +25,12 @@ func (myself *MessageManagementBase) ModifyById(id int, states string, finished 
 }
 
 func (myself *MessageManagementBase) RemoveMessageId(messageId int) (int64, error) {
-	return global.RedisClient.SortedSetRemoveByValue(global.RedisKeyMessageIds+myself.KeySuffix, common.Int32ToString(messageId))
+	return global.GetRedisClient().SortedSetRemoveByValue(global.RedisKeyMessageIds+myself.KeySuffix, common.Int32ToString(messageId))
 }
 
 func (myself *MessageManagementBase) DequeueMessageIds(now time.Time) ([]int, error) {
 	max := float64(now.Unix())
-	messageIds, err := global.RedisClient.SortedSetRangeByScore(global.RedisKeyMessageIds+myself.KeySuffix, 0, max)
+	messageIds, err := global.GetRedisClient().SortedSetRangeByScore(global.RedisKeyMessageIds+myself.KeySuffix, 0, max)
 	if nil != err {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (myself *MessageManagementBase) DequeueMessageIds(now time.Time) ([]int, er
 }
 
 func (myself *MessageManagementBase) EnqueueMessageIds(messageId int, score int64) (error) {
-	return global.RedisClient.SortedSetAdd(
+	return global.GetRedisClient().SortedSetAdd(
 		global.RedisKeyMessageIds+myself.KeySuffix,
 		common.Int32ToString(messageId),
 		float64(score))

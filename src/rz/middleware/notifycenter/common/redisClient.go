@@ -11,7 +11,7 @@ type doFunc func(redis.Conn) (interface{}, error)
 type RedisClient struct {
 	redisPool *redis.Pool
 
-	RedisClientSettings *RedisClientSettings
+	RedisClientSettings RedisClientSettings
 }
 
 type RedisClientSettings struct {
@@ -25,12 +25,7 @@ type RedisClientSettings struct {
 	Address         string
 }
 
-func NewRedisClient(redisClientSettings *RedisClientSettings) (*RedisClient, error) {
-	err := Assert.IsNotNilToError(redisClientSettings, "redisClientSettings")
-	if nil != err {
-		return nil, err
-	}
-
+func NewRedisClient(redisClientSettings RedisClientSettings) (*RedisClient) {
 	redisClient := &RedisClient{
 		RedisClientSettings: redisClientSettings,
 	}
@@ -55,7 +50,11 @@ func NewRedisClient(redisClientSettings *RedisClientSettings) (*RedisClient, err
 		},
 	}
 
-	return redisClient, nil
+	return redisClient
+}
+
+func (myself *RedisClient) Close() (error) {
+	return myself.redisPool.Close()
 }
 
 func (myself *RedisClient) Ping() (bool, error) {
