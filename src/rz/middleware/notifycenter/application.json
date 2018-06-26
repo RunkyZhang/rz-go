@@ -9,7 +9,7 @@
     "password": ""
   },
   "databases": {
-    "default": "ua_notifycenter:ekIxrgWsJ03u@tcp(10.0.34.44:3306)/notifycenter?parseTime=true"
+    "default": "ua_notifycenter:ekIxrgWsJ03u@tcp(10.0.34.44:3306)/notifycenter?parseTime=true&charset=utf8&loc=Local"
   },
   "sms": {
     "url": "https://yun.tim.qq.com/v5/tlssmssvr/sendmultisms2",

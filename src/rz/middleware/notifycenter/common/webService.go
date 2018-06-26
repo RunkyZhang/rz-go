@@ -257,7 +257,7 @@ func (myself *webService) log(title string, id string, url string, method string
 	fmt.Printf("%s-[%s][%s][%s][body: %s]\n", title, id, url, method, body)
 }
 
-func (myself *webService) start() (error) {
+func (myself *webService) start() {
 	myself.health()
 
 	myself.server = &http.Server{
@@ -266,7 +266,10 @@ func (myself *webService) start() (error) {
 		MaxHeaderBytes: 1 << 20,
 	}
 	myself.server.SetKeepAlivesEnabled(true)
-	return myself.server.ListenAndServe()
+	err := myself.server.ListenAndServe()
+	if nil != err {
+		panic(errors.New(fmt.Sprintf("failed to start web service; error: %s", err.Error())))
+	}
 }
 
 func (myself *webService) buildRequestId() (string) {
