@@ -7,7 +7,7 @@ var (
 )
 
 func getArguments() (map[string]string) {
-	flag.String(ArgumentNameConfig, "application.json", "config file")
+	flag.String(ArgumentNameConfig, "application%s.json", "config file")
 	flag.Parse()
 
 	arguments := map[string]string{}

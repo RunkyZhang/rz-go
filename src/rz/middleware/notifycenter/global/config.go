@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"sync"
+	"os"
 
 	"rz/middleware/notifycenter/common"
 )
@@ -70,6 +71,8 @@ func GetConfig() (*Configuration) {
 	}
 
 	filePath := Arguments[ArgumentNameConfig]
+	environmentId := os.Getenv("CONFIGENV")
+	filePath = fmt.Sprintf(filePath, getConfigFileSuffix(environmentId))
 
 	if !common.IsExistPath(filePath) {
 		panic(errors.New(fmt.Sprintf("cannot find config file path(%s)\n", filePath)))
@@ -87,6 +90,24 @@ func GetConfig() (*Configuration) {
 	}
 
 	return configuration
+}
+
+func getConfigFileSuffix(environmentId string) (string) {
+	if "10" == environmentId {
+		return "_DEV"
+	} else if "20" == environmentId {
+		return "_TEST"
+	} else if "30" == environmentId {
+		return "_UAT"
+	} else if "40" == environmentId {
+		return "_PRD"
+	} else if "50" == environmentId {
+		return "_MIT"
+	} else if "60" == environmentId {
+		return "_STG"
+	}
+
+	return "_DEV"
 }
 
 func RefreshConfig() {

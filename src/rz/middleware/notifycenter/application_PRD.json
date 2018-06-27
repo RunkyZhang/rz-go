@@ -1,0 +1,33 @@
+{
+  "consumingInterval": 5,
+  "web": {
+    "listen": "0.0.0.0:3030"
+  },
+  "redis": {
+    "address": "10.0.52.105:6379",
+    "databaseId": 0,
+    "password": ""
+  },
+  "databases": {
+    "default": "ua_notifycenter:ekIxrgWsJ03u@tcp(10.0.34.44:3306)/notifycenter?parseTime=true&charset=utf8&loc=Local"
+  },
+  "sms": {
+    "url": "https://yun.tim.qq.com/v5/tlssmssvr/sendmultisms2",
+    "appKey": "0e602644340c447b2d9174195f178e4f",
+    "appId": "1400025614",
+    "defaultNationCode": "86"
+  },
+  "mail": {
+    "host": "mail.gangtiequn.com",
+    "port": 25,
+    "userName": "monitor@gangtiequn.com",
+    "password": "399GCG",
+    "from": "notifycenter <monitor@gangtiequn.com>",
+    "contentType": "text/html"
+  },
+  "qyWeixin": {
+    "corpId": "ww88ab4482196f4543",
+    "corpSecret": "Itg-tBARZhy3Iep2GO-u6vMGmVp45Iyktxtsq58cJW0",
+    "agentId": 1000027
+  }
+}

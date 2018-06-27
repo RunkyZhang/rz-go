@@ -11,6 +11,7 @@ var (
 	SmsUserCallbackController = smsUserCallbackController{
 		SmsUserCallbackControllerPack: &common.ControllerPack{
 			Pattern:          "/message/sms-user-callback",
+			Method:           "POST",
 			ControllerFunc:   smsUserCallback,
 			ConvertToDtoFunc: ConvertToSmsCallbackMessageDto,
 		},

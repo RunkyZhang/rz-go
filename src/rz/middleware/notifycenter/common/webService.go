@@ -16,6 +16,7 @@ type ConvertToDtoFunc func(body []byte) (interface{}, error)
 type ControllerFunc func(interface{}) (interface{}, error)
 
 type ControllerPack struct {
+	Method           string
 	Pattern          string
 	ControllerFunc   ControllerFunc
 	ConvertToDtoFunc ConvertToDtoFunc
@@ -44,6 +45,7 @@ func NewWebService(address string) (*webService) {
 	webService := &webService{
 		address:          address,
 		healthIndicators: []HealthIndicator{},
+		routes:           map[string]bool{},
 	}
 
 	return webService
@@ -53,10 +55,16 @@ type webService struct {
 	server           *http.Server
 	address          string
 	healthIndicators []HealthIndicator
+	routes           map[string]bool
 }
 
 func (myself *webService) RegisterStandardController(controllerPack *ControllerPack) {
 	http.HandleFunc(controllerPack.Pattern, func(responseWriter http.ResponseWriter, request *http.Request) {
+		if !myself.checkRoute(request.RequestURI, request.Method) {
+			http.Error(responseWriter, fmt.Sprintf("method(%s) is not match", request.Method), http.StatusNotFound)
+			return
+		}
+
 		id := myself.buildRequestId()
 
 		defer func() {
@@ -101,6 +109,8 @@ func (myself *webService) RegisterStandardController(controllerPack *ControllerP
 		}
 		myself.wrapResponseWriter(responseWriter, request, id, &responseDto, nil, "")
 	})
+
+	myself.routes[fmt.Sprintf("%s_%s", controllerPack.Pattern, controllerPack.Method)] = true
 }
 
 func (myself *webService) RegisterCommonController(controllerPack *ControllerPack) {
@@ -193,7 +203,13 @@ func (myself *webService) health() {
 	})
 }
 
-func (*webService) errorToResponseDto(value interface{}) ResponseDto {
+func (myself *webService) checkRoute(requestUri string, method string) (bool) {
+	_, ok := myself.routes[fmt.Sprintf("%s_%s", requestUri, method)]
+
+	return ok
+}
+
+func (*webService) errorToResponseDto(value interface{}) (ResponseDto) {
 	businessError, ok := value.(*BusinessError)
 	if ok {
 		return ResponseDto{

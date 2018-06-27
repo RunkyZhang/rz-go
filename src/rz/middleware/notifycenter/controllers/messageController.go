@@ -11,16 +11,19 @@ var (
 	MessageController = messageController{
 		SendMailControllerPack: &common.ControllerPack{
 			Pattern:          "/message/send-mail",
+			Method:           "POST",
 			ControllerFunc:   sendMail,
 			ConvertToDtoFunc: ConvertToMailMessageDto,
 		},
 		SendSmsControllerPack: &common.ControllerPack{
 			Pattern:          "/message/send-sms",
+			Method:           "POST",
 			ControllerFunc:   sendSms,
 			ConvertToDtoFunc: ConvertToSmsMessageDto,
 		},
 		QuerySmsControllerPack: &common.ControllerPack{
 			Pattern:          "/message/query-sms",
+			Method:           "POST",
 			ControllerFunc:   querySms,
 			ConvertToDtoFunc: ConvertToQuerySmsMessageRequestDtoDto,
 		},
