@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	Version                         = "2018-06-27-17:00"
 	AsyncWorker                     = common.NewAsyncJobWorker(5, 1*time.Second)
 	WebService                      = common.NewWebService(GetConfig().Web.Listen)
 	redisClient *common.RedisClient = nil

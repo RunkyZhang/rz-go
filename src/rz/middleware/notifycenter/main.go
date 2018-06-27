@@ -49,6 +49,7 @@ func start() {
 	// healths
 	global.WebService.RegisterHealthIndicator(&healths.RedisHealthIndicator{})
 	global.WebService.RegisterHealthIndicator(&healths.MySQLHealthIndicator{})
+	global.WebService.RegisterHealthIndicator(&healths.RuntimeHealthIndicator{})
 
 	// web service
 	common.GetLogging().Info(nil, "web service listening %s ...", global.GetConfig().Web.Listen)
