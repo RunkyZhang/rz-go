@@ -284,7 +284,7 @@ func (myself *webService) start() {
 	myself.server.SetKeepAlivesEnabled(true)
 	err := myself.server.ListenAndServe()
 	if nil != err {
-		panic(errors.New(fmt.Sprintf("failed to start web service; error: %s", err.Error())))
+		GetLogging().Error(err, "failed to start web service")
 	}
 }
 

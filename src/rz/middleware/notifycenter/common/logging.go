@@ -31,27 +31,29 @@ func GetLogging() (*logging) {
 		defaultLogging.Close()
 	}
 
-	defaultLogging = newLogging()
+	defaultLogging = newLogging(false)
 
 	return defaultLogging
 }
 
-func newLogging() (*logging) {
+func newLogging(toFile bool) (*logging) {
 	logging := &logging{}
 
 	now := time.Now()
-	logPath := fmt.Sprintf("./goapp_%s.log", now.Format("20060102"))
-	if !IsExistPath(logPath) {
-		os.Create(logPath)
+	logging.Day = now.Day()
+	logging.ok = false
+	if !toFile {
+		return logging
 	}
-	logFile, err := os.OpenFile(logPath, os.O_APPEND, 0)
+
+	logPath := fmt.Sprintf("./goapp_%s.log", now.Format("20060102"))
+	logFile, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 	logging.ok = nil == err
 
 	if logging.ok {
 		logging.logFile = logFile
 		logging.logger = log.New(logFile, "", log.Ldate|log.Ltime)
 	}
-	logging.Day = now.Day()
 
 	return logging
 }
@@ -60,6 +62,7 @@ type logging struct {
 	logger  *log.Logger
 	ok      bool
 	logFile *os.File
+	toFile  bool
 	Day     int
 }
 
