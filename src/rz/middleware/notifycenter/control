@@ -1,0 +1,86 @@
+#!/bin/bash
+
+WORKSPACE=$(cd $(dirname $0)/; pwd)
+cd $WORKSPACE
+
+appName=goapp
+config=application%s.json
+pidFile=app.pid
+logFile=app.log
+
+function check_pid() {
+    if [ -f $pidFile ];then
+        pid=`cat $pidFile`
+        if [ -n $pid ]; then
+            running=`ps -p $pid|grep -v "PID TTY" |wc -l`
+            return $running
+        fi
+    fi
+    return 0
+}
+
+function start() {
+    check_pid
+    running=$?
+    if [ $running -gt 0 ];then
+        echo -n "$appName now is running already, pid="
+        cat $pidFile
+        return 1
+    fi
+
+    nohup ./$appName -config $config >> $logFile 2>&1 &
+    echo $! > $pidFile
+    echo "$appName started..., pid=$!"
+}
+
+function stop() {
+    pid=`cat $pidFile`
+    kill -2 $pid
+    sleep 10
+    echo "$appName stopped..."
+}
+
+function restart() {
+    stop
+    sleep 1
+    start
+}
+
+function status() {
+    check_pid
+    running=$?
+    if [ $running -gt 0 ];then
+        echo -n "$appName now is running, pid="
+        cat $pidFile
+    else
+        echo "$appName is stopped"
+    fi
+}
+
+function tailf() {
+    tail -f $logFile
+}
+
+function show_version() {
+    ./$appName -v
+}
+
+function help() {
+    echo "$0 start|stop|restart|status|tail"
+}
+
+if [ "$1" == "" ]; then
+    help
+elif [ "$1" == "stop" ];then
+    stop
+elif [ "$1" == "start" ];then
+    start
+elif [ "$1" == "restart" ];then
+    restart
+elif [ "$1" == "status" ];then
+    status
+elif [ "$1" == "tail" ];then
+    tailf
+else
+    help
+fi

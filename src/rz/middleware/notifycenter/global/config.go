@@ -89,6 +89,8 @@ func GetConfig() (*Configuration) {
 		panic(errors.New(fmt.Sprintf("invaild config file content(%s). error: %s", content, err.Error())))
 	}
 
+	common.GetLogging().Info(nil, "loaded config file(%s)", filePath)
+
 	return configuration
 }
 
