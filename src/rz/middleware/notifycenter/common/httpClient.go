@@ -100,8 +100,6 @@ func (myself *HttpClient) Get(uri string, headers ...map[string]string) ([]byte,
 }
 
 func (myself *HttpClient) Post(uri string, body interface{}, headers ...map[string]string) ([]byte, error) {
-	//return httplib.Post(uri, body)
-
 	return myself.request("POST", uri, body, headers...)
 }
 

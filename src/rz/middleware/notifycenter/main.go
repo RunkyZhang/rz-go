@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"time"
@@ -17,7 +16,7 @@ import (
 // https://cloud.tencent.com/document/product/382/5976
 // 202067351   Zgadmin0719   qcloud.com
 func main() {
-	fmt.Printf("starting...\n")
+	common.GetLogging().Info(nil, "starting...")
 
 	start()
 
@@ -27,7 +26,7 @@ func main() {
 
 	stop()
 
-	fmt.Printf("stoped...\n")
+	common.GetLogging().Info(nil, "stopped...")
 }
 
 func start() {
@@ -38,9 +37,10 @@ func start() {
 	global.AsyncWorker.Start()
 
 	// consumers
-	consumers.SmsMessageConsumer.Start(5 * time.Second)
-	consumers.MailMessageConsumer.Start(5 * time.Second)
-	consumers.SmsUserMessageConsumer.Start(5 * time.Second)
+	duration := time.Duration(global.GetConfig().ConsumingInterval) * time.Second
+	consumers.SmsMessageConsumer.Start(duration)
+	consumers.MailMessageConsumer.Start(duration)
+	consumers.SmsUserMessageConsumer.Start(duration)
 
 	// controllers
 	controllers.MessageController.Enable(controllers.MessageController, true)
@@ -51,7 +51,7 @@ func start() {
 	global.WebService.RegisterHealthIndicator(&healths.MySQLHealthIndicator{})
 
 	// web service
-	fmt.Printf("web service listening %s ...\n", global.GetConfig().Web.Listen)
+	common.GetLogging().Info(nil, "web service listening %s ...", global.GetConfig().Web.Listen)
 	global.WebService.Start()
 }
 
@@ -59,24 +59,24 @@ func stop() {
 	// web service
 	err := global.WebService.Stop()
 	if nil != err {
-		fmt.Printf("failed to shutdown web server. error: %s\n", err.Error())
+		common.GetLogging().Error(err, "failed to shutdown web server")
 	}
 
 	// consumers
-	fmt.Printf("[SmsMessageConsumer] closing...")
+	common.GetLogging().Info(nil, "[SmsMessageConsumer] closing...")
 	consumers.SmsMessageConsumer.CloseAndWait()
-	fmt.Printf("[SmsMessageConsumer] closed...")
-	fmt.Printf("[MailMessageConsumer] closing...")
+	common.GetLogging().Info(nil, "[SmsMessageConsumer] closed...")
+	common.GetLogging().Info(nil, "[MailMessageConsumer] closing...")
 	consumers.MailMessageConsumer.CloseAndWait()
-	fmt.Printf("[MailMessageConsumer] closed...")
-	fmt.Printf("[SmsUserMessageConsumer] closing...")
+	common.GetLogging().Info(nil, "[MailMessageConsumer] closed...")
+	common.GetLogging().Info(nil, "[SmsUserMessageConsumer] closing...")
 	consumers.SmsUserMessageConsumer.CloseAndWait()
-	fmt.Printf("[SmsUserMessageConsumer] closed...")
+	common.GetLogging().Info(nil, "[SmsUserMessageConsumer] closed...")
 
 	// AsyncWorker
-	fmt.Printf("there are (%d) jobs in [AsyncWorker]. waiting it done...\n", global.AsyncWorker.QueueLength())
+	common.GetLogging().Info(nil, "there are (%d) jobs in [AsyncWorker]. waiting it done...", global.AsyncWorker.QueueLength())
 	global.AsyncWorker.CloseAndWait()
-	fmt.Printf("[AsyncWorker] done...\n")
+	common.GetLogging().Info(nil, "[AsyncWorker] done...")
 }
 
 func test() {
@@ -92,7 +92,7 @@ func test() {
 	//fmt.Println(jsonString, ree)
 
 	//err = exceptions.DtoNull().AttachMessage("asdasdasd")
-	//fmt.Printf("failed to get message ids. error: %s", err)
+	//global.GetLogging().Info(nil, "failed to get message ids. error: %s", err)
 
 	//asyncJob := &common.AsyncJob{
 	//	Name: "666",

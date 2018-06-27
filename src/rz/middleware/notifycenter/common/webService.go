@@ -181,7 +181,7 @@ func (myself *webService) health() {
 				healthReport := &HealthReport{
 					Ok:      false,
 					Name:    "unknown error",
-					Message: fmt.Sprintln(value),
+					Message: fmt.Sprint(value),
 					Type:    "panic",
 					Level:   0,
 				}
@@ -230,7 +230,7 @@ func (*webService) errorToResponseDto(value interface{}) (ResponseDto) {
 
 	return ResponseDto{
 		Code:    1,
-		Message: fmt.Sprintln(value),
+		Message: fmt.Sprint(value),
 		Data:    nil,
 	}
 }
@@ -270,7 +270,7 @@ func (myself *webService) wrapResponseWriter(responseWriter http.ResponseWriter,
 }
 
 func (myself *webService) log(title string, id string, url string, method string, body []byte) {
-	fmt.Printf("%s-[%s][%s][%s][body: %s]\n", title, id, url, method, body)
+	GetLogging().Info(nil, "%s-[%s][%s][%s][body: %s]", title, id, url, method, body)
 }
 
 func (myself *webService) start() {

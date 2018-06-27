@@ -52,7 +52,7 @@ func (myself *messageConsumerBase) start(parameter interface{}) (error) {
 	now := time.Now()
 	messageIds, err := myself.messageManagementBase.DequeueMessageIds(now)
 	if nil != err {
-		fmt.Printf("failed to get message(%s) ids. error: %s\n", myself.messageManagementBase.KeySuffix, err.Error())
+		common.GetLogging().Info(err, "failed to get message(%s) ids", myself.messageManagementBase.KeySuffix)
 		return err
 	}
 	if nil == messageIds {
@@ -62,7 +62,7 @@ func (myself *messageConsumerBase) start(parameter interface{}) (error) {
 	for _, messageId := range messageIds {
 		affectedCount, err := myself.messageManagementBase.RemoveMessageId(messageId)
 		if nil != err {
-			fmt.Printf("failed to remove message(%d). error: %s\n", messageId, err)
+			common.GetLogging().Error(err, "failed to remove message(%d)", messageId)
 			continue
 		}
 		// 0 mean: the other consumer remove it, ignore
@@ -78,11 +78,11 @@ func (myself *messageConsumerBase) start(parameter interface{}) (error) {
 		var messageState enumerations.MessageState
 		var errorMessage string
 		if nil == flagError {
-			fmt.Printf("success to consume message(%d)\n", messageId)
+			common.GetLogging().Info(nil, "success to consume message(%d)", messageId)
 			messageState = enumerations.Sent
 			errorMessage = ""
 		} else {
-			fmt.Printf("failed to consume message(%d). error: %s\n", messageId, flagError.Error())
+			common.GetLogging().Error(flagError, "failed to consume message(%d)", messageId)
 			messageState = enumerations.Error
 			errorMessage = flagError.Error()
 		}

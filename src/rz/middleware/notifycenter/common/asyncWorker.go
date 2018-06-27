@@ -2,7 +2,6 @@ package common
 
 import (
 	"time"
-	"fmt"
 	"sync"
 )
 
@@ -62,31 +61,30 @@ func (myself *AsyncJobWorker) Start() {
 }
 
 func (myself *AsyncJobWorker) start(id int) {
-	var currentAysncJob *AsyncJob
+	var currentAsyncJob *AsyncJob
 
-	//defer func() {
-	//	value := recover()
-	//	if nil != value {
-	//		if nil != myself.defaultAsyncJob {
-	//			fmt.Printf(
-	//				"panic on job(type: %s; name: %s) in goroutine(%d). error: %s\n",
-	//				myself.defaultAsyncJob.Type,
-	//				myself.defaultAsyncJob.Name,
-	//				id,
-	//				fmt.Sprintln(value))
-	//		} else if nil != currentAysncJob {
-	//			fmt.Printf("panic on job(type: %s; name: %s) in goroutine(%d). error: %s\n",
-	//				currentAysncJob.Type,
-	//				currentAysncJob.Name,
-	//				id,
-	//				fmt.Sprintln(value))
-	//		} else {
-	//			fmt.Printf("panic in goroutine(%d). error: %s\n", id, fmt.Sprintln(value))
-	//		}
-	//
-	//		myself.start(id)
-	//	}
-	//}()
+	defer func() {
+		value := recover()
+		if nil != value {
+			if nil != myself.defaultAsyncJob {
+				GetLogging().Error(value,
+					"panic on job(type: %s; name: %s) in goroutine(%d)",
+					myself.defaultAsyncJob.Type,
+					myself.defaultAsyncJob.Name,
+					id)
+			} else if nil != currentAsyncJob {
+				GetLogging().Error(value,
+					"panic on job(type: %s; name: %s) in goroutine(%d)",
+					currentAsyncJob.Type,
+					currentAsyncJob.Name,
+					id)
+			} else {
+				GetLogging().Error(value, "panic in goroutine(%d)", id)
+			}
+
+			myself.start(id)
+		}
+	}()
 
 	for ; ; {
 		if nil != myself.defaultAsyncJob {
@@ -95,14 +93,14 @@ func (myself *AsyncJobWorker) start(id int) {
 			for ; 0 < myself.queue.Length(); {
 				item := myself.queue.Dequeue()
 				var ok bool
-				currentAysncJob, ok = item.(*AsyncJob)
+				currentAsyncJob, ok = item.(*AsyncJob)
 				if !ok {
 					continue
 				}
 
-				err := currentAysncJob.RunFunc(currentAysncJob.Parameter)
+				err := currentAsyncJob.RunFunc(currentAsyncJob.Parameter)
 				if nil != err {
-					fmt.Printf("failed to run job in goroutine(%d). error: %s\n", id, err)
+					GetLogging().Warn(err, "failed to run job in goroutine(%d)", id)
 				}
 			}
 		}
@@ -114,9 +112,9 @@ func (myself *AsyncJobWorker) start(id int) {
 		time.Sleep(myself.duration)
 	}
 
-	fmt.Printf("the goroutine(%d) is closing\n", id)
+	GetLogging().Info(nil, "the goroutine(%d) is closing", id)
 	myself.closedChan <- true
-	fmt.Printf("the goroutine(%d) is closed\n", id)
+	GetLogging().Info(nil, "the goroutine(%d) is closed", id)
 }
 
 func (myself *AsyncJobWorker) Add(asyncJob *AsyncJob) {

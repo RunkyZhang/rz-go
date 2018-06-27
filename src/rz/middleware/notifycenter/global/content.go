@@ -3,7 +3,6 @@ package global
 import (
 	"time"
 	"sync"
-	"fmt"
 
 	"rz/middleware/notifycenter/common"
 )
@@ -49,7 +48,7 @@ func RefreshRedis() {
 	defer func() {
 		value := recover()
 		if nil != value {
-			fmt.Printf("failed to refresh redis\n")
+			common.GetLogging().Error(value, "failed to refresh redis")
 
 			if !flag {
 				redisClient = oldRedisClient

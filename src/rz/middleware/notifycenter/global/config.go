@@ -75,12 +75,12 @@ func GetConfig() (*Configuration) {
 	filePath = fmt.Sprintf(filePath, getConfigFileSuffix(environmentId))
 
 	if !common.IsExistPath(filePath) {
-		panic(errors.New(fmt.Sprintf("cannot find config file path(%s)\n", filePath)))
+		panic(errors.New(fmt.Sprintf("cannot find config file path(%s)", filePath)))
 	}
 
 	content, err := common.ReadFileContent(filePath)
 	if nil != err {
-		panic(errors.New(fmt.Sprintf("failed to get config file content(%s). error: %s\n", content, err.Error())))
+		panic(errors.New(fmt.Sprintf("failed to get config file content(%s). error: %s", content, err.Error())))
 	}
 
 	configuration = &Configuration{}
@@ -116,7 +116,7 @@ func RefreshConfig() {
 	defer func() {
 		value := recover()
 		if nil != value {
-			fmt.Printf("failed to refresh config file\n")
+			common.GetLogging().Error(value, "failed to refresh config file")
 
 			configuration = oldConfiguration
 		}
