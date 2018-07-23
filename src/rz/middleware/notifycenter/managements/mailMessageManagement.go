@@ -4,7 +4,6 @@ import (
 	"rz/middleware/notifycenter/enumerations"
 	"rz/middleware/notifycenter/repositories"
 	"rz/middleware/notifycenter/models"
-	"time"
 	"rz/middleware/notifycenter/common"
 )
 
@@ -43,6 +42,6 @@ func (myself *mailMessageManagement) Add(mailMessagePo *models.MailMessagePo) (e
 	return repositories.MailMessageRepository.Insert(mailMessagePo)
 }
 
-func (myself *mailMessageManagement) GetById(id int, date time.Time) (*models.MailMessagePo, error) {
-	return repositories.MailMessageRepository.SelectById(id, date)
+func (myself *mailMessageManagement) GetById(id int64) (*models.MailMessagePo, error) {
+	return repositories.MailMessageRepository.SelectById(id)
 }

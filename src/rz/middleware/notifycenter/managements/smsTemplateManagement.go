@@ -1,28 +1,26 @@
 package managements
 
 import (
-	"rz/middleware/notifycenter/models"
 	"time"
-	"fmt"
-	"errors"
+	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/repositories"
 	"rz/middleware/notifycenter/common"
+	"rz/middleware/notifycenter/exceptions"
 )
 
 var (
-	SmsTemplateManagement = smsTemplateManagement{}
+	SmsTemplateManagement = smsTemplateManagement{
+		refreshDuration: 10,
+	}
 
-	smsTemplatePos  map[int]models.SmsTemplatePo
-	lastRefreshTime int64
-	refreshDuration int
+	smsTemplatePos map[int]*models.SmsTemplatePo
 )
-
-func init() {
-	refreshDuration = 60 * 1000
-}
 
 type smsTemplateManagement struct {
 	managementBase
+
+	lastRefreshTime int64
+	refreshDuration int
 }
 
 func (myself *smsTemplateManagement) Add(smsTemplatePo *models.SmsTemplatePo) (error) {
@@ -48,10 +46,10 @@ func (myself *smsTemplateManagement) GetByTemplateId(templateId int) (*models.Sm
 
 	smsTemplatePo, ok := smsTemplatePos[templateId]
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("map key(%d) is not exist", templateId))
+		return nil, exceptions.TemplateIdNotExist().AttachError(err).AttachMessage(templateId)
 	}
 
-	return &smsTemplatePo, nil
+	return smsTemplatePo, nil
 }
 
 func (myself *smsTemplateManagement) GetByExtend(extend int) (*models.SmsTemplatePo, error) {
@@ -62,27 +60,27 @@ func (myself *smsTemplateManagement) GetByExtend(extend int) (*models.SmsTemplat
 
 	for _, value := range smsTemplateIdExtendMappingPos {
 		if extend == value.Extend {
-			return &value, nil
+			return value, nil
 		}
 	}
 
-	return nil, errors.New(fmt.Sprintf("the extend[%d] is not exist", extend))
+	return nil, exceptions.ExtendNotExist().AttachError(err).AttachMessage(extend)
 }
 
-func (myself *smsTemplateManagement) GetAll() (map[int]models.SmsTemplatePo, error) {
+func (myself *smsTemplateManagement) GetAll() (map[int]*models.SmsTemplatePo, error) {
 	var err error
 	if nil == smsTemplatePos {
 		smsTemplatePos, err = myself.getAll()
 		return smsTemplatePos, err
 	}
 
-	if int64(refreshDuration) <= time.Now().Unix()-lastRefreshTime {
+	if int64(myself.refreshDuration) <= time.Now().Unix()-myself.lastRefreshTime {
 		go func() {
 			smsTemplatePos, err = myself.getAll()
 			if nil == err {
-				lastRefreshTime = time.Now().Unix()
+				myself.lastRefreshTime = time.Now().Unix()
 			} else {
-				common.GetLogging().Error(err, "failed to get all [smsTemplatePo]")
+				common.GetLogging().Error(err, "failed to get all [SmsTemplatePo]")
 			}
 		}()
 	}
@@ -90,13 +88,19 @@ func (myself *smsTemplateManagement) GetAll() (map[int]models.SmsTemplatePo, err
 	return smsTemplatePos, nil
 }
 
-func (*smsTemplateManagement) getAll() (map[int]models.SmsTemplatePo, error) {
+func (*smsTemplateManagement) ExistExtend(extend int) (bool, error) {
+	count, err := repositories.SmsTemplateRepository.CountByExtend(extend)
+
+	return 0 < count, err
+}
+
+func (*smsTemplateManagement) getAll() (map[int]*models.SmsTemplatePo, error) {
 	smsTemplatePos, err := repositories.SmsTemplateRepository.SelectAll()
 	if nil != err {
 		return nil, err
 	}
 
-	var keyValues = make(map[int]models.SmsTemplatePo)
+	var keyValues = make(map[int]*models.SmsTemplatePo)
 	for _, smsTemplatePo := range smsTemplatePos {
 		keyValues[smsTemplatePo.Id] = smsTemplatePo
 	}

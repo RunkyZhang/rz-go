@@ -105,7 +105,21 @@ func (myself *RepositoryBase) SelectById(id interface{}, po interface{}, shardPa
 		return err
 	}
 
-	return database.Where("id=? and deleted=0", id).First(po).Error
+	return database.Where("id=? AND deleted=0", id).First(po).Error
+}
+
+func (myself *RepositoryBase) SelectByIds(ids interface{}, pos interface{}, shardParameters ...interface{}) (error) {
+	err := Assert.IsNotNilToError(pos, "po")
+	if nil != err {
+		return err
+	}
+
+	database, err := myself.GetShardDatabase(shardParameters...)
+	if nil != err {
+		return err
+	}
+
+	return database.Where("id IN (?) AND deleted=0", ids).Find(pos).Error
 }
 
 func (myself *RepositoryBase) SelectAll(pos interface{}, shardParameters ...interface{}) (error) {
@@ -120,6 +134,18 @@ func (myself *RepositoryBase) SelectAll(pos interface{}, shardParameters ...inte
 	}
 
 	return database.Where("deleted=0").Find(pos).Error
+}
+
+func (myself *RepositoryBase) Count(extend int, shardParameters ...interface{}) (int64, error) {
+	database, err := myself.GetShardDatabase(shardParameters...)
+	if nil != err {
+		return 0, err
+	}
+
+	var count int64
+	err = database.Where("deleted=0", extend).Count(&count).Error
+
+	return count, err
 }
 
 func (myself *RepositoryBase) GetShardDatabase(shardParameters ...interface{}) (*gorm.DB, error) {

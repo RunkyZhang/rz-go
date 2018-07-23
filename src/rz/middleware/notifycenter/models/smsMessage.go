@@ -5,23 +5,23 @@ import "strings"
 type SmsMessageDto struct {
 	MessageBaseDto
 
-	Parameters         []string `json:"parameters"`
-	Sign               string   `json:"sign"`
-	TemplateId         int      `json:"templateId"`
-	NationCode         string   `json:"nationCode"`
-	IdentifyingCode    string   `json:"identifyingCode"`
-	ExpireCallbackUrls []string `json:"expireCallbackUrls"`
+	Parameters      []string `json:"parameters"`
+	Sign            string   `json:"sign"`
+	TemplateId      int      `json:"templateId"`
+	NationCode      string   `json:"nationCode"`
+	IdentifyingCode string   `json:"identifyingCode"`
+	ExternalId      string   `json:"externalId"`
 }
 
 type SmsMessagePo struct {
 	MessageBasePo
 
-	Parameters         string `gorm:"column:parameters"`
-	Sign               string `gorm:"column:sign"`
-	TemplateId         int    `gorm:"column:templateId"`
-	NationCode         string `gorm:"column:nationCode"`
-	IdentifyingCode    string `gorm:"column:identifyingCode"`
-	ExpireCallbackUrls string `gorm:"column:expireCallbackUrls"`
+	Parameters      string `gorm:"column:parameters"`
+	Sign            string `gorm:"column:sign"`
+	TemplateId      int    `gorm:"column:templateId"`
+	NationCode      string `gorm:"column:nationCode"`
+	IdentifyingCode string `gorm:"column:identifyingCode"`
+	ExternalId      string `gorm:"column:externalId"`
 }
 
 func SmsMessageDtoToPo(smsMessageDto *SmsMessageDto) (*SmsMessagePo) {
@@ -48,19 +48,31 @@ func SmsMessagePoToDto(smsMessagePo *SmsMessagePo) (*SmsMessageDto) {
 
 	smsMessageDto := &SmsMessageDto{}
 	smsMessageDto.MessageBaseDto = *MessageBasePoToDto(&smsMessagePo.MessageBasePo)
-	smsMessageDto.Parameters = strings.Split(smsMessagePo.Parameters, ",")
+	if "" != smsMessagePo.Parameters {
+		smsMessageDto.Parameters = strings.Split(smsMessagePo.Parameters, ",")
+	}
 	smsMessageDto.Sign = smsMessagePo.Sign
 	smsMessageDto.TemplateId = smsMessagePo.TemplateId
 	smsMessageDto.NationCode = smsMessagePo.NationCode
 	smsMessageDto.NationCode = smsMessagePo.NationCode
 	smsMessageDto.IdentifyingCode = smsMessagePo.IdentifyingCode
-	smsMessageDto.ExpireCallbackUrls = strings.Split(smsMessagePo.ExpireCallbackUrls, ",")
+	if "" != smsMessagePo.ExpireCallbackUrls {
+		smsMessageDto.ExpireCallbackUrls = strings.Split(smsMessagePo.ExpireCallbackUrls, ",")
+	}
+	smsMessageDto.ExternalId = smsMessagePo.ExternalId
 
 	return smsMessageDto
 }
 
-type QuerySmsMessageRequestDto struct {
-	Id          int    `json:"id"`
-	SystemAlias string `json:"systemAlias"`
-	CreatedTime int64  `json:"createdTime"`
+func SmsMessagePosToDtos(smsMessagePos []*SmsMessagePo) ([]*SmsMessageDto) {
+	if nil == smsMessagePos {
+		return nil
+	}
+
+	var smsMessageDtos []*SmsMessageDto
+	for _, smsMessagePo := range smsMessagePos {
+		smsMessageDtos = append(smsMessageDtos, SmsMessagePoToDto(smsMessagePo))
+	}
+
+	return smsMessageDtos
 }

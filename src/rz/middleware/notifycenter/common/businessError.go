@@ -1,5 +1,7 @@
 package common
 
+import "fmt"
+
 func NewBusinessError(defaultMessage string, code int) (*BusinessError) {
 	return &BusinessError{
 		DefaultMessage: defaultMessage,
@@ -21,8 +23,8 @@ func (myself *BusinessError) AttachError(rawError error) (*BusinessError) {
 	return myself
 }
 
-func (myself *BusinessError) AttachMessage(message string) (*BusinessError) {
-	myself.message = message
+func (myself *BusinessError) AttachMessage(message interface{}) (*BusinessError) {
+	myself.message = fmt.Sprint(message)
 
 	return myself
 }

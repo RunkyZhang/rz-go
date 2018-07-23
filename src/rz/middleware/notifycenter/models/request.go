@@ -3,17 +3,40 @@ package models
 import "rz/middleware/notifycenter/enumerations"
 
 type SmsUserCallbackRequestDto struct {
-	Message     *SmsMessageDto
-	Template    *SmsTemplateDto
-	UserMessage *SmsUserMessageDto
+	Message     *SmsMessageDto     `json:"message"`
+	Template    *SmsTemplateDto    `json:"template"`
+	UserMessage *SmsUserMessageDto `json:"userMessage"`
 }
 
 type MessageStateCallbackRequestDto struct {
-	Message      interface{}
-	MessageState enumerations.MessageState
+	Message      interface{}               `json:"message"`
+	MessageState enumerations.MessageState `json:"messageState"`
 }
 
 type MessageExpireCallbackRequestDto struct {
-	Message      interface{}
-	MessageState enumerations.MessageState
+	Message interface{} `json:"message"`
+}
+
+type QueryMessagesRequestDto struct {
+	Id          int64  `json:"id,string"`
+	SystemAlias string `json:"systemAlias"`
+	Year        int    `json:"year"`
+}
+
+type QueryMessagesByIdsRequestDto struct {
+	Ids []string `json:"ids"`
+}
+
+type DisableMessageRequestDto struct {
+	Id          int64  `json:"id,string"`
+	SystemAlias string `json:"systemAlias"`
+}
+
+type QuerySmsUserMessagesRequestDto struct {
+	SmsMessageId int64  `json:"smsMessageId,string"`
+	Content      string `json:"content"`
+	NationCode   string `json:"nationCode"`
+	PhoneNumber  string `json:"phoneNumber"`
+	TemplateId   int    `json:"templateId"`
+	Year         int    `json:"year"`
 }

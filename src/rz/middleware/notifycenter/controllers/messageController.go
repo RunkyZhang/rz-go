@@ -10,22 +10,34 @@ import (
 var (
 	MessageController = messageController{
 		SendMailControllerPack: &common.ControllerPack{
-			Pattern:          "/message/send-mail",
+			Pattern:          "/cloud.appgov.notifycenter.service/mailmessage/send",
 			Method:           "POST",
 			ControllerFunc:   sendMail,
 			ConvertToDtoFunc: ConvertToMailMessageDto,
 		},
 		SendSmsControllerPack: &common.ControllerPack{
-			Pattern:          "/message/send-sms",
+			Pattern:          "/cloud.appgov.notifycenter.service/smsmessage/send",
 			Method:           "POST",
 			ControllerFunc:   sendSms,
 			ConvertToDtoFunc: ConvertToSmsMessageDto,
 		},
 		QuerySmsControllerPack: &common.ControllerPack{
-			Pattern:          "/message/query-sms",
+			Pattern:          "/cloud.appgov.notifycenter.service/smsmessage/querybyids",
 			Method:           "POST",
-			ControllerFunc:   querySms,
-			ConvertToDtoFunc: ConvertToQuerySmsMessageRequestDtoDto,
+			ControllerFunc:   querySmsMessageByIds,
+			ConvertToDtoFunc: ConvertToQueryMessagesByIdsRequestDto,
+		},
+		DisableMessageControllerPack: &common.ControllerPack{
+			Pattern:          "/cloud.appgov.notifycenter.service/smsmessage/disable",
+			Method:           "POST",
+			ControllerFunc:   disableSms,
+			ConvertToDtoFunc: ConvertToDisableMessageRequestDto,
+		},
+		QuerySmsUserMessagesControllerPack: &common.ControllerPack{
+			Pattern:          "/cloud.appgov.notifycenter.service/smsusermessage/query",
+			Method:           "POST",
+			ControllerFunc:   querySmsUserMessages,
+			ConvertToDtoFunc: ConvertToQuerySmsUserMessagesRequestDto,
 		},
 	}
 )
@@ -33,9 +45,11 @@ var (
 type messageController struct {
 	ControllerBase
 
-	SendMailControllerPack *common.ControllerPack
-	SendSmsControllerPack  *common.ControllerPack
-	QuerySmsControllerPack *common.ControllerPack
+	SendMailControllerPack             *common.ControllerPack
+	SendSmsControllerPack              *common.ControllerPack
+	QuerySmsControllerPack             *common.ControllerPack
+	DisableMessageControllerPack       *common.ControllerPack
+	QuerySmsUserMessagesControllerPack *common.ControllerPack
 }
 
 func sendMail(dto interface{}) (interface{}, error) {
@@ -45,7 +59,7 @@ func sendMail(dto interface{}) (interface{}, error) {
 		return nil, err
 	}
 
-	return services.MailMessageService.SendMail(mailMessageDto)
+	return services.MailMessageService.Send(mailMessageDto)
 }
 
 func sendSms(dto interface{}) (interface{}, error) {
@@ -55,15 +69,35 @@ func sendSms(dto interface{}) (interface{}, error) {
 		return nil, err
 	}
 
-	return services.SmsMessageService.SendSms(smsMessageDto)
+	return services.SmsMessageService.Send(smsMessageDto)
 }
 
-func querySms(dto interface{}) (interface{}, error) {
-	querySmsMessageRequestDto, ok := dto.(*models.QuerySmsMessageRequestDto)
-	err := common.Assert.IsTrueToError(ok, "dto.(*models.QuerySmsMessageRequestDto)")
+func querySmsMessageByIds(dto interface{}) (interface{}, error) {
+	queryMessagesByIdsRequestDto, ok := dto.(*models.QueryMessagesByIdsRequestDto)
+	err := common.Assert.IsTrueToError(ok, "dto.(*models.QueryMessagesByIdsRequestDto)")
 	if nil != err {
 		return nil, err
 	}
 
-	return services.SmsMessageService.QuerySms(querySmsMessageRequestDto)
+	return services.SmsMessageService.QueryByIds(queryMessagesByIdsRequestDto)
+}
+
+func disableSms(dto interface{}) (interface{}, error) {
+	disableMessageRequestDto, ok := dto.(*models.DisableMessageRequestDto)
+	err := common.Assert.IsTrueToError(ok, "dto.(*models.DisableMessageRequestDto)")
+	if nil != err {
+		return nil, err
+	}
+
+	return services.SmsMessageService.Disable(disableMessageRequestDto)
+}
+
+func querySmsUserMessages(dto interface{}) (interface{}, error) {
+	querySmsUserMessagesRequestDto, ok := dto.(*models.QuerySmsUserMessagesRequestDto)
+	err := common.Assert.IsTrueToError(ok, "dto.(*models.QuerySmsUserMessagesRequestDto)")
+	if nil != err {
+		return nil, err
+	}
+
+	return services.SmsUserMessageService.Query(querySmsUserMessagesRequestDto)
 }

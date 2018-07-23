@@ -1,4 +1,4 @@
-package consumers
+package channels
 
 import (
 	"net/smtp"

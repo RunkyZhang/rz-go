@@ -5,19 +5,19 @@ import (
 	"sync"
 )
 
-type runFunc func(interface{}) (error)
+type RunFunc func(interface{}) (error)
 
 type AsyncJob struct {
-	RunFunc   runFunc
+	RunFunc   RunFunc
 	Name      string
 	Type      string
 	Parameter interface{}
 }
 
-func NewAsyncJobWorker(workerCount int, duration time.Duration, defaultAsyncJob ...*AsyncJob) (*AsyncJobWorker) {
+func NewAsyncJobWorker(workerCount int, interval time.Duration, defaultAsyncJob ...*AsyncJob) (*AsyncJobWorker) {
 	asyncJobWorker := &AsyncJobWorker{
 		closed:   false,
-		duration: duration,
+		interval: interval,
 	}
 	if nil == defaultAsyncJob || 0 == len(defaultAsyncJob) {
 		asyncJobWorker.defaultAsyncJob = nil
@@ -32,13 +32,14 @@ func NewAsyncJobWorker(workerCount int, duration time.Duration, defaultAsyncJob 
 
 type AsyncJobWorker struct {
 	queue           Queue
-	duration        time.Duration
+	interval        time.Duration
 	closed          bool
 	started         bool
 	closedChan      chan bool
 	workerCount     int
 	defaultAsyncJob *AsyncJob
 	lock            sync.Mutex
+	semaphore       Semaphore
 }
 
 func (myself *AsyncJobWorker) Start() {
@@ -90,12 +91,12 @@ func (myself *AsyncJobWorker) start(id int) {
 		if nil != myself.defaultAsyncJob {
 			myself.defaultAsyncJob.RunFunc(myself.defaultAsyncJob.Parameter)
 		} else {
-			for ; 0 < myself.queue.Length(); {
+			for ; ; {
 				item := myself.queue.Dequeue()
 				var ok bool
 				currentAsyncJob, ok = item.(*AsyncJob)
 				if !ok {
-					continue
+					break
 				}
 
 				err := currentAsyncJob.RunFunc(currentAsyncJob.Parameter)
@@ -109,7 +110,7 @@ func (myself *AsyncJobWorker) start(id int) {
 			break
 		}
 
-		time.Sleep(myself.duration)
+		myself.semaphore.Wait()
 	}
 
 	GetLogging().Info(nil, "the goroutine(%d) is closing", id)
@@ -123,6 +124,7 @@ func (myself *AsyncJobWorker) Add(asyncJob *AsyncJob) {
 	}
 
 	myself.queue.Enqueue(asyncJob)
+	myself.semaphore.Release()
 }
 
 func (myself *AsyncJobWorker) QueueLength() (int) {
@@ -152,8 +154,10 @@ func (myself *AsyncJobWorker) CloseAndWait() {
 	}
 
 	myself.closed = true
+	myself.semaphore.Release()
 
 	for i := 0; i < myself.workerCount; i++ {
 		<-myself.closedChan
 	}
+	close(myself.closedChan)
 }

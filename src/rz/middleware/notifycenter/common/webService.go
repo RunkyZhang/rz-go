@@ -61,7 +61,7 @@ type webService struct {
 func (myself *webService) RegisterStandardController(controllerPack *ControllerPack) {
 	http.HandleFunc(controllerPack.Pattern, func(responseWriter http.ResponseWriter, request *http.Request) {
 		if !myself.checkRoute(request.RequestURI, request.Method) {
-			http.Error(responseWriter, fmt.Sprintf("method(%s) is not match", request.Method), http.StatusNotFound)
+			http.Error(responseWriter, fmt.Sprintf("method(%s) is not match", request.Method), http.StatusMethodNotAllowed)
 			return
 		}
 
@@ -115,6 +115,11 @@ func (myself *webService) RegisterStandardController(controllerPack *ControllerP
 
 func (myself *webService) RegisterCommonController(controllerPack *ControllerPack) {
 	http.HandleFunc(controllerPack.Pattern, func(responseWriter http.ResponseWriter, request *http.Request) {
+		if !myself.checkRoute(request.RequestURI, request.Method) {
+			http.Error(responseWriter, fmt.Sprintf("method(%s) is not match", request.Method), http.StatusMethodNotAllowed)
+			return
+		}
+
 		id := myself.buildRequestId()
 
 		defer func() {
@@ -147,6 +152,8 @@ func (myself *webService) RegisterCommonController(controllerPack *ControllerPac
 
 		myself.wrapResponseWriter(responseWriter, request, id, result, nil, "")
 	})
+
+	myself.routes[fmt.Sprintf("%s_%s", controllerPack.Pattern, controllerPack.Method)] = true
 }
 
 func (myself *webService) RegisterHealthIndicator(healthIndicator HealthIndicator) {
@@ -270,6 +277,10 @@ func (myself *webService) wrapResponseWriter(responseWriter http.ResponseWriter,
 }
 
 func (myself *webService) log(title string, id string, url string, method string, body []byte) {
+	if "/health" == url {
+		return
+	}
+
 	GetLogging().Info(nil, "%s-[%s][%s][%s][body: %s]", title, id, url, method, body)
 }
 

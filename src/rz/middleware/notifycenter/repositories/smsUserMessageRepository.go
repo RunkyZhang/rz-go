@@ -1,8 +1,9 @@
 package repositories
 
 import (
-	"rz/middleware/notifycenter/models"
 	"time"
+
+	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/common"
 )
 
@@ -27,42 +28,90 @@ func (myself *smsUserMessageRepository) Insert(smsUserMessagePo *models.SmsUserM
 		return err
 	}
 
-	return myself.RepositoryBase.Insert(smsUserMessagePo, smsUserMessagePo.CreatedTime)
+	return myself.RepositoryBase.Insert(smsUserMessagePo, smsUserMessagePo.Id)
 }
 
-func (myself *smsUserMessageRepository) SelectById(id int, date time.Time) (*models.SmsUserMessagePo, error) {
+func (myself *smsUserMessageRepository) UpdateSmsMessageIdById(id int64, smsMessageId int64) (int64, error) {
+	database, err := myself.GetShardDatabase(id)
+	if nil != err {
+		return 0, err
+	}
+
+	keyValues := map[string]interface{}{}
+	keyValues["smsMessageId"] = smsMessageId
+	keyValues["updatedTime"] = time.Now()
+	database = database.Where("id=?", id).Updates(keyValues)
+
+	return database.RowsAffected, database.Error
+}
+
+func (myself *smsUserMessageRepository) SelectById(id int64) (*models.SmsUserMessagePo, error) {
 	smsUserMessagePo := &models.SmsUserMessagePo{}
 
-	err := myself.RepositoryBase.SelectById(id, smsUserMessagePo, date)
+	err := myself.selectById(id, smsUserMessagePo)
 
 	return smsUserMessagePo, err
 }
 
-func (myself *smsUserMessageRepository) SelectByPhoneNumber(nationCode string, phoneNumber string) ([]models.SmsUserMessagePo, error) {
-	database, err := myself.GetShardDatabase(nil)
+func (myself *smsUserMessageRepository) Select(smsMessageId int64, content string, nationCode string, phoneNumber string, templateId int, year int) ([]*models.SmsUserMessagePo, error) {
+	database, err := myself.GetShardDatabase(year)
 	if nil != err {
 		return nil, err
 	}
 
-	var smsUserMessagePos []models.SmsUserMessagePo
-	err = database.Where("phoneNumber=? AND nationCode=?", phoneNumber, nationCode).Find(smsUserMessagePos).Error
+	var parameters []interface{}
+	whereSql := ""
+	if 0 < smsMessageId {
+		whereSql += "`smsMessageId`=?"
+		parameters = append(parameters, smsMessageId)
+	}
+	if "" != content {
+		if "" != whereSql {
+			whereSql += " AND "
+		}
+
+		whereSql += "`content`=?"
+		parameters = append(parameters, content)
+	}
+	if "" != nationCode {
+		if "" != whereSql {
+			whereSql += " AND "
+		}
+
+		whereSql += "`nationCode`=?"
+		parameters = append(parameters, nationCode)
+	}
+	if "" != phoneNumber {
+		if "" != whereSql {
+			whereSql += " AND "
+		}
+
+		whereSql += "`phoneNumber`=?"
+		parameters = append(parameters, phoneNumber)
+	}
+	if 0 < templateId {
+		if "" != whereSql {
+			whereSql += " AND "
+		}
+
+		whereSql += "`templateId`=?"
+		parameters = append(parameters, templateId)
+	}
+
+	var smsUserMessagePos []*models.SmsUserMessagePo
+	err = database.Where(whereSql, parameters...).Find(&smsUserMessagePos).Error
 
 	return smsUserMessagePos, err
 }
 
-func (myself *smsUserMessageRepository) getDatabaseKey(shardParameters ...interface{}) (string) {
-	return myself.DefaultDatabaseKey
-}
-
-func (myself *smsUserMessageRepository) getTableName(shardParameters ...interface{}) (string) {
-	if nil == shardParameters || 0 == len(shardParameters) {
-		return ""
+func (myself *smsUserMessageRepository) SelectByPhoneNumber(nationCode string, phoneNumber string, year int) ([]*models.SmsUserMessagePo, error) {
+	database, err := myself.GetShardDatabase(year)
+	if nil != err {
+		return nil, err
 	}
 
-	date, ok := shardParameters[0].(time.Time)
-	if !ok {
-		return ""
-	}
+	var smsUserMessagePos []*models.SmsUserMessagePo
+	err = database.Where("phoneNumber=? AND nationCode=?", phoneNumber, nationCode).Find(&smsUserMessagePos).Error
 
-	return myself.RawTableName + "_" + common.Int32ToString(date.Year())
+	return smsUserMessagePos, err
 }

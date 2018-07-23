@@ -4,7 +4,6 @@ import (
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/repositories"
 	"rz/middleware/notifycenter/enumerations"
-	"time"
 	"rz/middleware/notifycenter/common"
 )
 
@@ -42,10 +41,18 @@ func (myself *smsUserMessageManagement) Add(smsUserMessagePo *models.SmsUserMess
 	return repositories.SmsUserMessageRepository.Insert(smsUserMessagePo)
 }
 
-func (myself *smsUserMessageManagement) GetByPhoneNumber(nationCode string, phoneNumber string) ([]models.SmsUserMessagePo, error) {
-	return repositories.SmsUserMessageRepository.SelectByPhoneNumber(nationCode, phoneNumber)
+func (myself *smsUserMessageManagement) ModifySmsMessageId(id int64, smsMessageId int64) (int64, error) {
+	return repositories.SmsUserMessageRepository.UpdateSmsMessageIdById(id, smsMessageId)
 }
 
-func (myself *smsUserMessageManagement) GetById(id int, date time.Time) (*models.SmsUserMessagePo, error) {
-	return repositories.SmsUserMessageRepository.SelectById(id, date)
+func (myself *smsUserMessageManagement) GetByPhoneNumber(nationCode string, phoneNumber string, year int) ([]*models.SmsUserMessagePo, error) {
+	return repositories.SmsUserMessageRepository.SelectByPhoneNumber(nationCode, phoneNumber, year)
+}
+
+func (myself *smsUserMessageManagement) GetById(id int64) (*models.SmsUserMessagePo, error) {
+	return repositories.SmsUserMessageRepository.SelectById(id)
+}
+
+func (myself *smsUserMessageManagement) Query(smsMessageId int64, content string, nationCode string, phoneNumber string, templateId int, year int) ([]*models.SmsUserMessagePo, error) {
+	return repositories.SmsUserMessageRepository.Select(smsMessageId, content, nationCode, phoneNumber, templateId, year)
 }

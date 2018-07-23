@@ -1,7 +1,6 @@
 package repositories
 
 import (
-	"time"
 	"rz/middleware/notifycenter/common"
 	"rz/middleware/notifycenter/models"
 )
@@ -27,38 +26,29 @@ func (myself *mailMessageRepository) Insert(mailMessagePo *models.MailMessagePo)
 		return err
 	}
 
-	return myself.RepositoryBase.Insert(mailMessagePo, mailMessagePo.CreatedTime)
+	return myself.RepositoryBase.Insert(mailMessagePo, mailMessagePo.Id)
 }
 
-func (myself *mailMessageRepository) SelectById(id int, date time.Time) (*models.MailMessagePo, error) {
+func (myself *mailMessageRepository) SelectById(id int64) (*models.MailMessagePo, error) {
 	mailMessagePo := &models.MailMessagePo{}
 
-	err := myself.RepositoryBase.SelectById(id, mailMessagePo, date)
+	err := myself.selectById(id, mailMessagePo)
 
 	return mailMessagePo, err
 }
 
-func (myself *mailMessageRepository) SelectByExpireTimeAndFinished(date time.Time) ([]models.MailMessagePo, error) {
-	var mailMessagePos []models.MailMessagePo
+func (myself *mailMessageRepository) SelectByIds(ids []int64, year int) ([]*models.MailMessagePo, error) {
+	var mailMessagePos []*models.MailMessagePo
 
-	err := myself.MessageRepositoryBase.SelectByExpireTimeAndFinished(&mailMessagePos, date)
+	err := myself.selectByIds(ids, &mailMessagePos, year)
 
 	return mailMessagePos, err
 }
 
-func (myself *mailMessageRepository) getDatabaseKey(shardParameters ...interface{}) (string) {
-	return myself.DefaultDatabaseKey
-}
+func (myself *mailMessageRepository) SelectByExpireTimeAndFinished(year int) ([]*models.MailMessagePo, error) {
+	var mailMessagePos []*models.MailMessagePo
 
-func (myself *mailMessageRepository) getTableName(shardParameters ...interface{}) (string) {
-	if nil == shardParameters || 0 == len(shardParameters) {
-		return ""
-	}
+	err := myself.selectByExpireTimeAndFinished(&mailMessagePos, year)
 
-	date, ok := shardParameters[0].(time.Time)
-	if !ok {
-		return ""
-	}
-
-	return myself.RawTableName + "_" + common.Int32ToString(date.Year())
+	return mailMessagePos, err
 }

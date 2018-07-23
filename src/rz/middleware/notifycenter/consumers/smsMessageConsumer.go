@@ -1,20 +1,13 @@
 package consumers
 
 import (
-	"math/rand"
-	"time"
 	"fmt"
-	"crypto/sha256"
-	"encoding/hex"
-	"encoding/json"
 	"errors"
-	"strings"
-
-	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/models/external"
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/common"
 	"rz/middleware/notifycenter/managements"
+	"rz/middleware/notifycenter/channels"
 )
 
 var (
@@ -22,47 +15,35 @@ var (
 )
 
 func init() {
-	SmsMessageConsumer = &smsMessageConsumer{
-		Url:               global.GetConfig().Sms.Url,
-		AppId:             global.GetConfig().Sms.AppId,
-		AppKey:            global.GetConfig().Sms.AppKey,
-		DefaultNationCode: global.GetConfig().Sms.DefaultNationCode,
-	}
+	SmsMessageConsumer = &smsMessageConsumer{}
+	SmsMessageConsumer.runFunc = SmsMessageConsumer.run
+	SmsMessageConsumer.expireRunFunc = SmsMessageConsumer.expireRun
 	SmsMessageConsumer.getMessageFunc = SmsMessageConsumer.getMessage
-	SmsMessageConsumer.sendFunc = SmsMessageConsumer.Send
+	SmsMessageConsumer.sendFunc = SmsMessageConsumer.send
+	SmsMessageConsumer.expireSendFunc = SmsMessageConsumer.expireSend
 	SmsMessageConsumer.poToDtoFunc = SmsMessageConsumer.poToDto
 	SmsMessageConsumer.messageManagementBase = &managements.SmsMessageManagement.MessageManagementBase
-	SmsMessageConsumer.httpClient = common.NewHttpClient(nil)
+	SmsMessageConsumer.name = SmsMessageConsumer.messageManagementBase.KeySuffix
 }
 
 type smsMessageConsumer struct {
 	messageConsumerBase
-
-	Url               string
-	AppKey            string
-	AppId             string
-	DefaultNationCode string
-	httpClient        *common.HttpClient
 }
 
-func (myself *smsMessageConsumer) Send(messagePo interface{}) (error) {
+func (myself *smsMessageConsumer) send(messagePo interface{}) (error) {
 	smsMessagePo, ok := messagePo.(*models.SmsMessagePo)
 	err := common.Assert.IsTrueToError(ok, "messagePo.(*models.SmsMessagePo)")
 	if nil != err {
 		return err
 	}
 
-	var randomNumber = common.Int32ToString(rand.Intn(1024))
-	smsMessageRequestExternalDto := myself.buildSmsMessageRequestExternalDto(smsMessagePo, randomNumber)
-
-	url := fmt.Sprintf("%s?sdkappid=%s&random=%s", myself.Url, myself.AppId, randomNumber)
-	bytes, err := myself.httpClient.Post(url, smsMessageRequestExternalDto)
+	smsChannel, err := channels.ChooseSmsChannel(smsMessagePo)
 	if nil != err {
 		return err
 	}
 
 	smsMessageResponseExternalDto := &external.SmsMessageResponseExternalDto{}
-	err = json.Unmarshal(bytes, smsMessageResponseExternalDto)
+	err = smsChannel.Do(smsMessagePo, smsMessageResponseExternalDto)
 	if nil != err {
 		return err
 	}
@@ -86,62 +67,8 @@ func (myself *smsMessageConsumer) Send(messagePo interface{}) (error) {
 	return nil
 }
 
-func (myself *smsMessageConsumer) buildSmsMessageRequestExternalDto(
-	smsMessagePo *models.SmsMessagePo,
-	randomNumber string) (*external.SmsMessageRequestExternalDto) {
-	smsMessageRequestExternalDto := &external.SmsMessageRequestExternalDto{}
-	now := time.Now()
-	smsMessageRequestExternalDto.TplId = smsMessagePo.TemplateId
-	smsMessageRequestExternalDto.Time = now.Unix()
-	smsMessageRequestExternalDto.Sig = myself.buildSignature(smsMessagePo, now, randomNumber)
-	smsMessageRequestExternalDto.Tel = myself.buildPhoneNumberPackExternalDtos(smsMessagePo)
-	smsMessageRequestExternalDto.Params = strings.Split(smsMessagePo.Parameters, ",")
-	if !common.IsStringBlank(smsMessagePo.Content) {
-		smsMessageRequestExternalDto.Msg = smsMessagePo.Content
-	}
-	smsMessageRequestExternalDto.Ext = ""
-	smsTemplatePo, err := managements.SmsTemplateManagement.GetByTemplateId(smsMessagePo.TemplateId)
-	if nil == err {
-		smsMessageRequestExternalDto.Extend = common.Int32ToString(smsTemplatePo.Extend)
-	}
-
-	return smsMessageRequestExternalDto
-}
-
-func (myself *smsMessageConsumer) buildSignature(smsMessagePo *models.SmsMessagePo, now time.Time, randomNumber string) (string) {
-	var value = fmt.Sprintf(
-		"appkey=%s&random=%s&time=%s&mobile=%s",
-		myself.AppKey,
-		randomNumber,
-		common.Int64ToString(now.Unix()),
-		smsMessagePo.Tos)
-	var signature = sha256.Sum256([]byte(value))
-
-	return hex.EncodeToString(signature[:])
-}
-
-func (myself *smsMessageConsumer) buildPhoneNumberPackExternalDtos(smsMessagePo *models.SmsMessagePo) ([]external.PhoneNumberPackExternalDto) {
-	var phoneNumberPackExternalDtos []external.PhoneNumberPackExternalDto
-
-	nationCode := smsMessagePo.NationCode
-	if "" == smsMessagePo.NationCode {
-		nationCode = myself.DefaultNationCode
-	}
-
-	phoneNumbers := strings.Split(smsMessagePo.Tos, ",")
-	for _, phoneNumber := range phoneNumbers {
-		phoneNumberPackExternalDto := external.PhoneNumberPackExternalDto{
-			Nationcode: nationCode,
-			Mobile:     phoneNumber,
-		}
-		phoneNumberPackExternalDtos = append(phoneNumberPackExternalDtos, phoneNumberPackExternalDto)
-	}
-
-	return phoneNumberPackExternalDtos
-}
-
-func (myself *smsMessageConsumer) getMessage(messageId int, date time.Time) (interface{}, *models.PoBase, *models.CallbackBasePo, error) {
-	smsMessagePo, err := managements.SmsMessageManagement.GetById(messageId, date)
+func (myself *smsMessageConsumer) getMessage(messageId int64) (interface{}, *models.PoBase, *models.CallbackBasePo, error) {
+	smsMessagePo, err := managements.SmsMessageManagement.GetById(messageId)
 	if nil != err {
 		return nil, nil, nil, err
 	}
@@ -156,4 +83,24 @@ func (myself *smsMessageConsumer) poToDto(messagePo interface{}) (interface{}) {
 	}
 
 	return models.SmsMessagePoToDto(smsMessagePo)
+}
+
+func (myself *smsMessageConsumer) expireSend(messagePo interface{}) (error) {
+	smsMessagePo, ok := messagePo.(*models.SmsMessagePo)
+	err := common.Assert.IsTrueToError(ok, "messagePo.(*models.SmsMessagePo)")
+	if nil != err {
+		return err
+	}
+
+	smsExpireChannel, err := channels.ChooseSmsExpireChannel(smsMessagePo)
+	if nil != err {
+		return err
+	}
+
+	err = smsExpireChannel.Do(smsMessagePo)
+	if nil != err {
+		return err
+	}
+
+	return nil
 }

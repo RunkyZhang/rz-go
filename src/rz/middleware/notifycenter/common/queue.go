@@ -4,14 +4,6 @@ import (
 	"sync"
 )
 
-func newQueue() (*Queue) {
-	queue := &Queue{
-		items: make([]interface{}, 0),
-	}
-
-	return queue
-}
-
 type Queue struct {
 	items []interface{}
 	lock  sync.Mutex
@@ -38,6 +30,28 @@ func (myself *Queue) Dequeue() (interface{}) {
 	return item
 }
 
+func (myself *Queue) Head() (interface{}) {
+	myself.lock.Lock()
+	defer myself.lock.Unlock()
+
+	if 0 == len(myself.items) {
+		return nil
+	}
+
+	return myself.items[0]
+}
+
+func (myself *Queue) Tail() (interface{}) {
+	myself.lock.Lock()
+	defer myself.lock.Unlock()
+
+	length := len(myself.items)
+	if 0 == length {
+		return nil
+	}
+
+	return myself.items[length-1]
+}
 func (myself *Queue) Length() (int) {
 	return len(myself.items)
 }

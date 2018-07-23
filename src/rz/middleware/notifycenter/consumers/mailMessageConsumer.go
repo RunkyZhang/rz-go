@@ -1,13 +1,10 @@
 package consumers
 
 import (
-	"gopkg.in/gomail.v2"
-	"net/smtp"
 	"rz/middleware/notifycenter/models"
-	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/managements"
-	"time"
 	"rz/middleware/notifycenter/common"
+	"rz/middleware/notifycenter/channels"
 )
 
 var (
@@ -15,61 +12,41 @@ var (
 )
 
 func init() {
-	MailMessageConsumer = &mailMessageConsumer{
-		Host:        global.GetConfig().Mail.Host,
-		Port:        global.GetConfig().Mail.Port,
-		UserName:    global.GetConfig().Mail.UserName,
-		password:    global.GetConfig().Mail.Password,
-		From:        global.GetConfig().Mail.From,
-		ContentType: global.GetConfig().Mail.ContentType,
-	}
+	MailMessageConsumer = &mailMessageConsumer{}
+	MailMessageConsumer.runFunc = MailMessageConsumer.run
 	MailMessageConsumer.getMessageFunc = MailMessageConsumer.getMessage
-	MailMessageConsumer.sendFunc = MailMessageConsumer.Send
+	MailMessageConsumer.sendFunc = MailMessageConsumer.send
 	MailMessageConsumer.poToDtoFunc = MailMessageConsumer.poToDto
 	MailMessageConsumer.messageManagementBase = &managements.MailMessageManagement.MessageManagementBase
-	MailMessageConsumer.dialer = gomail.NewDialer(MailMessageConsumer.Host, MailMessageConsumer.Port, MailMessageConsumer.UserName, MailMessageConsumer.password)
-	MailMessageConsumer.dialer.Auth = &unencryptedAuth{
-		smtp.PlainAuth(
-			"",
-			MailMessageConsumer.UserName,
-			MailMessageConsumer.password,
-			MailMessageConsumer.Host,
-		),
-	}
+	MailMessageConsumer.name = MailMessageConsumer.messageManagementBase.KeySuffix
 }
 
 type mailMessageConsumer struct {
 	messageConsumerBase
-
-	Host        string
-	Port        int
-	UserName    string
-	password    string
-	From        string
-	ContentType string
-
-	dialer *gomail.Dialer
 }
 
-func (myself *mailMessageConsumer) Send(messageDto interface{}) error {
-	mailMessageDto, ok := messageDto.(*models.MailMessageDto)
-	err := common.Assert.IsTrueToError(ok, "messageDto.(*models.MailMessageDto)")
+func (myself *mailMessageConsumer) send(messagePo interface{}) error {
+	mailMessagePo, ok := messagePo.(*models.MailMessagePo)
+	err := common.Assert.IsTrueToError(ok, "messagePo.(*models.MailMessagePo)")
 	if nil != err {
 		return err
 	}
 
-	message := gomail.NewMessage()
-	message.SetHeader("From", myself.From)
-	message.SetHeader("To", mailMessageDto.Tos...)
-	message.SetHeader("Subject", mailMessageDto.Subject)
-	message.SetBody(myself.ContentType, mailMessageDto.Content)
-	//	m.Attach("/home/Alex/lolcat.jpg")
+	mailChannel, err := channels.ChooseMailChannel(mailMessagePo)
+	if nil != err {
+		return err
+	}
 
-	return myself.dialer.DialAndSend(message)
+	err = mailChannel.Do(mailMessagePo)
+	if nil != err {
+		return err
+	}
+
+	return nil
 }
 
-func (myself *mailMessageConsumer) getMessage(messageId int, date time.Time) (interface{}, *models.PoBase, *models.CallbackBasePo, error) {
-	mailMessagePo, err := managements.MailMessageManagement.GetById(messageId, date)
+func (myself *mailMessageConsumer) getMessage(messageId int64) (interface{}, *models.PoBase, *models.CallbackBasePo, error) {
+	mailMessagePo, err := managements.MailMessageManagement.GetById(messageId)
 	if nil != err {
 		return nil, nil, nil, err
 	}

@@ -8,9 +8,10 @@ import (
 )
 
 var (
-	Version                         = "2018-06-27-17:00"
+	Version                         = "2018-06-28-11:55"
 	AsyncWorker                     = common.NewAsyncJobWorker(5, 1*time.Second)
 	WebService                      = common.NewWebService(GetConfig().Web.Listen)
+	HttpClient                      = common.NewHttpClient(nil)
 	redisClient *common.RedisClient = nil
 	redisLock   sync.Mutex
 )

@@ -5,34 +5,38 @@ import (
 )
 
 type SmsUserMessageDto struct {
-	Id            int    `json:"id"`
-	NationCode    string `json:"nationCode"`
-	PhoneNumber   string `json:"phoneNumber"`
-	TemplateId    int    `json:"templateId"`
-	Extend        int    `json:"extend"`
-	Content       string `json:"content"`
-	Sign          string `json:"sign"`
-	Time          int64  `json:"time"`
+	Id           int64  `json:"id,string"`
+	NationCode   string `json:"nationCode"`
+	PhoneNumber  string `json:"phoneNumber"`
+	TemplateId   int    `json:"templateId"`
+	Extend       int    `json:"extend"`
+	Content      string `json:"content"`
+	Sign         string `json:"sign"`
+	Time         int64  `json:"time,string"`
+	SmsMessageId int64  `json:"time,string"`
+
+	Disable       bool   `json:"disable"`
 	Finished      bool   `json:"finished"`
-	FinishedTime  int64  `json:"finishedTime"`
+	FinishedTime  int64  `json:"finishedTime,string"`
 	ErrorMessages string `json:"errorMessages"`
 	States        string `json:"states"`
-	CreatedTime   int64  `json:"createdTime"`
-	UpdatedTime   int64  `json:"updatedTime"`
+	CreatedTime   int64  `json:"createdTime,string"`
+	UpdatedTime   int64  `json:"updatedTime,string"`
 }
 
 type SmsUserMessagePo struct {
 	PoBase
 	CallbackBasePo
 
-	Id          int    `gorm:"column:id;primary_key;auto_increment"`
-	NationCode  string `gorm:"column:nationCode"`
-	PhoneNumber string `gorm:"column:phoneNumber"`
-	TemplateId  int    `gorm:"column:templateId"`
-	Extend      int    `gorm:"column:extend"`
-	Content     string `gorm:"column:content"`
-	Sign        string `gorm:"column:sign"`
-	Time        int64  `gorm:"column:time"`
+	Id           int64  `gorm:"column:id;primary_key"`
+	NationCode   string `gorm:"column:nationCode"`
+	PhoneNumber  string `gorm:"column:phoneNumber"`
+	TemplateId   int    `gorm:"column:templateId"`
+	Extend       int    `gorm:"column:extend"`
+	Content      string `gorm:"column:content"`
+	Sign         string `gorm:"column:sign"`
+	Time         int64  `gorm:"column:time"`
+	SmsMessageId int64  `gorm:"column:smsMessageId"`
 }
 
 func SmsUserMessageDtoToPo(smsUserMessageDto *SmsUserMessageDto) (*SmsUserMessagePo) {
@@ -48,6 +52,7 @@ func SmsUserMessageDtoToPo(smsUserMessageDto *SmsUserMessageDto) (*SmsUserMessag
 	smsUserMessagePo.Content = smsUserMessageDto.Content
 	smsUserMessagePo.Sign = smsUserMessageDto.Sign
 	smsUserMessagePo.Time = smsUserMessageDto.Time
+	smsUserMessagePo.SmsMessageId = smsUserMessageDto.SmsMessageId
 	smsUserMessagePo.Finished = smsUserMessageDto.Finished
 	smsUserMessagePo.FinishedTime = time.Unix(smsUserMessageDto.FinishedTime, 0)
 	smsUserMessagePo.ErrorMessages = smsUserMessageDto.ErrorMessages
@@ -68,11 +73,27 @@ func SmsUserMessagePoToDto(smsUserMessagePo *SmsUserMessagePo) (*SmsUserMessageD
 	smsUserMessageDto.Content = smsUserMessagePo.Content
 	smsUserMessageDto.Sign = smsUserMessagePo.Sign
 	smsUserMessageDto.Time = smsUserMessagePo.Time
+	smsUserMessageDto.SmsMessageId = smsUserMessagePo.SmsMessageId
+	smsUserMessageDto.Disable = smsUserMessagePo.Disable
 	smsUserMessageDto.Finished = smsUserMessagePo.Finished
 	smsUserMessageDto.FinishedTime = smsUserMessagePo.FinishedTime.Unix()
 	smsUserMessageDto.ErrorMessages = smsUserMessagePo.ErrorMessages
+	smsUserMessageDto.States = smsUserMessagePo.States
 	smsUserMessageDto.CreatedTime = smsUserMessagePo.CreatedTime.Unix()
 	smsUserMessageDto.UpdatedTime = smsUserMessagePo.UpdatedTime.Unix()
 
 	return smsUserMessageDto
+}
+
+func SmsUserMessagePosToDtos(smsUserMessagePos []*SmsUserMessagePo) ([]*SmsUserMessageDto) {
+	if nil == smsUserMessagePos {
+		return nil
+	}
+
+	var smsUserMessageDtos []*SmsUserMessageDto
+	for _, smsUserMessagePo := range smsUserMessagePos {
+		smsUserMessageDtos = append(smsUserMessageDtos, SmsUserMessagePoToDto(smsUserMessagePo))
+	}
+
+	return smsUserMessageDtos
 }

@@ -9,8 +9,11 @@ type managementBase struct {
 }
 
 func (myself *managementBase) setPoBase(poBase *models.PoBase) {
-	now := time.Now()
-	poBase.CreatedTime = now
-	poBase.UpdatedTime = now
+	var mixTime time.Time
+	if mixTime == poBase.CreatedTime {
+		now := time.Now()
+		poBase.CreatedTime = now
+	}
+	poBase.UpdatedTime = poBase.CreatedTime
 	poBase.Deleted = false
 }

@@ -1,8 +1,9 @@
 package repositories
 
 import (
-	"rz/middleware/notifycenter/models"
 	"time"
+
+	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/common"
 )
 
@@ -27,50 +28,41 @@ func (myself *smsMessageRepository) Insert(smsMessagePo *models.SmsMessagePo) (e
 		return err
 	}
 
-	return myself.RepositoryBase.Insert(smsMessagePo, smsMessagePo.CreatedTime)
+	return myself.RepositoryBase.Insert(smsMessagePo, smsMessagePo.Id)
 }
 
-func (myself *smsMessageRepository) SelectById(id int, date time.Time) (*models.SmsMessagePo, error) {
+func (myself *smsMessageRepository) SelectById(id int64) (*models.SmsMessagePo, error) {
 	smsMessagePo := &models.SmsMessagePo{}
 
-	err := myself.RepositoryBase.SelectById(id, smsMessagePo, date)
+	err := myself.selectById(id, smsMessagePo)
 
 	return smsMessagePo, err
 }
 
-func (myself *smsMessageRepository) SelectByExpireTimeAndFinished(date time.Time) ([]models.SmsMessagePo, error) {
-	var smsMessagePos []models.SmsMessagePo
+func (myself *smsMessageRepository) SelectByIds(ids []int64, year int) ([]*models.SmsMessagePo, error) {
+	var smsMessagePos []*models.SmsMessagePo
 
-	err := myself.MessageRepositoryBase.SelectByExpireTimeAndFinished(&smsMessagePos, date)
+	err := myself.selectByIds(ids, &smsMessagePos, year)
 
 	return smsMessagePos, err
 }
 
-func (myself *smsMessageRepository) SelectByIdentifyingCode(templateId int, identifyingCode string, date time.Time) (*models.SmsMessagePo, error) {
-	database, err := myself.GetShardDatabase(date)
+func (myself *smsMessageRepository) SelectByExpireTimeAndFinished(year int) ([]*models.SmsMessagePo, error) {
+	var smsMessagePos []*models.SmsMessagePo
+
+	err := myself.selectByExpireTimeAndFinished(&smsMessagePos, year)
+
+	return smsMessagePos, err
+}
+
+func (myself *smsMessageRepository) SelectByIdentifyingCode(templateId int, identifyingCode string, year int) (*models.SmsMessagePo, error) {
+	database, err := myself.GetShardDatabase(year)
 	if nil != err {
 		return nil, err
 	}
 
 	smsMessagePo := &models.SmsMessagePo{}
-	err = database.Where("templateId=? AND identifyingCode=? AND expireTime>? AND deleted=0", templateId, identifyingCode, time.Now()).First(smsMessagePo).Error
+	err = database.Where("templateId=? AND identifyingCode=? AND expireTime>? AND disable=0 AND deleted=0", templateId, identifyingCode, time.Now()).Last(smsMessagePo).Error
 
 	return smsMessagePo, err
-}
-
-func (myself *smsMessageRepository) getDatabaseKey(shardParameters ...interface{}) (string) {
-	return myself.DefaultDatabaseKey
-}
-
-func (myself *smsMessageRepository) getTableName(shardParameters ...interface{}) (string) {
-	if nil == shardParameters || 0 == len(shardParameters) {
-		return ""
-	}
-
-	date, ok := shardParameters[0].(time.Time)
-	if !ok {
-		return ""
-	}
-
-	return myself.RawTableName + "_" + common.Int32ToString(date.Year())
 }

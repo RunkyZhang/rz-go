@@ -266,6 +266,22 @@ func (myself *RedisClient) HashExist(key string, fieldName string) (bool, error)
 	return redis.Bool(result, err)
 }
 
+func (myself *RedisClient) HashIncrement(key string, fieldName string, value int) (int64, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
+		return conn.Do("HINCRBY", key, fieldName, value)
+	})
+
+	return redis.Int64(result, err)
+}
+
+func (myself *RedisClient) HashDecrement(key string, fieldName string, value int) (int64, error) {
+	result, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
+		return conn.Do("HINCRBY", key, fieldName, -1*value)
+	})
+
+	return redis.Int64(result, err)
+}
+
 func (myself *RedisClient) SortedSetAdd(key string, value string, score float64) (error) {
 	_, err := myself.safeDo(func(conn redis.Conn) (interface{}, error) {
 		return conn.Do("ZADD", key, score, value)

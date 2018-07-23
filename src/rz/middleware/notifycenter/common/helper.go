@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"strconv"
+	"sort"
 )
 
 func IsStringBlank(value string) (bool) {
@@ -67,4 +68,16 @@ func Int64ToString(value int64) (string) {
 
 func StringToInt32(value string) (int, error) {
 	return strconv.Atoi(value)
+}
+
+func StringToInt64(value string) (int64, error) {
+	return strconv.ParseInt(value, 10, 64)
+}
+
+func SortIntSlice(values []int64) {
+	sort.Slice(values, func(currentIndex int, nextIndex int) bool { return values[currentIndex] < values[nextIndex] })
+}
+
+func SortReverseIntSlice(values []int64) {
+	sort.Slice(values, func(currentIndex int, nextIndex int) bool { return values[currentIndex] > values[nextIndex] })
 }

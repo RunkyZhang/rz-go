@@ -4,7 +4,6 @@ import (
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/repositories"
 	"rz/middleware/notifycenter/enumerations"
-	"time"
 	"rz/middleware/notifycenter/common"
 )
 
@@ -43,10 +42,14 @@ func (myself *smsMessageManagement) Add(smsMessagePo *models.SmsMessagePo) (erro
 	return repositories.SmsMessageRepository.Insert(smsMessagePo)
 }
 
-func (myself *smsMessageManagement) GetById(id int, date time.Time) (*models.SmsMessagePo, error) {
-	return repositories.SmsMessageRepository.SelectById(id, date)
+func (myself *smsMessageManagement) GetById(id int64) (*models.SmsMessagePo, error) {
+	return repositories.SmsMessageRepository.SelectById(id)
 }
 
-func (myself *smsMessageManagement) GetByIdentifyingCode(templateId int, identifyingCode string, date time.Time) (*models.SmsMessagePo, error) {
-	return repositories.SmsMessageRepository.SelectByIdentifyingCode(templateId, identifyingCode, date)
+func (myself *smsMessageManagement) GetByIds(id []int64, year int) ([]*models.SmsMessagePo, error) {
+	return repositories.SmsMessageRepository.SelectByIds(id, year)
+}
+
+func (myself *smsMessageManagement) GetByIdentifyingCode(templateId int, identifyingCode string, year int) (*models.SmsMessagePo, error) {
+	return repositories.SmsMessageRepository.SelectByIdentifyingCode(templateId, identifyingCode, year)
 }

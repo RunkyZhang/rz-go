@@ -47,13 +47,20 @@ func (myself *smsUserMessageService) Callback(smsUserCallbackMessageRequestExter
 		Extend:      extend,
 	}
 	smsUserMessagePo.ExpireTime = time.Now().Add(7 * 24 * time.Hour)
-
 	smsTemplatePo, err := managements.SmsTemplateManagement.GetByExtend(extend)
 	if nil != err {
 		smsUserMessagePo.Finished = true
-		smsUserMessagePo.ErrorMessages = exceptions.InvalidExtend().AttachMessage(common.Int32ToString(smsUserMessagePo.Id)).Error()
+		smsUserMessagePo.ErrorMessages = exceptions.InvalidExtend().AttachMessage(smsUserMessagePo.Id).Error()
 	} else {
 		smsUserMessagePo.TemplateId = smsTemplatePo.Id
+	}
+	smsUserMessagePo.CreatedTime = time.Now()
+	smsUserMessagePo.Id, err = managements.SmsUserMessageManagement.GenerateId(smsUserMessagePo.CreatedTime.Year())
+	if nil != err {
+		return &external.SmsUserCallbackMessageResponseExternalDto{
+			Result: 1,
+			Errmsg: exceptions.FailedGenerateMessageId().AttachError(err).Error(),
+		}
 	}
 
 	err = managements.SmsUserMessageManagement.Add(smsUserMessagePo)
@@ -65,17 +72,18 @@ func (myself *smsUserMessageService) Callback(smsUserCallbackMessageRequestExter
 	}
 
 	if false == smsUserMessagePo.Finished {
-		err = managements.SmsUserMessageManagement.EnqueueMessageIds(smsUserMessagePo.Id, smsUserMessagePo.CreatedTime.Unix())
+		err = managements.SmsUserMessageManagement.EnqueueIds(smsUserMessagePo.Id, smsUserMessagePo.CreatedTime.Unix())
 		if nil != err {
+			now := time.Now()
+			finished := true
 			managements.ModifyMessageFlowAsync(
 				myself.messageManagementBase,
 				smsUserMessagePo.Id,
-				&smsUserMessagePo.PoBase,
-				&smsUserMessagePo.CallbackBasePo,
 				enumerations.Error,
-				true,
-				time.Now(),
-				exceptions.FailedEnqueueMessageId().AttachError(err).AttachMessage(common.Int32ToString(smsUserMessagePo.Id)).Error())
+				exceptions.FailedEnqueueMessageId().AttachError(err).AttachMessage(smsUserMessagePo.Id).Error(),
+				&finished,
+				&now,
+				smsUserMessagePo.CreatedTime.Year())
 
 			return &external.SmsUserCallbackMessageResponseExternalDto{
 				Result: 1,
@@ -88,4 +96,21 @@ func (myself *smsUserMessageService) Callback(smsUserCallbackMessageRequestExter
 		Result: 0,
 		Errmsg: "OK",
 	}
+}
+
+func (myself *smsUserMessageService) Query(querySmsUserMessagesRequestDto *models.QuerySmsUserMessagesRequestDto) ([]*models.SmsUserMessageDto, error) {
+	err := VerifyQuerySmsUserMessagesRequestDto(querySmsUserMessagesRequestDto)
+	if nil != err {
+		return nil, err
+	}
+
+	smsUserMessagePos, err := managements.SmsUserMessageManagement.Query(
+		querySmsUserMessagesRequestDto.SmsMessageId,
+		querySmsUserMessagesRequestDto.Content,
+		querySmsUserMessagesRequestDto.NationCode,
+		querySmsUserMessagesRequestDto.PhoneNumber,
+		querySmsUserMessagesRequestDto.TemplateId,
+		querySmsUserMessagesRequestDto.Year)
+
+	return models.SmsUserMessagePosToDtos(smsUserMessagePos), err
 }

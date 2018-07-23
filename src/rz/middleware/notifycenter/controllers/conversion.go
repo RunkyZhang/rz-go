@@ -15,8 +15,8 @@ func ConvertToMailMessageDto(body []byte) (interface{}, error) {
 		return nil, err
 	}
 
-	var mailMessageDto models.MailMessageDto
-	return convertToDto(body, &mailMessageDto)
+	var dto models.MailMessageDto
+	return convertToDto(body, &dto)
 }
 
 func ConvertToSmsMessageDto(body []byte) (interface{}, error) {
@@ -25,18 +25,28 @@ func ConvertToSmsMessageDto(body []byte) (interface{}, error) {
 		return nil, err
 	}
 
-	var smsMessageDto models.SmsMessageDto
-	return convertToDto(body, &smsMessageDto)
+	var dto models.SmsMessageDto
+	return convertToDto(body, &dto)
 }
 
-func ConvertToQuerySmsMessageRequestDtoDto(body []byte) (interface{}, error) {
+func ConvertToQueryMessagesByIdsRequestDto(body []byte) (interface{}, error) {
 	err := common.Assert.IsNotNilToError(body, "body")
 	if nil != err {
 		return nil, err
 	}
 
-	var querySmsMessageRequestDto models.QuerySmsMessageRequestDto
-	return convertToDto(body, &querySmsMessageRequestDto)
+	var dto models.QueryMessagesByIdsRequestDto
+	return convertToDto(body, &dto)
+}
+
+func ConvertToDisableMessageRequestDto(body []byte) (interface{}, error) {
+	err := common.Assert.IsNotNilToError(body, "body")
+	if nil != err {
+		return nil, err
+	}
+
+	var dto models.DisableMessageRequestDto
+	return convertToDto(body, &dto)
 }
 
 func ConvertToSmsCallbackMessageDto(body []byte) (interface{}, error) {
@@ -45,8 +55,28 @@ func ConvertToSmsCallbackMessageDto(body []byte) (interface{}, error) {
 		return nil, err
 	}
 
-	var smsUserCallbackMessageRequestExternalDto external.SmsUserCallbackMessageRequestExternalDto
-	return convertToDto(body, &smsUserCallbackMessageRequestExternalDto)
+	var dto external.SmsUserCallbackMessageRequestExternalDto
+	return convertToDto(body, &dto)
+}
+
+func ConvertToSmsTemplateDto(body []byte) (interface{}, error) {
+	err := common.Assert.IsNotNilToError(body, "body")
+	if nil != err {
+		return nil, err
+	}
+
+	var dto models.SmsTemplateDto
+	return convertToDto(body, &dto)
+}
+
+func ConvertToQuerySmsUserMessagesRequestDto(body []byte) (interface{}, error) {
+	err := common.Assert.IsNotNilToError(body, "body")
+	if nil != err {
+		return nil, err
+	}
+
+	var dto models.QuerySmsUserMessagesRequestDto
+	return convertToDto(body, &dto)
 }
 
 func convertToDto(body []byte, messageDto interface{}) (interface{}, error) {
