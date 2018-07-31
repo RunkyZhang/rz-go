@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"sync"
-
-	"rz/middleware/notifycenter/common"
 )
 
 var (
@@ -53,7 +51,7 @@ func NewClusterTokenBucket(redisClient *RedisClient, namespace string, key strin
 	if nil != err || 0 == len(ipv4s) {
 		panic(errors.New("failed to get ip"))
 	}
-	clusterTokenBucket.id = ipv4s[0]
+	clusterTokenBucket.id = "666"
 	// depend on time server to adjust every node time
 	clusterTokenBucket.timeoutSeconds = 2
 
@@ -165,30 +163,31 @@ func (myself *ClusterTokenBucket) TryTake() (bool, error) {
 }
 
 func (myself *ClusterTokenBucket) supply() {
-	//spread := time.Now().Unix() - myself.lastSupplyTime
-	//duration := time.Duration(spread%myself.intervalSeconds) * time.Second
-	//time.Sleep(duration)
-
 	for range myself.ticker.C {
 		myself.lock.Lock()
 		clusterTokenBucketPo, err := myself.get()
 		if nil != err {
 			GetLogging().Error(err, "Failed to get [TokenBucket] from redis")
+			myself.lock.Unlock()
 			continue
 		}
+		lastSupplyTime := myself.lastSupplyTime
+		myself.lastSupplyTime = clusterTokenBucketPo.LastSupplyTime
 
 		now := time.Now().Unix()
 		if myself.id == clusterTokenBucketPo.MasterId { // if self is master, then refresh
 			err = myself.refresh(now, myself.intervalSeconds, myself.capacity)
 			if nil != err {
+				myself.lock.Unlock()
 				continue
 			}
 		} else {
-			if myself.lastSupplyTime == clusterTokenBucketPo.LastSupplyTime { // if last supply time is not change, then wait a moment
-				overSeconds := now - clusterTokenBucketPo.LastSupplyTime - myself.intervalSeconds
+			if lastSupplyTime == myself.lastSupplyTime { // if last supply time is not change, then wait a moment or change master
+				overSeconds := now - myself.lastSupplyTime - myself.intervalSeconds
 				if myself.timeoutSeconds < overSeconds { // if over time greater than timeout time, then change master
 					err = myself.refresh(now, myself.intervalSeconds, myself.capacity)
 					if nil != err {
+						myself.lock.Unlock()
 						continue
 					}
 				} else {
@@ -279,7 +278,7 @@ func (myself *ClusterTokenBucket) build(lastSupplyTime int64, intervalSeconds in
 }
 
 func (myself *ClusterTokenBucket) supplyAvailable(capacity int) (error) {
-	return myself.redisClient.HashSet(myself.namespace+clusterTokenBucketAvailableKey, myself.key, common.Int32ToString(capacity))
+	return myself.redisClient.HashSet(myself.namespace+clusterTokenBucketAvailableKey, myself.key, Int32ToString(capacity))
 }
 
 func (myself *ClusterTokenBucket) getAvailable() (int, error) {

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"os"
-	"os/signal"
 	"time"
 	"fmt"
 	"strings"
@@ -14,6 +12,8 @@ import (
 	"rz/middleware/notifycenter/healths"
 	"rz/middleware/notifycenter/common"
 	"rz/middleware/notifycenter/models"
+	"os"
+	"os/signal"
 )
 
 // http://work.weixin.qq.com/api/doc
@@ -398,7 +398,7 @@ func testClusterTokenBucket() {
 	}
 	redisClient := common.NewRedisClient(redisClientSettings)
 
-	clusterTokenBucket := common.NewClusterTokenBucket(redisClient, "Middleware_NotifyCenter_", "day_notifycenter.test", int64(0), 10, 5000)
+	clusterTokenBucket := common.NewClusterTokenBucket(redisClient, "Middleware_NotifyCenter_", "day_notifycenter.test", int64(0), 10, 10000)
 	//for i := 0; i < 100; i++ {
 	//	//time.Sleep(time.Second)
 	//	//fmt.Println(clusterTokenBucket.TryTake())
@@ -434,10 +434,13 @@ func testClusterTokenBucket() {
 		}(i)
 	}
 
-	seconds := int64(30)
+	seconds := int64(30000)
 	fmt.Println("wait", seconds)
 	for ; time.Now().Unix()-timePoint < seconds; {
 		time.Sleep(1 * time.Millisecond)
+		if 0 == count%10000 {
+			fmt.Println(count)
+		}
 	}
 	disable = true
 	fmt.Println(time.Now().Unix()-timePoint, count)
