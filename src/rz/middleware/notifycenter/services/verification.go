@@ -90,6 +90,27 @@ func VerifySystemAliasPermissionDto(verifySystemAliasPermissionDto *models.Syste
 	return nil
 }
 
+func VerifyModifySystemAliasPermissionRequestDto(modifySystemAliasPermissionRequestDto *models.ModifySystemAliasPermissionRequestDto) (error) {
+	err := common.Assert.IsNotNilToError(modifySystemAliasPermissionRequestDto, "modifySystemAliasPermissionRequestDto")
+	if nil != err {
+		return err
+	}
+
+	if "" == modifySystemAliasPermissionRequestDto.SystemAlias {
+		return exceptions.SystemAliasBlank()
+	}
+
+	if nil == modifySystemAliasPermissionRequestDto.SmsPermission &&
+		nil == modifySystemAliasPermissionRequestDto.MailPermission &&
+		nil == modifySystemAliasPermissionRequestDto.SmsDayFrequency &&
+		nil == modifySystemAliasPermissionRequestDto.SmsHourFrequency &&
+		nil == modifySystemAliasPermissionRequestDto.SmsMinuteFrequency {
+		return exceptions.NullModifyParameter()
+	}
+
+	return nil
+}
+
 func verifyMessageDto(messageBaseDto *models.MessageBaseDto) (error) {
 	if 0 == len(messageBaseDto.Tos) {
 		return exceptions.TosEmpty()

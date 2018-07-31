@@ -9,7 +9,7 @@ import (
 
 var (
 	Version                         = "2018-06-28-11:55"
-	AsyncWorker                     = common.NewAsyncJobWorker(5, 1*time.Second)
+	AsyncWorker                     = common.NewAsyncJobWorker(5)
 	WebService                      = common.NewWebService(GetConfig().Web.Listen)
 	HttpClient                      = common.NewHttpClient(nil)
 	redisClient *common.RedisClient = nil
@@ -50,7 +50,7 @@ func RefreshRedis() {
 	defer func() {
 		value := recover()
 		if nil != value {
-			common.GetLogging().Error(value, "failed to refresh redis")
+			common.GetLogging().Error(value, "Failed to refresh redis")
 
 			if !flag {
 				redisClient = oldRedisClient

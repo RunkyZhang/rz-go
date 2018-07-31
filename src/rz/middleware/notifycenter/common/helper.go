@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"strconv"
 	"sort"
+	"net"
 )
 
 func IsStringBlank(value string) (bool) {
@@ -80,4 +81,21 @@ func SortIntSlice(values []int64) {
 
 func SortReverseIntSlice(values []int64) {
 	sort.Slice(values, func(currentIndex int, nextIndex int) bool { return values[currentIndex] > values[nextIndex] })
+}
+
+func GetIpV4s() ([]string, error) {
+	interfaceAddrs, err := net.InterfaceAddrs()
+	if nil != err {
+		return nil, err
+	}
+
+	var ipV4s []string
+	for _, interfaceAddr := range interfaceAddrs {
+		ipNet, ok := interfaceAddr.(*net.IPNet)
+		if ok && nil != ipNet.IP && !ipNet.IP.IsLoopback() && nil != ipNet.IP.To4() {
+			ipV4s = append(ipV4s, ipNet.IP.String())
+		}
+	}
+
+	return ipV4s, nil
 }

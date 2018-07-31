@@ -3,12 +3,13 @@ package services
 import (
 	"time"
 	"fmt"
+	"strings"
+
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/managements"
 	"rz/middleware/notifycenter/enumerations"
 	"rz/middleware/notifycenter/exceptions"
 	"rz/middleware/notifycenter/common"
-	"strings"
 )
 
 var (
@@ -28,9 +29,13 @@ func (myself *smsMessageService) Send(smsMessageDto *models.SmsMessageDto) (int6
 	if nil != err {
 		return 0, err
 	}
+	systemAliasPermissionPo, err := managements.SystemAliasPermissionManagement.GetById(smsMessageDto.SystemAlias)
+	if nil != err || 0 == systemAliasPermissionPo.SmsPermission {
+		return 0, exceptions.NotSendSmsPermission().AttachError(err).AttachMessage(smsMessageDto.SystemAlias)
+	}
 	smsTemplatePo, err := managements.SmsTemplateManagement.GetByTemplateId(smsMessageDto.TemplateId)
 	if nil != err {
-		return 0, err
+		return 0, exceptions.InvalidTemplateId().AttachError(err).AttachMessage(smsMessageDto.TemplateId)
 	}
 	count := len(strings.Split(smsTemplatePo.Context, "%s")) - 1
 	if count != len(smsMessageDto.Parameters) {
@@ -64,6 +69,7 @@ func (myself *smsMessageService) Send(smsMessageDto *models.SmsMessageDto) (int6
 		managements.ModifyMessageFlowAsync(
 			myself.messageManagementBase,
 			smsMessagePo.Id,
+			enumerations.Initial,
 			enumerations.Error,
 			exceptions.FailedEnqueueMessageId().AttachError(err).AttachMessage(smsMessagePo.Id).Error(),
 			&finished,

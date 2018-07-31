@@ -37,7 +37,7 @@ func GetDatabases() (map[string]*gorm.DB) {
 		database, err := gorm.Open("mysql", value)
 		if nil != err {
 			CloseDatabase()
-			panic(errors.New(fmt.Sprintf("failed to open database; error: %s", err.Error())))
+			panic(errors.New(fmt.Sprintf("Failed to open database; error: %s", err.Error())))
 		}
 		database.DB().SetMaxIdleConns(2)
 		database.DB().SetMaxOpenConns(10)
@@ -158,7 +158,7 @@ func (myself *RepositoryBase) GetShardDatabase(shardParameters ...interface{}) (
 
 	database, ok := GetDatabases()[defaultDatabaseKey]
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("failed to get database(%s)", defaultDatabaseKey))
+		return nil, errors.New(fmt.Sprintf("Failed to get database(%s)", defaultDatabaseKey))
 	}
 
 	var tableName string

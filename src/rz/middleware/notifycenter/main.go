@@ -6,6 +6,7 @@ import (
 	"time"
 	"fmt"
 	"strings"
+	"errors"
 
 	"rz/middleware/notifycenter/controllers"
 	"rz/middleware/notifycenter/global"
@@ -49,6 +50,7 @@ func start() {
 	controllers.MessageController.Enable(controllers.MessageController, true)
 	controllers.SmsTemplateController.Enable(controllers.SmsTemplateController, true)
 	controllers.SmsUserCallbackController.Enable(controllers.SmsUserCallbackController, false)
+	controllers.SystemAliasPermissionController.Enable(controllers.SystemAliasPermissionController, false)
 
 	// healths
 	global.WebService.RegisterHealthIndicator(&healths.RedisHealthIndicator{})
@@ -231,14 +233,32 @@ func testHttpClient() {
 }
 
 func testTokenBucket() {
-	tokenBucket := common.NewTokenBucket(5*time.Second, 20000)
-	timePoint := time.Now().Unix()
+	tokenBucket := common.NewTokenBucket(10*time.Second, 3)
 	//for i := 0; i < 100; i++ {
 	//	//time.Sleep(time.Second)
 	//	//fmt.Println(tokenBucket.TryTake(1))
-	//	fmt.Println(tokenBucket.Take(1, 5*time.Second))
+	//	tokenBucket.Take(1, 5*time.Second)
 	//}
 
+	tokenBucket.Take(3, 5*time.Second)
+	fmt.Println("0------3")
+	go func() {
+		tokenBucket.Take(2, 1000*time.Second)
+		fmt.Println("1------2")
+	}()
+	time.Sleep(1)
+	go func() {
+		tokenBucket.Take(2, 1000*time.Second)
+		fmt.Println("2------2")
+	}()
+	time.Sleep(1)
+	go func() {
+		tokenBucket.Take(1, 1000*time.Second)
+		fmt.Println("3------1")
+	}()
+	time.Sleep(2000 * time.Second)
+
+	timePoint := time.Now().Unix()
 	count := 0
 	disable := false
 	for i := 0; i < 100; i++ {
@@ -309,6 +329,118 @@ func testSemaphore() {
 		}
 	}
 	fmt.Println("done")
+}
+
+func testAsyncJobWorker() {
+	asyncWorker := common.NewAsyncJobWorker(5)
+	asyncWorker.Start()
+	time.Sleep(1 * time.Second)
+	for i := 0; i < 10; i++ {
+		asyncJob := &common.AsyncJob{
+			Name:      fmt.Sprint(i),
+			Type:      "777",
+			Parameter: []interface{}{i},
+			RunFunc: func(parameter interface{}) error {
+				time.Sleep(1 * time.Second)
+				return errors.New(fmt.Sprint("test", parameter))
+			},
+		}
+		asyncWorker.Add(asyncJob)
+	}
+
+	time.Sleep(10 * time.Second)
+
+	for i := 0; i < 20; i++ {
+		asyncJob := &common.AsyncJob{
+			Name:      fmt.Sprint(i),
+			Type:      "777",
+			Parameter: []interface{}{i},
+			RunFunc: func(parameter interface{}) error {
+				time.Sleep(5 * time.Second)
+				return errors.New(fmt.Sprint("test", parameter))
+			},
+		}
+		asyncWorker.Add(asyncJob)
+	}
+
+	fmt.Println(time.Now(), "CloseAndWait")
+	asyncWorker.CloseAndWait()
+}
+
+func testAsyncJobTrigger() {
+	asyncJob := common.AsyncJob{
+		Name: "666",
+		Type: "777",
+		RunFunc: func(parameter interface{}) error {
+			//time.Sleep(5 * time.Second)
+			return errors.New(fmt.Sprint("test", parameter))
+		},
+	}
+	asyncJobTrigger := common.NewAsyncJobTrigger(5, 1*time.Second, asyncJob)
+	asyncJobTrigger.Start()
+
+	time.Sleep(100 * time.Second)
+
+	fmt.Println(time.Now(), "CloseAndWait")
+	asyncJobTrigger.CloseAndWait()
+}
+
+func testClusterTokenBucket() {
+	redisClientSettings := common.RedisClientSettings{
+		PoolMaxActive:   10,
+		PoolMaxIdle:     1,
+		PoolWait:        true,
+		PoolIdleTimeout: 180 * time.Second,
+		DatabaseId:      0,
+		ConnectTimeout:  2000 * time.Second,
+		Address:         "10.0.52.105:6379",
+		Password:        "",
+	}
+	redisClient := common.NewRedisClient(redisClientSettings)
+
+	clusterTokenBucket := common.NewClusterTokenBucket(redisClient, "Middleware_NotifyCenter_", "day_notifycenter.test", int64(0), 10, 5000)
+	//for i := 0; i < 100; i++ {
+	//	//time.Sleep(time.Second)
+	//	//fmt.Println(clusterTokenBucket.TryTake())
+	//	clusterTokenBucket.Take(5)
+	//}
+
+	timePoint := time.Now().Unix()
+	count := 0
+	disable := false
+	for i := 0; i < 100; i++ {
+		go func(index int) {
+			if 0 == index%2 {
+				for ; ; {
+					ok, _ := clusterTokenBucket.Take(2)
+					if ok {
+						count += 1
+					}
+					if disable {
+						break
+					}
+				}
+			} else {
+				for ; ; {
+					ok, _ := clusterTokenBucket.TryTake()
+					if ok {
+						count += 1
+					}
+					if disable {
+						break
+					}
+				}
+			}
+		}(i)
+	}
+
+	seconds := int64(30)
+	fmt.Println("wait", seconds)
+	for ; time.Now().Unix()-timePoint < seconds; {
+		time.Sleep(1 * time.Millisecond)
+	}
+	disable = true
+	fmt.Println(time.Now().Unix()-timePoint, count)
 }
 
 func test() {

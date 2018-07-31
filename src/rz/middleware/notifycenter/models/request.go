@@ -40,3 +40,12 @@ type QuerySmsUserMessagesRequestDto struct {
 	TemplateId   int    `json:"templateId"`
 	Year         int    `json:"year"`
 }
+
+type ModifySystemAliasPermissionRequestDto struct {
+	SystemAlias        string `json:"systemAlias"`
+	SmsPermission      *int   `json:"smsPermission,omitempty"`
+	MailPermission     *int   `json:"mailPermission,omitempty"`
+	SmsDayFrequency    *int   `json:"smsDayFrequency,omitempty"`
+	SmsHourFrequency   *int   `json:"smsHourFrequency,omitempty"`
+	SmsMinuteFrequency *int   `json:"smsMinuteFrequency,omitempty"`
+}

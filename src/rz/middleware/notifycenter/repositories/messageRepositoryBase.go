@@ -24,7 +24,7 @@ func (myself *MessageRepositoryBase) UpdateStatesById(id int64, state string, er
 	parameters = append(parameters, time.Now())
 	if "" != errorMessage {
 		setSql += ", `errorMessages`=CONCAT(`errorMessages`,?)"
-		parameters = append(parameters, "+++"+errorMessage)
+		parameters = append(parameters, errorMessage)
 	}
 	if nil != finished {
 		setSql += ", `finished`=?"

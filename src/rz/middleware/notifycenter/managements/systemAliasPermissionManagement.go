@@ -38,6 +38,10 @@ func (myself *systemAliasPermissionManagement) Add(systemAliasPermissionPo *mode
 	return repositories.SystemAliasPermissionRepository.Insert(systemAliasPermissionPo)
 }
 
+func (myself *systemAliasPermissionManagement) Modify(id string, smsPermission *int, mailPermission *int, smsDayFrequency *int, smsHourFrequency *int, smsMinuteFrequency *int) (int64, error) {
+	return repositories.SystemAliasPermissionRepository.Update(id, smsPermission, mailPermission, smsDayFrequency, smsHourFrequency, smsMinuteFrequency)
+}
+
 func (myself *systemAliasPermissionManagement) GetById(id string) (*models.SystemAliasPermissionPo, error) {
 	systemAliasPermissionPos, err := myself.GetAll()
 	if nil != err {
@@ -46,7 +50,7 @@ func (myself *systemAliasPermissionManagement) GetById(id string) (*models.Syste
 
 	systemAliasPermissionPo, ok := systemAliasPermissionPos[id]
 	if !ok {
-		return nil, exceptions.TemplateIdNotExist().AttachError(err).AttachMessage(id)
+		return nil, exceptions.SystemAliasNotExist().AttachError(err).AttachMessage(id)
 	}
 
 	return systemAliasPermissionPo, nil
@@ -65,7 +69,7 @@ func (myself *systemAliasPermissionManagement) GetAll() (map[string]*models.Syst
 			if nil == err {
 				myself.lastRefreshTime = time.Now().Unix()
 			} else {
-				common.GetLogging().Error(err, "failed to get all [SystemAliasPermissionPo]")
+				common.GetLogging().Error(err, "Failed to get all [SystemAliasPermissionPo]")
 			}
 		}()
 	}

@@ -79,6 +79,26 @@ func ConvertToQuerySmsUserMessagesRequestDto(body []byte) (interface{}, error) {
 	return convertToDto(body, &dto)
 }
 
+func ConvertToSystemAliasPermissionDto(body []byte) (interface{}, error) {
+	err := common.Assert.IsNotNilToError(body, "body")
+	if nil != err {
+		return nil, err
+	}
+
+	var dto models.SystemAliasPermissionDto
+	return convertToDto(body, &dto)
+}
+
+func ConvertToModifySystemAliasPermissionRequestDto(body []byte) (interface{}, error) {
+	err := common.Assert.IsNotNilToError(body, "body")
+	if nil != err {
+		return nil, err
+	}
+
+	var dto models.ModifySystemAliasPermissionRequestDto
+	return convertToDto(body, &dto)
+}
+
 func convertToDto(body []byte, messageDto interface{}) (interface{}, error) {
 	err := json.Unmarshal(body, &messageDto)
 	if nil != err {

@@ -37,7 +37,7 @@ func (myself *smsTemplateService) Add(smsTemplateDto *models.SmsTemplateDto) (in
 	return smsTemplatePo.Id, nil
 }
 
-func (myself *smsTemplateService) Get() ([]*models.SmsTemplateDto, error) {
+func (myself *smsTemplateService) GetAll() ([]*models.SmsTemplateDto, error) {
 	keyValues, err := managements.SmsTemplateManagement.GetAll()
 	if nil != err {
 		return nil, err

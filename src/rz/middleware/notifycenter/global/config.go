@@ -75,21 +75,21 @@ func GetConfig() (*Configuration) {
 	filePath = fmt.Sprintf(filePath, getConfigFileSuffix(environmentId))
 
 	if !common.IsExistPath(filePath) {
-		panic(errors.New(fmt.Sprintf("cannot find config file path(%s)", filePath)))
+		panic(errors.New(fmt.Sprintf("Cannot find config file path(%s)", filePath)))
 	}
 
 	content, err := common.ReadFileContent(filePath)
 	if nil != err {
-		panic(errors.New(fmt.Sprintf("failed to get config file content(%s). error: %s", content, err.Error())))
+		panic(errors.New(fmt.Sprintf("Failed to get config file content(%s). error: %s", content, err.Error())))
 	}
 
 	configuration = &Configuration{}
 	err = json.Unmarshal([]byte(content), &configuration)
 	if nil != err {
-		panic(errors.New(fmt.Sprintf("invaild config file content(%s). error: %s", content, err.Error())))
+		panic(errors.New(fmt.Sprintf("Invaild config file content(%s). error: %s", content, err.Error())))
 	}
 
-	common.GetLogging().Info(nil, "loaded config file(%s)", filePath)
+	common.GetLogging().Info(nil, "Loaded config file(%s)", filePath)
 
 	return configuration
 }
@@ -118,7 +118,7 @@ func RefreshConfig() {
 	defer func() {
 		value := recover()
 		if nil != value {
-			common.GetLogging().Error(value, "failed to refresh config file")
+			common.GetLogging().Error(value, "Failed to refresh config file")
 
 			configuration = oldConfiguration
 		}

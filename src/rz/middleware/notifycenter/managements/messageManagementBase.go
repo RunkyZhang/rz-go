@@ -131,11 +131,15 @@ type MessageFlowJobParameter struct {
 func ModifyMessageFlowAsync(
 	messageManagementBase *MessageManagementBase,
 	messageId int64,
+	currentMessageState enumerations.MessageState,
 	messageState enumerations.MessageState,
 	errorMessage string,
 	finished *bool,
 	finishedTime *time.Time,
 	year int) {
+	if "" != errorMessage {
+		errorMessage = fmt.Sprintf("(%s)%s", enumerations.MessageStateToString(currentMessageState), errorMessage)
+	}
 	messageFlowJobParameter := &MessageFlowJobParameter{
 		MessageManagementBase: messageManagementBase,
 		MessageId:             messageId,
@@ -176,7 +180,7 @@ func modifyMessageFlow(parameter interface{}) (error) {
 		messageFlowJobParameter.FinishedTime,
 		messageFlowJobParameter.Year)
 	if nil != err || 0 == affectedCount {
-		return errors.New(fmt.Sprintf("failed to modify message(%d) state. error: %s", messageFlowJobParameter.MessageId, err))
+		return errors.New(fmt.Sprintf("Failed to modify message(%d) state. error: %s", messageFlowJobParameter.MessageId, err))
 	}
 
 	return nil

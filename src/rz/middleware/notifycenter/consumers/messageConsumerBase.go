@@ -24,28 +24,28 @@ type messageConsumerBase struct {
 	sendFunc              sendFunc
 	poToDtoFunc           poToDtoFunc
 	messageManagementBase *managements.MessageManagementBase
-	expireAsyncJobWorker  *common.AsyncJobWorker
+	expireAsyncJobTrigger *common.AsyncJobTrigger
 	expireRunFunc         common.RunFunc
 	expireSendFunc        sendFunc
 }
 
 func (myself *messageConsumerBase) Start(duration time.Duration) (error) {
-	asyncJob := &common.AsyncJob{
+	asyncJob := common.AsyncJob{
 		Name:    myself.name,
 		Type:    "Consumer Message",
 		RunFunc: myself.runFunc,
 	}
-	myself.asyncJobWorker = common.NewAsyncJobWorker(runtime.NumCPU(), duration, asyncJob)
-	myself.asyncJobWorker.Start()
+	myself.asyncJobTrigger = common.NewAsyncJobTrigger(runtime.NumCPU(), duration, asyncJob)
+	myself.asyncJobTrigger.Start()
 
 	if nil != myself.expireRunFunc {
-		expireAsyncJob := &common.AsyncJob{
+		expireAsyncJob := common.AsyncJob{
 			Name:    myself.name,
 			Type:    "Consumer Expire Message",
 			RunFunc: myself.expireRunFunc,
 		}
-		myself.expireAsyncJobWorker = common.NewAsyncJobWorker(1, duration, expireAsyncJob)
-		myself.expireAsyncJobWorker.Start()
+		myself.expireAsyncJobTrigger = common.NewAsyncJobTrigger(1, duration, expireAsyncJob)
+		myself.expireAsyncJobTrigger.Start()
 	}
 
 	return nil
@@ -55,7 +55,7 @@ func (myself *messageConsumerBase) run(parameter interface{}) (error) {
 	now := time.Now()
 	messageIds, err := myself.messageManagementBase.DequeueIds(now)
 	if nil != err {
-		common.GetLogging().Info(err, "failed to get message(%s) ids", myself.messageManagementBase.KeySuffix)
+		common.GetLogging().Info(err, "Failed to get message(%s) ids", myself.messageManagementBase.KeySuffix)
 		return err
 	}
 	if nil == messageIds {
@@ -65,7 +65,7 @@ func (myself *messageConsumerBase) run(parameter interface{}) (error) {
 	for _, messageId := range messageIds {
 		affectedCount, err := myself.messageManagementBase.RemoveId(messageId)
 		if nil != err {
-			common.GetLogging().Error(err, "failed to remove message(%d)", messageId)
+			common.GetLogging().Error(err, "Failed to remove message(%d)", messageId)
 			continue
 		}
 		// 0 mean: the other consumer remove it, ignore
@@ -81,11 +81,11 @@ func (myself *messageConsumerBase) run(parameter interface{}) (error) {
 		var messageState enumerations.MessageState
 		var errorMessage string
 		if nil == flagError {
-			common.GetLogging().Info(nil, "success to consume message(%d)", messageId)
+			common.GetLogging().Info(nil, "Success to consume message(%d)", messageId)
 			messageState = enumerations.Sent
 			errorMessage = ""
 		} else {
-			common.GetLogging().Error(flagError, "failed to consume message(%d)", messageId)
+			common.GetLogging().Error(flagError, "Failed to consume message(%d)", messageId)
 			messageState = enumerations.Error
 			errorMessage = flagError.Error()
 		}
@@ -94,6 +94,7 @@ func (myself *messageConsumerBase) run(parameter interface{}) (error) {
 		managements.ModifyMessageFlowAsync(
 			myself.messageManagementBase,
 			messageId,
+			enumerations.Sent,
 			messageState,
 			errorMessage,
 			&finished,
@@ -117,6 +118,7 @@ func (myself *messageConsumerBase) run(parameter interface{}) (error) {
 			managements.ModifyMessageFlowAsync(
 				myself.messageManagementBase,
 				messageId,
+				enumerations.FinishedSent,
 				enumerations.FinishedSent,
 				errorMessage,
 				nil,
@@ -146,6 +148,7 @@ func (myself *messageConsumerBase) consume(messagePo interface{}, messageId int6
 		myself.messageManagementBase,
 		messageId,
 		enumerations.Consuming,
+		enumerations.Consuming,
 		"",
 		nil,
 		nil,
@@ -171,7 +174,7 @@ func (myself *messageConsumerBase) expireRun(parameter interface{}) (error) {
 	now := time.Now()
 	messageIds, err := myself.messageManagementBase.DequeueExpireIds(now)
 	if nil != err {
-		common.GetLogging().Info(err, "failed to get expire message(%s) ids", myself.messageManagementBase.KeySuffix)
+		common.GetLogging().Info(err, "Failed to get expire message(%s) ids", myself.messageManagementBase.KeySuffix)
 		return err
 	}
 	if nil == messageIds {
@@ -181,7 +184,7 @@ func (myself *messageConsumerBase) expireRun(parameter interface{}) (error) {
 	for _, messageId := range messageIds {
 		affectedCount, err := myself.messageManagementBase.RemoveExpireId(messageId)
 		if nil != err {
-			common.GetLogging().Error(err, "failed to remove expire message(%d)", messageId)
+			common.GetLogging().Error(err, "Failed to remove expire message(%d)", messageId)
 			continue
 		}
 		// 0 mean: the other consumer remove it, ignore
@@ -197,17 +200,18 @@ func (myself *messageConsumerBase) expireRun(parameter interface{}) (error) {
 		var messageState enumerations.MessageState
 		var errorMessage string
 		if nil == flagError {
-			common.GetLogging().Info(nil, "success to consume expire message(%d)", messageId)
+			common.GetLogging().Info(nil, "Success to consume expire message(%d)", messageId)
 			messageState = enumerations.ExpireSent
 			errorMessage = ""
 		} else {
-			common.GetLogging().Error(flagError, "failed to consume expire message(%d)", messageId)
+			common.GetLogging().Error(flagError, "Failed to consume expire message(%d)", messageId)
 			messageState = enumerations.ExpireError
 			errorMessage = flagError.Error()
 		}
 		managements.ModifyMessageFlowAsync(
 			myself.messageManagementBase,
 			messageId,
+			enumerations.ExpireSent,
 			messageState,
 			errorMessage,
 			nil,
@@ -235,6 +239,7 @@ func (myself *messageConsumerBase) expireConsume(messagePo interface{}, messageI
 	managements.ModifyMessageFlowAsync(
 		myself.messageManagementBase,
 		messageId,
+		enumerations.ExpireConsuming,
 		enumerations.ExpireConsuming,
 		"",
 		nil,

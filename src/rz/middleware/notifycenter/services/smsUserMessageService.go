@@ -79,6 +79,7 @@ func (myself *smsUserMessageService) Callback(smsUserCallbackMessageRequestExter
 			managements.ModifyMessageFlowAsync(
 				myself.messageManagementBase,
 				smsUserMessagePo.Id,
+				enumerations.Initial,
 				enumerations.Error,
 				exceptions.FailedEnqueueMessageId().AttachError(err).AttachMessage(smsUserMessagePo.Id).Error(),
 				&finished,

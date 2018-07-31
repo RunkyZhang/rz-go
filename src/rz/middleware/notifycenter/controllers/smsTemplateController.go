@@ -15,8 +15,8 @@ var (
 			ControllerFunc:   addSmsTemplate,
 			ConvertToDtoFunc: ConvertToSmsTemplateDto,
 		},
-		GetSmsTemplatesControllerPack: &common.ControllerPack{
-			Pattern:          "/cloud.appgov.notifycenter.service/smstemplate/get",
+		GetAllSmsTemplatesControllerPack: &common.ControllerPack{
+			Pattern:          "/cloud.appgov.notifycenter.service/smstemplate/getall",
 			Method:           "GET",
 			ControllerFunc:   getSmsTemplates,
 			ConvertToDtoFunc: func(body []byte) (interface{}, error) { return nil, nil },
@@ -28,7 +28,7 @@ type smsTemplateController struct {
 	ControllerBase
 
 	AddSmsTemplateControllerPack  *common.ControllerPack
-	GetSmsTemplatesControllerPack *common.ControllerPack
+	GetAllSmsTemplatesControllerPack *common.ControllerPack
 }
 
 func addSmsTemplate(dto interface{}) (interface{}, error) {
@@ -42,5 +42,5 @@ func addSmsTemplate(dto interface{}) (interface{}, error) {
 }
 
 func getSmsTemplates(dto interface{}) (interface{}, error) {
-	return services.SmsTemplateService.Get()
+	return services.SmsTemplateService.GetAll()
 }

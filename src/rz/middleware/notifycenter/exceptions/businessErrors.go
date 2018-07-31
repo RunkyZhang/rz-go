@@ -45,4 +45,9 @@ var (
 	SmsParameterContainComma     = func() (*common.BusinessError) { return common.NewBusinessError("Sms parameter contains [,]", 30036) }
 	InvalidSmsParameterCount     = func() (*common.BusinessError) { return common.NewBusinessError("Invalid sms parameter's count", 30037) }
 	SystemAliasBlank             = func() (*common.BusinessError) { return common.NewBusinessError("[SystemAlias] is blank", 30038) }
+	InvalidTemplateId            = func() (*common.BusinessError) { return common.NewBusinessError("Invalid template id", 30039) }
+	NotSendSmsPermission         = func() (*common.BusinessError) { return common.NewBusinessError("No send Sms permission", 30040) }
+	NotSendMailPermission        = func() (*common.BusinessError) { return common.NewBusinessError("No send mail permission", 30041) }
+	NullModifyParameter          = func() (*common.BusinessError) { return common.NewBusinessError("Null modify parameter", 30042) }
+	SystemAliasNotExist          = func() (*common.BusinessError) { return common.NewBusinessError("[SystemAlias] is not exist", 30043) }
 )

@@ -26,6 +26,10 @@ func (myself *mailMessageService) Send(mailMessageDto *models.MailMessageDto) (i
 	if nil != err {
 		return 0, err
 	}
+	systemAliasPermissionPo, err := managements.SystemAliasPermissionManagement.GetById(mailMessageDto.SystemAlias)
+	if nil != err || 0 == systemAliasPermissionPo.SmsPermission {
+		return 0, exceptions.NotSendMailPermission().AttachError(err).AttachMessage(mailMessageDto.SystemAlias)
+	}
 
 	mailMessagePo := models.MailMessageDtoToPo(mailMessageDto)
 	mailMessagePo.CreatedTime = time.Now()
@@ -46,6 +50,7 @@ func (myself *mailMessageService) Send(mailMessageDto *models.MailMessageDto) (i
 		managements.ModifyMessageFlowAsync(
 			myself.messageManagementBase,
 			mailMessagePo.Id,
+			enumerations.Initial,
 			enumerations.Error,
 			exceptions.FailedEnqueueMessageId().AttachError(err).AttachMessage(mailMessagePo.Id).Error(),
 			&finished,

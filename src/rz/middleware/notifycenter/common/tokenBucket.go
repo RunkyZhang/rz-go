@@ -49,12 +49,14 @@ func (myself *TokenBucket) Take(count int, waitingTime time.Duration) (bool) {
 		return true
 	}
 
+	myself.lock.Lock()
 	channelPack := &channelPack{
 		count:     count,
 		abandoned: false,
 		channel:   make(chan bool, 1),
 	}
 	myself.queue.Enqueue(channelPack)
+	myself.lock.Unlock()
 
 	select {
 	case <-channelPack.channel:
@@ -86,27 +88,31 @@ func (myself *TokenBucket) supply() {
 	for range myself.ticker.C {
 		myself.lock.Lock()
 
+		var channelPacks []*channelPack
 		myself.available = myself.capacity
 		for ; ; {
-			head := myself.queue.Head()
+			head := myself.queue.Dequeue()
 			channelPack, ok := head.(*channelPack)
-			if !ok || nil == channelPack.channel {
+			if !ok {
 				break
+			}
+			if nil == channelPack.channel {
+				continue
 			}
 
 			if channelPack.abandoned {
-				myself.queue.Dequeue()
 				close(channelPack.channel)
 			} else {
 				if myself.available < channelPack.count {
-					// when not enough
-					break
+					channelPacks = append(channelPacks, channelPack)
 				} else {
-					myself.queue.Dequeue()
 					myself.available -= channelPack.count
 					channelPack.channel <- true
 				}
 			}
+		}
+		for _, channelPack := range channelPacks {
+			myself.queue.Enqueue(channelPack)
 		}
 
 		myself.lock.Unlock()

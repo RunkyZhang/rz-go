@@ -61,7 +61,7 @@ type webService struct {
 func (myself *webService) RegisterStandardController(controllerPack *ControllerPack) {
 	http.HandleFunc(controllerPack.Pattern, func(responseWriter http.ResponseWriter, request *http.Request) {
 		if !myself.checkRoute(request.RequestURI, request.Method) {
-			http.Error(responseWriter, fmt.Sprintf("method(%s) is not match", request.Method), http.StatusMethodNotAllowed)
+			http.Error(responseWriter, fmt.Sprintf("Method(%s) is not match", request.Method), http.StatusMethodNotAllowed)
 			return
 		}
 
@@ -116,7 +116,7 @@ func (myself *webService) RegisterStandardController(controllerPack *ControllerP
 func (myself *webService) RegisterCommonController(controllerPack *ControllerPack) {
 	http.HandleFunc(controllerPack.Pattern, func(responseWriter http.ResponseWriter, request *http.Request) {
 		if !myself.checkRoute(request.RequestURI, request.Method) {
-			http.Error(responseWriter, fmt.Sprintf("method(%s) is not match", request.Method), http.StatusMethodNotAllowed)
+			http.Error(responseWriter, fmt.Sprintf("Method(%s) is not match", request.Method), http.StatusMethodNotAllowed)
 			return
 		}
 
@@ -256,7 +256,7 @@ func (myself *webService) wrapResponseWriter(responseWriter http.ResponseWriter,
 	var buffer []byte
 	buffer, err := json.Marshal(body)
 	if nil != err {
-		errorMessage = fmt.Sprintf("failed to convert body to json; error: %s", err.Error())
+		errorMessage = fmt.Sprintf("Failed to convert body to json; error: %s", err.Error())
 	}
 
 	if "" != errorMessage {

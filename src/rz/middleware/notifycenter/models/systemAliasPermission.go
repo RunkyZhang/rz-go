@@ -1,19 +1,25 @@
 package models
 
 type SystemAliasPermissionDto struct {
-	SystemAlias    string `json:"id,string"`
-	SmsPermission  int    `json:"smsPermission"`
-	MailPermission int    `json:"mailPermission"`
-	CreatedTime    int64  `json:"createdTime,string"`
-	UpdatedTime    int64  `json:"updatedTime,string"`
+	SystemAlias        string `json:"systemAlias"`
+	SmsPermission      int    `json:"smsPermission"`
+	MailPermission     int    `json:"mailPermission"`
+	SmsDayFrequency    int    `json:"smsDayFrequency"`
+	SmsHourFrequency   int    `json:"smsHourFrequency"`
+	SmsMinuteFrequency int    `json:"smsMinuteFrequency"`
+	CreatedTime        int64  `json:"createdTime,string"`
+	UpdatedTime        int64  `json:"updatedTime,string"`
 }
 
 type SystemAliasPermissionPo struct {
 	PoBase
 
-	SystemAlias    string `gorm:"column:id;primary_key"`
-	SmsPermission  int    `gorm:"column:smsPermission"`
-	MailPermission int    `gorm:"column:mailPermission"`
+	SystemAlias        string `gorm:"column:id;primary_key"`
+	SmsPermission      int    `gorm:"column:smsPermission"`
+	MailPermission     int    `gorm:"column:mailPermission"`
+	SmsDayFrequency    int    `gorm:"column:smsDayFrequency"`
+	SmsHourFrequency   int    `gorm:"column:smsHourFrequency"`
+	SmsMinuteFrequency int    `gorm:"column:smsMinuteFrequency"`
 }
 
 func SystemAliasPermissionDtoToPo(systemAliasPermissionDto *SystemAliasPermissionDto) (*SystemAliasPermissionPo) {
@@ -25,6 +31,9 @@ func SystemAliasPermissionDtoToPo(systemAliasPermissionDto *SystemAliasPermissio
 	systemAliasPermissionPo.SystemAlias = systemAliasPermissionDto.SystemAlias
 	systemAliasPermissionPo.SmsPermission = systemAliasPermissionDto.SmsPermission
 	systemAliasPermissionPo.MailPermission = systemAliasPermissionDto.MailPermission
+	systemAliasPermissionPo.SmsDayFrequency = systemAliasPermissionDto.SmsDayFrequency
+	systemAliasPermissionPo.SmsHourFrequency = systemAliasPermissionDto.SmsHourFrequency
+	systemAliasPermissionPo.SmsMinuteFrequency = systemAliasPermissionDto.SmsMinuteFrequency
 
 	return systemAliasPermissionPo
 }
@@ -38,6 +47,9 @@ func SystemAliasPermissionPoToDto(systemAliasPermissionPo *SystemAliasPermission
 	systemAliasPermissionDto.SystemAlias = systemAliasPermissionPo.SystemAlias
 	systemAliasPermissionDto.SmsPermission = systemAliasPermissionPo.SmsPermission
 	systemAliasPermissionDto.MailPermission = systemAliasPermissionPo.MailPermission
+	systemAliasPermissionDto.SmsDayFrequency = systemAliasPermissionPo.SmsDayFrequency
+	systemAliasPermissionDto.SmsHourFrequency = systemAliasPermissionPo.SmsHourFrequency
+	systemAliasPermissionDto.SmsMinuteFrequency = systemAliasPermissionPo.SmsMinuteFrequency
 	systemAliasPermissionDto.CreatedTime = systemAliasPermissionPo.CreatedTime.Unix()
 	systemAliasPermissionDto.UpdatedTime = systemAliasPermissionPo.UpdatedTime.Unix()
 
