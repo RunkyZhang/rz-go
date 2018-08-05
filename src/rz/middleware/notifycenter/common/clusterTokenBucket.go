@@ -3,8 +3,8 @@ package common
 import (
 	"time"
 	"encoding/json"
-	"errors"
 	"sync"
+	"fmt"
 )
 
 var (
@@ -27,14 +27,15 @@ type ClusterTokenBucket struct {
 	namespace       string
 	key             string
 	lastSupplyTime  int64
-	ticker          *time.Ticker
 	id              string
-	timeoutSeconds  int64
 	queue           Queue
 	lock            sync.Mutex
+	cycleSeconds    int
+	slots           map[string]int
+	today           time.Time
 }
 
-func NewClusterTokenBucket(redisClient *RedisClient, namespace string, key string, lastSupplyTime int64, intervalSeconds int64, capacity int) (*ClusterTokenBucket) {
+func NewClusterTokenBucket(redisClient *RedisClient, namespace string, key string, intervalSeconds int, capacity int) (*ClusterTokenBucket) {
 	Assert.IsNotNilToPanic(redisClient, "redisClient")
 	Assert.IsNotBlankToPanic(namespace, "namespace")
 	Assert.IsNotBlankToPanic(key, "key")
@@ -42,62 +43,15 @@ func NewClusterTokenBucket(redisClient *RedisClient, namespace string, key strin
 	Assert.IsTrueToPanic(0 < capacity, "0 < capacity")
 
 	clusterTokenBucket := &ClusterTokenBucket{
-		redisClient: redisClient,
-		namespace:   namespace,
-		key:         key,
-		ticker:      time.NewTicker(time.Duration(intervalSeconds) * time.Second),
+		redisClient:     redisClient,
+		namespace:       namespace,
+		key:             key,
+		cycleSeconds:    60 * 60 * 24,
+		capacity:        capacity,
+		intervalSeconds: int64(intervalSeconds),
 	}
-	ipv4s, err := GetIpV4s()
-	if nil != err || 0 == len(ipv4s) {
-		panic(errors.New("failed to get ip"))
-	}
-	clusterTokenBucket.id = "666"
-	// depend on time server to adjust every node time
-	clusterTokenBucket.timeoutSeconds = 2
-
-	now := time.Now().Unix()
-	if now > lastSupplyTime+intervalSeconds {
-		lastSupplyTime = now
-	}
-	refreshed := false
-	clusterTokenBucketPo, err := clusterTokenBucket.get()
-	if nil != err {
-		err = clusterTokenBucket.refresh(lastSupplyTime, intervalSeconds, capacity)
-		if nil != err {
-			panic(err)
-		}
-		refreshed = true
-	} else {
-		overSeconds := now - clusterTokenBucketPo.LastSupplyTime - clusterTokenBucketPo.IntervalSeconds
-		if clusterTokenBucket.timeoutSeconds < overSeconds {
-			err = clusterTokenBucket.refresh(lastSupplyTime, intervalSeconds, capacity)
-			if nil != err {
-				panic(err)
-			}
-			refreshed = true
-		}
-	}
-
-	if refreshed {
-		// block concurrency issue
-		time.Sleep(1 * time.Second)
-		clusterTokenBucketPo, err = clusterTokenBucket.get()
-		if nil != err {
-			panic(errors.New("failed to get [TokenBucket] from redis"))
-		}
-	}
-
-	if clusterTokenBucketPo.IntervalSeconds != intervalSeconds {
-		panic(errors.New("[intervalSeconds] conflict when concurrency"))
-	}
-	if clusterTokenBucketPo.Capacity != capacity {
-		panic(errors.New("capacity conflict when concurrency"))
-	}
-	clusterTokenBucket.lastSupplyTime = clusterTokenBucketPo.LastSupplyTime
-	clusterTokenBucket.intervalSeconds = clusterTokenBucketPo.IntervalSeconds
-	clusterTokenBucket.capacity = clusterTokenBucketPo.Capacity
-
-	go clusterTokenBucket.supply()
+	Assert.IsTrueToPanic(0 == (clusterTokenBucket.cycleSeconds % intervalSeconds), "0 == (clusterTokenBucket.cycleSeconds % intervalSeconds)")
+	clusterTokenBucket.initSlots()
 
 	return clusterTokenBucket
 }
@@ -160,70 +114,6 @@ func (myself *ClusterTokenBucket) TryTake() (bool, error) {
 	}
 
 	return true, nil
-}
-
-func (myself *ClusterTokenBucket) supply() {
-	for range myself.ticker.C {
-		myself.lock.Lock()
-		clusterTokenBucketPo, err := myself.get()
-		if nil != err {
-			GetLogging().Error(err, "Failed to get [TokenBucket] from redis")
-			myself.lock.Unlock()
-			continue
-		}
-		lastSupplyTime := myself.lastSupplyTime
-		myself.lastSupplyTime = clusterTokenBucketPo.LastSupplyTime
-
-		now := time.Now().Unix()
-		if myself.id == clusterTokenBucketPo.MasterId { // if self is master, then refresh
-			err = myself.refresh(now, myself.intervalSeconds, myself.capacity)
-			if nil != err {
-				myself.lock.Unlock()
-				continue
-			}
-		} else {
-			if lastSupplyTime == myself.lastSupplyTime { // if last supply time is not change, then wait a moment or change master
-				overSeconds := now - myself.lastSupplyTime - myself.intervalSeconds
-				if myself.timeoutSeconds < overSeconds { // if over time greater than timeout time, then change master
-					err = myself.refresh(now, myself.intervalSeconds, myself.capacity)
-					if nil != err {
-						myself.lock.Unlock()
-						continue
-					}
-				} else {
-					waitSeconds := int64(0)
-					if 0 > overSeconds {
-						waitSeconds = myself.timeoutSeconds - overSeconds
-					} else {
-						waitSeconds = (-1 * waitSeconds) + myself.timeoutSeconds
-					}
-
-					if 0 == waitSeconds {
-						waitSeconds = 1
-					}
-					time.Sleep(time.Duration(waitSeconds) * time.Second)
-				}
-			}
-		}
-
-		for ; ; {
-			head := myself.queue.Dequeue()
-			channelPack, ok := head.(*channelPack)
-			if !ok {
-				break
-			}
-			if nil == channelPack.channel {
-				continue
-			}
-
-			if channelPack.abandoned {
-				close(channelPack.channel)
-			} else {
-				channelPack.channel <- true
-			}
-		}
-		myself.lock.Unlock()
-	}
 }
 
 func (myself *ClusterTokenBucket) refresh(lastSupplyTime int64, intervalSeconds int64, capacity int) (error) {
@@ -299,4 +189,33 @@ func (myself *ClusterTokenBucket) decrementAvailable() (int, error) {
 	available, err := myself.redisClient.HashDecrement(myself.namespace+clusterTokenBucketAvailableKey, myself.key, 1)
 
 	return int(available), err
+}
+
+func (myself *ClusterTokenBucket) initSlots() {
+	for i := int64(0); i != int64(myself.cycleSeconds); i = i + myself.intervalSeconds {
+		myself.slots[myself.formatSlotKey(int64(i))] = myself.capacity
+	}
+}
+
+// slotStart < X <= slotEnd
+func (myself *ClusterTokenBucket) calculateSlotKey() (string) {
+	now := time.Now()
+	if now.Day() != myself.today.Day() {
+		myself.lock.Lock()
+		defer myself.lock.Unlock()
+		if now.Day() != myself.today.Day() {
+			myself.initSlots()
+		}
+	}
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+
+	difference := now.Unix() - today.Unix()
+	slotStart := difference - (difference % myself.intervalSeconds)
+
+	return myself.formatSlotKey(slotStart)
+}
+
+// slotStart-slotEnd
+func (myself *ClusterTokenBucket) formatSlotKey(slotStart int64) (string) {
+	return fmt.Sprintf("%d-%d", slotStart, slotStart+myself.intervalSeconds)
 }
