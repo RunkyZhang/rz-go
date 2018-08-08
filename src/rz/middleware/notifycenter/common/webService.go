@@ -84,7 +84,7 @@ func (myself *webService) RegisterStandardController(controllerPack *ControllerP
 			return
 		}
 
-		myself.log("Start", id, request.URL.String(), request.Method, buffer.Bytes())
+		myself.log("Start", id, request, buffer.Bytes())
 
 		dto, err := controllerPack.ConvertToDtoFunc(buffer.Bytes())
 		if nil != err {
@@ -136,7 +136,7 @@ func (myself *webService) RegisterCommonController(controllerPack *ControllerPac
 			return
 		}
 
-		myself.log("Start", id, request.URL.String(), request.Method, buffer.Bytes())
+		myself.log("Start", id, request, buffer.Bytes())
 
 		dto, err := controllerPack.ConvertToDtoFunc(buffer.Bytes())
 		if nil != err {
@@ -198,7 +198,7 @@ func (myself *webService) health() {
 			}
 		}()
 
-		myself.log("Start", id, request.URL.String(), request.Method, nil)
+		myself.log("Start", id, request, nil)
 
 		length := len(myself.healthIndicators)
 		for i := 0; i < length; i++ {
@@ -216,7 +216,7 @@ func (myself *webService) checkRoute(requestUri string, method string) (bool) {
 	return ok
 }
 
-func (*webService) errorToResponseDto(value interface{}) (ResponseDto) {
+func (myself *webService) errorToResponseDto(value interface{}) (ResponseDto) {
 	businessError, ok := value.(*BusinessError)
 	if ok {
 		return ResponseDto{
@@ -260,28 +260,29 @@ func (myself *webService) wrapResponseWriter(responseWriter http.ResponseWriter,
 	}
 
 	if "" != errorMessage {
-		myself.log("Failed", id, request.URL.String(), request.Method, []byte(errorMessage))
+		myself.log("Failed", id, request, []byte(errorMessage))
 		http.Error(responseWriter, errorMessage, http.StatusInternalServerError)
 		return
 	}
 
 	responseDto, ok := body.(*ResponseDto)
 	if ok && 0 != responseDto.Code {
-		myself.log("Failed", id, request.URL.String(), request.Method, buffer)
+		myself.log("Failed", id, request, buffer)
 	} else {
-		myself.log("Success", id, request.URL.String(), request.Method, buffer)
+		myself.log("Success", id, request, buffer)
 	}
 
 	responseWriter.Header().Add("Content-Type", "application/json;charset=UTF-8")
 	responseWriter.Write(buffer)
 }
 
-func (myself *webService) log(title string, id string, url string, method string, body []byte) {
+func (myself *webService) log(title string, id string, request *http.Request, body []byte) {
+	url := request.URL.String()
 	if "/health" == url {
 		return
 	}
 
-	GetLogging().Info(nil, "%s-[%s][%s][%s][body: %s]", title, id, url, method, body)
+	GetLogging().Info(nil, "%s-[%s][%s][%s][%s][body: %s]", title, id, url, request.Method, request.RemoteAddr, body)
 }
 
 func (myself *webService) start() {
