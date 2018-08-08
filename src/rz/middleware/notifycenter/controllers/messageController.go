@@ -4,6 +4,7 @@ import (
 	"rz/middleware/notifycenter/common"
 	"rz/middleware/notifycenter/services"
 	"rz/middleware/notifycenter/models"
+	"rz/middleware/notifycenter/global"
 )
 
 // MVC structure
@@ -39,7 +40,15 @@ var (
 			ControllerFunc:   querySmsUserMessages,
 			ConvertToDtoFunc: ConvertToQuerySmsUserMessagesRequestDto,
 		},
+		TakeTokenControllerPack: &common.ControllerPack{
+			Pattern:          "/cloud.appgov.notifycenter.service/token/take",
+			Method:           "POST",
+			ControllerFunc:   takeToken,
+			ConvertToDtoFunc: ConvertToTakeTokenRequestDto,
+		},
 	}
+
+	tokenBucket *common.ClusterTokenBucket
 )
 
 type messageController struct {
@@ -50,6 +59,8 @@ type messageController struct {
 	QuerySmsControllerPack             *common.ControllerPack
 	DisableMessageControllerPack       *common.ControllerPack
 	QuerySmsUserMessagesControllerPack *common.ControllerPack
+
+	TakeTokenControllerPack *common.ControllerPack
 }
 
 func sendMail(dto interface{}) (interface{}, error) {
@@ -101,3 +112,24 @@ func querySmsUserMessages(dto interface{}) (interface{}, error) {
 
 	return services.SmsUserMessageService.Query(querySmsUserMessagesRequestDto)
 }
+
+func takeToken(dto interface{}) (interface{}, error) {
+	takeTokenRequestDto, ok := dto.(*models.TakeTokenRequestDto)
+	err := common.Assert.IsTrueToError(ok, "dto.(*models.TakeTokenRequestDto)")
+	if nil != err {
+		return nil, err
+	}
+
+	if nil == tokenBucket{
+		tokenBucket = common.NewClusterTokenBucket(
+			global.GetRedisClient(),
+			"Middleware_NotifyCenter",
+			takeTokenRequestDto.SystemAlias,
+			takeTokenRequestDto.IntervalSeconds,
+			takeTokenRequestDto.Capacity)
+	}
+
+
+	return tokenBucket.TryTake(1)
+}
+

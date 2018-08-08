@@ -38,16 +38,8 @@ func NewClusterTokenBucket(redisClient *RedisClient, namespace string, key strin
 		slots:           make(map[string]int),
 	}
 	Assert.IsTrueToPanic(0 == (clusterTokenBucket.cycleSeconds % intervalSeconds), "0 == (clusterTokenBucket.cycleSeconds % intervalSeconds)")
-	clusterTokenBucket.availableKey = fmt.Sprintf(
-		"%s_TokenBucket_Available:%s_%d_%d",
-		clusterTokenBucket.namespace,
-		clusterTokenBucket.key,
-		clusterTokenBucket.intervalSeconds,
-		clusterTokenBucket.capacity)
 	clusterTokenBucket.buffer = clusterTokenBucket.calculateBuffer()
-	now := time.Now()
-	clusterTokenBucket.today = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
-	clusterTokenBucket.initSlots(now)
+	clusterTokenBucket.refresh(time.Now())
 
 	return clusterTokenBucket
 }
@@ -107,8 +99,7 @@ func (myself *ClusterTokenBucket) TryTake(count int) (bool, error) {
 
 	now := time.Now()
 	if now.Day() != myself.today.Day() {
-		myself.today = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
-		myself.initSlots(now)
+		myself.refresh(now)
 	}
 
 	slotKey := myself.calculateSlotKey(now)
@@ -157,6 +148,12 @@ func (myself *ClusterTokenBucket) calculateBuffer() (int) {
 	return myself.capacity / 10
 }
 
+func (myself *ClusterTokenBucket) refresh(now time.Time) {
+	myself.today = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+	myself.availableKey = myself.formatAvailableKey()
+	myself.initSlots(now)
+}
+
 func (myself *ClusterTokenBucket) initSlots(now time.Time) {
 	firstSlotStart := myself.calculateSlotStart(now)
 	cycleSeconds := int64(myself.cycleSeconds)
@@ -197,11 +194,11 @@ func (myself *ClusterTokenBucket) initSlots(now time.Time) {
 }
 
 func (myself *ClusterTokenBucket) supplyAvailable(slotKey string) (error) {
-	return myself.redisClient.HashSet(myself.formatAvailableKey(), slotKey, Int32ToString(myself.capacity))
+	return myself.redisClient.HashSet(myself.availableKey, slotKey, Int32ToString(myself.capacity))
 }
 
 func (myself *ClusterTokenBucket) getAvailable(slotKey string) (int, error) {
-	value, err := myself.redisClient.HashGet(myself.formatAvailableKey(), slotKey)
+	value, err := myself.redisClient.HashGet(myself.availableKey, slotKey)
 	if nil != err {
 		return 0, err
 	}
@@ -215,7 +212,7 @@ func (myself *ClusterTokenBucket) getAvailable(slotKey string) (int, error) {
 }
 
 func (myself *ClusterTokenBucket) decrementAvailable(slotKey string, count int) (int, error) {
-	available, err := myself.redisClient.HashDecrement(myself.formatAvailableKey(), slotKey, count)
+	available, err := myself.redisClient.HashDecrement(myself.availableKey, slotKey, count)
 
 	return int(available), err
 }
@@ -238,5 +235,11 @@ func (myself *ClusterTokenBucket) formatSlotKey(slotStart int64) (string) {
 }
 
 func (myself *ClusterTokenBucket) formatAvailableKey() (string) {
-	return fmt.Sprintf("%s_%d%d%d", myself.availableKey, myself.today.Year(), myself.today.Month(), myself.today.Day())
+	return fmt.Sprintf(
+		"%s_TokenBucket_Available:%s:%s_%d_%d",
+		myself.namespace,
+		myself.key,
+		myself.today.Format("20060102"),
+		myself.intervalSeconds,
+		myself.capacity)
 }

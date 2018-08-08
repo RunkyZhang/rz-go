@@ -99,6 +99,18 @@ func ConvertToModifySystemAliasPermissionRequestDto(body []byte) (interface{}, e
 	return convertToDto(body, &dto)
 }
 
+func ConvertToTakeTokenRequestDto(body []byte) (interface{}, error) {
+	err := common.Assert.IsNotNilToError(body, "body")
+	if nil != err {
+		return nil, err
+	}
+
+	var dto models.TakeTokenRequestDto
+	return convertToDto(body, &dto)
+}
+
+
+
 func convertToDto(body []byte, messageDto interface{}) (interface{}, error) {
 	err := json.Unmarshal(body, &messageDto)
 	if nil != err {
