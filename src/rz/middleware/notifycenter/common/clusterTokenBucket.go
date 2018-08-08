@@ -2,37 +2,23 @@ package common
 
 import (
 	"time"
-	"encoding/json"
 	"sync"
 	"fmt"
 )
 
-var (
-	clusterTokenBucketKey          = "TokenBucket"
-	clusterTokenBucketAvailableKey = clusterTokenBucketKey + "_Available"
-)
-
-type clusterTokenBucketPo struct {
-	LastSupplyTime  int64  `json:"lastSupplyTime"`
-	Capacity        int    `json:"capacity"`
-	IntervalSeconds int64  `json:"intervalSeconds"`
-	MasterId        string `json:"masterId"`
-}
-
-// max 1800token/second
+// 48948306/30secs
 type ClusterTokenBucket struct {
 	intervalSeconds int64
 	capacity        int
 	redisClient     *RedisClient
 	namespace       string
 	key             string
-	lastSupplyTime  int64
-	id              string
-	queue           Queue
 	lock            sync.Mutex
 	cycleSeconds    int
 	slots           map[string]int
 	today           time.Time
+	availableKey    string
+	buffer          int
 }
 
 func NewClusterTokenBucket(redisClient *RedisClient, namespace string, key string, intervalSeconds int, capacity int) (*ClusterTokenBucket) {
@@ -49,9 +35,19 @@ func NewClusterTokenBucket(redisClient *RedisClient, namespace string, key strin
 		cycleSeconds:    60 * 60 * 24,
 		capacity:        capacity,
 		intervalSeconds: int64(intervalSeconds),
+		slots:           make(map[string]int),
 	}
 	Assert.IsTrueToPanic(0 == (clusterTokenBucket.cycleSeconds % intervalSeconds), "0 == (clusterTokenBucket.cycleSeconds % intervalSeconds)")
-	clusterTokenBucket.initSlots()
+	clusterTokenBucket.availableKey = fmt.Sprintf(
+		"%s_TokenBucket_Available:%s_%d_%d",
+		clusterTokenBucket.namespace,
+		clusterTokenBucket.key,
+		clusterTokenBucket.intervalSeconds,
+		clusterTokenBucket.capacity)
+	clusterTokenBucket.buffer = clusterTokenBucket.calculateBuffer()
+	now := time.Now()
+	clusterTokenBucket.today = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+	clusterTokenBucket.initSlots(now)
 
 	return clusterTokenBucket
 }
@@ -61,13 +57,24 @@ func (myself *ClusterTokenBucket) Capability() (int) {
 }
 
 func (myself *ClusterTokenBucket) Available() (int, error) {
-	return myself.getAvailable()
+	myself.lock.Lock()
+	defer myself.lock.Unlock()
+
+	slotKey := myself.calculateSlotKey(time.Now())
+	available := myself.slots[slotKey]
+	if -1 == available {
+		return 0, nil
+	} else if 0 < available {
+		return available, nil
+	}
+
+	return myself.getAvailable(slotKey)
 }
 
-func (myself *ClusterTokenBucket) Take(waitingSeconds int) (bool, error) {
-	timestamp := time.Now().Unix()
+func (myself *ClusterTokenBucket) Take(count int, waitingSeconds int) (bool, error) {
+	startTimestamp := time.Now().Unix()
 	for ; ; {
-		ok, err := myself.TryTake()
+		ok, err := myself.TryTake(count)
 		if nil != err {
 			return false, err
 		}
@@ -75,104 +82,126 @@ func (myself *ClusterTokenBucket) Take(waitingSeconds int) (bool, error) {
 			return true, nil
 		}
 
-		myself.lock.Lock()
-		// need in lock, cos sometime wait out lock
-		leavingSeconds := int64(waitingSeconds) - (time.Now().Unix() - timestamp)
-		if 0 > leavingSeconds {
-			myself.lock.Unlock()
-			return false, nil
-		}
+		now := time.Now().Unix()
+		leavingSeconds := int64(waitingSeconds) - (now - startTimestamp)
+		difference := now - myself.today.Unix()
+		nextSeconds := myself.intervalSeconds - (difference % myself.intervalSeconds)
 
-		channelPack := &channelPack{
-			count:     1,
-			abandoned: false,
-			channel:   make(chan bool, 1),
-		}
-		myself.queue.Enqueue(channelPack)
-		myself.lock.Unlock()
-
-		select {
-		case <-channelPack.channel:
-			close(channelPack.channel)
-		case <-time.After(time.Duration(leavingSeconds) * time.Second):
-			channelPack.abandoned = true
+		if leavingSeconds < nextSeconds {
+			time.Sleep(time.Duration(leavingSeconds) * time.Second)
 			return false, nil
+		} else {
+			time.Sleep(time.Duration(nextSeconds) * time.Second)
 		}
 	}
 }
 
-func (myself *ClusterTokenBucket) TryTake() (bool, error) {
-	myself.lock.Lock()
-	defer myself.lock.Unlock()
-
-	available, err := myself.decrementAvailable()
+func (myself *ClusterTokenBucket) TryTake(count int) (bool, error) {
+	err := Assert.IsTrueToError(myself.capacity >= count && 0 < count, "myself.capacity >= count && 0 < count")
 	if nil != err {
 		return false, err
 	}
-	if 0 > available {
+
+	myself.lock.Lock()
+	defer myself.lock.Unlock()
+
+	now := time.Now()
+	if now.Day() != myself.today.Day() {
+		myself.today = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+		myself.initSlots(now)
+	}
+
+	slotKey := myself.calculateSlotKey(now)
+	localAvailable := myself.slots[slotKey]
+	if -1 == localAvailable {
+		return false, nil
+	} else if 0 < localAvailable {
+		if localAvailable >= count {
+			myself.slots[slotKey] = localAvailable - count
+			return true, nil
+		}
+	}
+
+	// when 0 == localAvailable
+	required := myself.buffer
+	if count > myself.buffer {
+		required = count
+	}
+	remoteAvailable, err := myself.decrementAvailable(slotKey, required)
+	if nil != err {
+		return false, err
+	}
+	if 0 > remoteAvailable {
+		leaving := remoteAvailable + required
+		if 0 < leaving {
+			myself.slots[slotKey] = leaving
+		} else {
+			myself.slots[slotKey] = -1
+			return false, nil
+		}
+	} else {
+		myself.slots[slotKey] = required
+	}
+
+	localAvailable = myself.slots[slotKey]
+	if localAvailable < count {
 		return false, nil
 	}
+	myself.slots[slotKey] = localAvailable - count
 
 	return true, nil
 }
 
-func (myself *ClusterTokenBucket) refresh(lastSupplyTime int64, intervalSeconds int64, capacity int) (error) {
-	clusterTokenBucketPo := myself.build(lastSupplyTime, intervalSeconds, capacity)
-	err := myself.set(clusterTokenBucketPo)
-	if nil != err {
-		GetLogging().Error(err, "Failed to get [TokenBucket] from redis")
-		return err
-	}
-	err = myself.supplyAvailable(capacity)
-	if nil != err {
-		GetLogging().Error(err, "Failed to get [TokenBucket] from redis")
-		return err
-	}
-
-	return nil
+// TODO: rich logic
+func (myself *ClusterTokenBucket) calculateBuffer() (int) {
+	return myself.capacity / 10
 }
 
-func (myself *ClusterTokenBucket) get() (*clusterTokenBucketPo, error) {
-	jsonString, err := myself.redisClient.HashGet(myself.namespace+clusterTokenBucketKey, myself.key)
-	if nil != err {
-		return nil, err
+func (myself *ClusterTokenBucket) initSlots(now time.Time) {
+	firstSlotStart := myself.calculateSlotStart(now)
+	cycleSeconds := int64(myself.cycleSeconds)
+	perInitTimes := 100
+	index := 0
+	secondSlotStart := int64(0)
+	for ; firstSlotStart != cycleSeconds; firstSlotStart = firstSlotStart + myself.intervalSeconds {
+		key := myself.formatSlotKey(firstSlotStart)
+		myself.slots[key] = 0
+
+		if index < perInitTimes {
+			_, err := myself.getAvailable(key)
+			if nil != err {
+				err = myself.supplyAvailable(key)
+				if nil != err {
+					GetLogging().Error(err, "Failed to init slot(%s)", key)
+				}
+			}
+		} else if index == perInitTimes {
+			secondSlotStart = firstSlotStart
+		}
+
+		index++
 	}
 
-	clusterTokenBucketPo := &clusterTokenBucketPo{}
-	err = json.Unmarshal([]byte(jsonString), &clusterTokenBucketPo)
-	if nil != err {
-		return nil, err
-	}
-
-	return clusterTokenBucketPo, nil
+	go func() {
+		for ; secondSlotStart != cycleSeconds; secondSlotStart = secondSlotStart + myself.intervalSeconds {
+			key := myself.formatSlotKey(secondSlotStart)
+			_, err := myself.getAvailable(key)
+			if nil != err {
+				err = myself.supplyAvailable(key)
+				if nil != err {
+					GetLogging().Error(err, "Failed to init slot(%s)", key)
+				}
+			}
+		}
+	}()
 }
 
-func (myself *ClusterTokenBucket) set(clusterTokenBucketPo *clusterTokenBucketPo) (error) {
-	buffer, err := json.Marshal(clusterTokenBucketPo)
-	if nil != err {
-		return err
-	}
-
-	return myself.redisClient.HashSet(myself.namespace+clusterTokenBucketKey, myself.key, string(buffer))
+func (myself *ClusterTokenBucket) supplyAvailable(slotKey string) (error) {
+	return myself.redisClient.HashSet(myself.formatAvailableKey(), slotKey, Int32ToString(myself.capacity))
 }
 
-func (myself *ClusterTokenBucket) build(lastSupplyTime int64, intervalSeconds int64, capacity int) (*clusterTokenBucketPo) {
-	clusterTokenBucketPo := &clusterTokenBucketPo{
-		LastSupplyTime:  lastSupplyTime,
-		IntervalSeconds: intervalSeconds,
-		Capacity:        capacity,
-		MasterId:        myself.id,
-	}
-
-	return clusterTokenBucketPo
-}
-
-func (myself *ClusterTokenBucket) supplyAvailable(capacity int) (error) {
-	return myself.redisClient.HashSet(myself.namespace+clusterTokenBucketAvailableKey, myself.key, Int32ToString(capacity))
-}
-
-func (myself *ClusterTokenBucket) getAvailable() (int, error) {
-	value, err := myself.redisClient.HashGet(myself.namespace+clusterTokenBucketAvailableKey, myself.key)
+func (myself *ClusterTokenBucket) getAvailable(slotKey string) (int, error) {
+	value, err := myself.redisClient.HashGet(myself.formatAvailableKey(), slotKey)
 	if nil != err {
 		return 0, err
 	}
@@ -185,32 +214,20 @@ func (myself *ClusterTokenBucket) getAvailable() (int, error) {
 	return available, nil
 }
 
-func (myself *ClusterTokenBucket) decrementAvailable() (int, error) {
-	available, err := myself.redisClient.HashDecrement(myself.namespace+clusterTokenBucketAvailableKey, myself.key, 1)
+func (myself *ClusterTokenBucket) decrementAvailable(slotKey string, count int) (int, error) {
+	available, err := myself.redisClient.HashDecrement(myself.formatAvailableKey(), slotKey, count)
 
 	return int(available), err
 }
 
-func (myself *ClusterTokenBucket) initSlots() {
-	for i := int64(0); i != int64(myself.cycleSeconds); i = i + myself.intervalSeconds {
-		myself.slots[myself.formatSlotKey(int64(i))] = myself.capacity
-	}
+func (myself *ClusterTokenBucket) calculateSlotStart(now time.Time) (int64) {
+	difference := now.Unix() - myself.today.Unix()
+	return difference - (difference % myself.intervalSeconds)
 }
 
 // slotStart < X <= slotEnd
-func (myself *ClusterTokenBucket) calculateSlotKey() (string) {
-	now := time.Now()
-	if now.Day() != myself.today.Day() {
-		myself.lock.Lock()
-		defer myself.lock.Unlock()
-		if now.Day() != myself.today.Day() {
-			myself.initSlots()
-		}
-	}
-	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
-
-	difference := now.Unix() - today.Unix()
-	slotStart := difference - (difference % myself.intervalSeconds)
+func (myself *ClusterTokenBucket) calculateSlotKey(now time.Time) (string) {
+	slotStart := myself.calculateSlotStart(now)
 
 	return myself.formatSlotKey(slotStart)
 }
@@ -218,4 +235,8 @@ func (myself *ClusterTokenBucket) calculateSlotKey() (string) {
 // slotStart-slotEnd
 func (myself *ClusterTokenBucket) formatSlotKey(slotStart int64) (string) {
 	return fmt.Sprintf("%d-%d", slotStart, slotStart+myself.intervalSeconds)
+}
+
+func (myself *ClusterTokenBucket) formatAvailableKey() (string) {
+	return fmt.Sprintf("%s_%d%d%d", myself.availableKey, myself.today.Year(), myself.today.Month(), myself.today.Day())
 }

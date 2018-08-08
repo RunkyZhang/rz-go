@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func NewZooKeeperClient(addresses []string, timeout time.Duration, rootPath string) (*ZooKeeperClient) {
+func NewZooKeeperClient(addresses []string, timeout time.Duration) (*ZooKeeperClient) {
 	var err error
 	zooKeeperClient := &ZooKeeperClient{}
 	zooKeeperClient.conn, _, err = zk.Connect(addresses, timeout, zk.WithEventCallback(zooKeeperClient.process))
@@ -17,8 +17,8 @@ func NewZooKeeperClient(addresses []string, timeout time.Duration, rootPath stri
 }
 
 type zNode struct {
-	zk.Stat
-
+	State *zk.Stat
+	Path  string
 	Value string
 }
 
@@ -46,63 +46,75 @@ func (myself *ZooKeeperClient) Set(path string, value string, version ...int32) 
 	myself.conn.Set(path, []byte(value), myself.getDefaultVersion(version...))
 }
 
-func (myself *ZooKeeperClient) Get(path string, watcher zk.EventCallback) (*zNode, error) {
-	if nil == watcher {
+func (myself *ZooKeeperClient) Get(path string, eventCallback zk.EventCallback) (*zNode, error) {
+	if nil == eventCallback {
 		buffer, state, err := myself.conn.Get(path)
 		if nil != err {
 			return nil, err
 		}
 
 		zNode := &zNode{}
-		zNode.Stat = *state
+		zNode.State = state
 		zNode.Value = string(buffer)
 
 		return zNode, nil
-	} else {
-		buffer, state, channel, err := myself.conn.GetW(path)
-		if nil != err {
-			return nil, err
-		}
+	}
 
-		zNode := &zNode{}
-		zNode.Stat = *state
-		zNode.Value = string(buffer)
+	buffer, state, channel, err := myself.conn.GetW(path)
+	if nil != err {
+		return nil, err
+	}
 
+	zNode := &zNode{}
+	zNode.State = state
+	zNode.Value = string(buffer)
+
+	go func() {
+		event := <-channel
+		eventCallback(event)
+	}()
+
+	return zNode, nil
+}
+
+//func (myself *ZooKeeperClient) WatchChildValues(path string) ([]*zNode, error) {
+//
+//}
+
+func (myself *ZooKeeperClient) GetChildPaths(path string, eventCallback zk.EventCallback, around ...bool) ([]string, error) {
+	if nil == eventCallback {
+		paths, _, err := myself.conn.Children(path)
+		return paths, err
+	}
+
+	paths, _, channel, err := myself.conn.ChildrenW(path)
+	if nil != err {
+		return nil, err
+	}
+
+	if nil != channel {
 		go func() {
 			event := <-channel
-			watcher(event)
+			eventCallback(event)
+			if myself.getDefaultAround(around...) {
+				myself.GetChildPaths(path, eventCallback, around...)
+			}
 		}()
-
-		return zNode, nil
 	}
+
+	return paths, nil
 }
 
-func (myself *ZooKeeperClient) Exists(path string, watcher zk.EventCallback) (*zk.Stat, error) {
-	if nil == watcher {
-		_, state, err := myself.conn.Exists(path)
-		if nil != err {
-			return nil, err
-		}
-
-		return state, err
-	} else {
-		_, state, channel, err := myself.conn.ExistsW(path)
-		if nil != err {
-			return nil, err
-		}
-
-		if nil != state {
-			go func() {
-				event := <-channel
-				watcher(event)
-			}()
-		}
-
-		return state, err
+func (myself *ZooKeeperClient) Exists(path string) (*zk.Stat, error) {
+	_, state, err := myself.conn.Exists(path)
+	if nil != err {
+		return nil, err
 	}
+
+	return state, err
 }
 
-func (myself *ZooKeeperClient) Watch(path string, watcher zk.EventCallback, around ...bool) (error) {
+func (myself *ZooKeeperClient) Watch(path string, eventCallback zk.EventCallback, around ...bool) (error) {
 	_, state, channel, err := myself.conn.ExistsW(path)
 	if nil != err {
 		return err
@@ -111,28 +123,9 @@ func (myself *ZooKeeperClient) Watch(path string, watcher zk.EventCallback, arou
 	if nil != state {
 		go func() {
 			event := <-channel
-			watcher(event)
+			eventCallback(event)
 			if myself.getDefaultAround(around...) {
-				myself.Watch(path, watcher, around...)
-			}
-		}()
-	}
-
-	return nil
-}
-
-func (myself *ZooKeeperClient) WatchChildren(path string, watcher zk.EventCallback, around ...bool) (error) {
-	_, state, channel, err := myself.conn.ChildrenW(path)
-	if nil != err {
-		return err
-	}
-
-	if nil != state {
-		go func() {
-			event := <-channel
-			watcher(event)
-			if myself.getDefaultAround(around...) {
-				myself.WatchChildren(path, watcher, around...)
+				myself.Watch(path, eventCallback, around...)
 			}
 		}()
 	}

@@ -398,23 +398,25 @@ func testClusterTokenBucket() {
 	}
 	redisClient := common.NewRedisClient(redisClientSettings)
 
-	clusterTokenBucket := common.NewClusterTokenBucket(redisClient, "Middleware_NotifyCenter_", "day_notifycenter.test", int64(0), 10, 10000)
+	clusterTokenBucket := common.NewClusterTokenBucket(redisClient, "Middleware_NotifyCenter", "notifycenter.test", 10, 10)
 	//for i := 0; i < 100; i++ {
 	//	//time.Sleep(time.Second)
-	//	//fmt.Println(clusterTokenBucket.TryTake())
-	//	clusterTokenBucket.Take(5)
+	//	//fmt.Println(clusterTokenBucket.TryTake(1))
+	//	clusterTokenBucket.Take(1, 7)
 	//}
 
-	timePoint := time.Now().Unix()
+	startTime := time.Now()
+	fmt.Println(startTime)
 	count := 0
 	disable := false
 	for i := 0; i < 100; i++ {
 		go func(index int) {
 			if 0 == index%2 {
 				for ; ; {
-					ok, _ := clusterTokenBucket.Take(2)
+					perCount := 1
+					ok, _ := clusterTokenBucket.Take(perCount, 2)
 					if ok {
-						count += 1
+						count += perCount
 					}
 					if disable {
 						break
@@ -422,9 +424,10 @@ func testClusterTokenBucket() {
 				}
 			} else {
 				for ; ; {
-					ok, _ := clusterTokenBucket.TryTake()
+					perCount := 5
+					ok, _ := clusterTokenBucket.TryTake(perCount)
 					if ok {
-						count += 1
+						count += perCount
 					}
 					if disable {
 						break
@@ -434,16 +437,13 @@ func testClusterTokenBucket() {
 		}(i)
 	}
 
-	seconds := int64(30000)
+	seconds := int64(30)
 	fmt.Println("wait", seconds)
-	for ; time.Now().Unix()-timePoint < seconds; {
+	for ; time.Now().Unix()-startTime.Unix() < seconds; {
 		time.Sleep(1 * time.Millisecond)
-		if 0 == count%10000 {
-			fmt.Println(count)
-		}
 	}
 	disable = true
-	fmt.Println(time.Now().Unix()-timePoint, count)
+	fmt.Println(time.Now().Unix()-startTime.Unix(), count)
 }
 
 func test() {
