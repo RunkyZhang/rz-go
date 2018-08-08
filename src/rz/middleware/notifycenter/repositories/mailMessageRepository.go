@@ -1,7 +1,7 @@
 package repositories
 
 import (
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 	"rz/middleware/notifycenter/models"
 )
 

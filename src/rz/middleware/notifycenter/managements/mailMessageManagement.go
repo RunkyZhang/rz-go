@@ -4,7 +4,7 @@ import (
 	"rz/middleware/notifycenter/enumerations"
 	"rz/middleware/notifycenter/repositories"
 	"rz/middleware/notifycenter/models"
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 )
 
 var (

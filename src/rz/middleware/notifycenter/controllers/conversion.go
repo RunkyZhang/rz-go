@@ -6,7 +6,7 @@ import (
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/models/external"
 	"rz/middleware/notifycenter/exceptions"
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 )
 
 func ConvertToMailMessageDto(body []byte) (interface{}, error) {

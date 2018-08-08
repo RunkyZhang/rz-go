@@ -3,7 +3,7 @@ package consumers
 import (
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/managements"
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 	"rz/middleware/notifycenter/channels"
 )
 

@@ -7,7 +7,7 @@ import (
 
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/global"
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 	"rz/middleware/notifycenter/managements"
 	"rz/middleware/notifycenter/exceptions"
 )

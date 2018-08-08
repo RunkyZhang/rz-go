@@ -3,7 +3,7 @@ package controllers
 import (
 	"rz/middleware/notifycenter/services"
 	"rz/middleware/notifycenter/models/external"
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 )
 
 // MVC structure

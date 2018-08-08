@@ -2,7 +2,7 @@ package managements
 
 import (
 	"rz/middleware/notifycenter/global"
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 	"rz/middleware/notifycenter/enumerations"
 	"time"
 	"rz/middleware/notifycenter/models"
@@ -158,7 +158,7 @@ func ModifyMessageFlowAsync(
 		Parameter: messageFlowJobParameter,
 	}
 
-	global.AsyncWorker.Add(asyncJob)
+	global.AsyncJobWorker.Add(asyncJob)
 }
 
 func modifyMessageFlow(parameter interface{}) (error) {

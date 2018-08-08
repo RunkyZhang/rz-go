@@ -9,7 +9,7 @@ import (
 	"rz/middleware/notifycenter/managements"
 	"rz/middleware/notifycenter/enumerations"
 	"rz/middleware/notifycenter/exceptions"
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 )
 
 var (

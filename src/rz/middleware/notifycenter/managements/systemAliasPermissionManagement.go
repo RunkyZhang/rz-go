@@ -4,7 +4,7 @@ import (
 	"time"
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/repositories"
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 	"rz/middleware/notifycenter/exceptions"
 )
 

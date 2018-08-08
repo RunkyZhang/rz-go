@@ -7,7 +7,7 @@ import (
 	"sync"
 	"os"
 
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 )
 
 var (

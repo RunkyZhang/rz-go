@@ -4,16 +4,16 @@ import (
 	"time"
 	"sync"
 
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 )
 
 var (
-	Version                         = "2018-06-28-11:55"
-	AsyncWorker                     = common.NewAsyncJobWorker(5)
-	WebService                      = common.NewWebService(GetConfig().Web.Listen)
-	HttpClient                      = common.NewHttpClient(nil)
-	redisClient *common.RedisClient = nil
-	redisLock   sync.Mutex
+	Version                            = "2018-06-28-11:55"
+	AsyncJobWorker                     = common.NewAsyncJobWorker(5)
+	WebService                         = common.NewWebService(GetConfig().Web.Listen)
+	HttpClient                         = common.NewHttpClient(nil)
+	redisClient    *common.RedisClient = nil
+	redisLock      sync.Mutex
 )
 
 func GetRedisClient() (*common.RedisClient) {

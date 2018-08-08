@@ -3,7 +3,7 @@ package controllers
 import (
 	"reflect"
 
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 	"rz/middleware/notifycenter/global"
 )
 

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/exceptions"
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 	"rz/middleware/notifycenter/enumerations"
 )
 

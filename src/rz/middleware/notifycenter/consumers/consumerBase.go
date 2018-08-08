@@ -3,7 +3,7 @@ package consumers
 import (
 	"time"
 	"runtime"
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 )
 
 type consumerBase struct {

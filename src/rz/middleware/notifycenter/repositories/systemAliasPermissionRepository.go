@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"rz/middleware/notifycenter/models"
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 	"time"
 )
 

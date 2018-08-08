@@ -9,7 +9,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/models/external"

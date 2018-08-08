@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"rz/middleware/notifycenter/services"
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 	"rz/middleware/notifycenter/models"
 )
 

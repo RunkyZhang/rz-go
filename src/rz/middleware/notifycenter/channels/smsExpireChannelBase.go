@@ -3,7 +3,7 @@ package channels
 import (
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/exceptions"
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 )
 
 var (

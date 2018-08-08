@@ -1,7 +1,7 @@
 package healths
 
 import (
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 )
 
 type MySQLHealthIndicator struct {

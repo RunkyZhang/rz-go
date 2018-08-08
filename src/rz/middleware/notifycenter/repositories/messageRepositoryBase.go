@@ -4,7 +4,7 @@ import (
 	"time"
 	"fmt"
 
-	"rz/middleware/notifycenter/common"
+	"rz/core/common"
 )
 
 type MessageRepositoryBase struct {

@@ -1,6 +1,6 @@
 package exceptions
 
-import "rz/middleware/notifycenter/common"
+import "rz/core/common"
 
 type newBusinessErrorFunc func() (*common.BusinessError)
 
