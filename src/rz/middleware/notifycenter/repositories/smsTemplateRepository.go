@@ -20,7 +20,7 @@ type smsTemplateRepository struct {
 }
 
 func (myself *smsTemplateRepository) Insert(smsTemplatePo *models.SmsTemplatePo) (error) {
-	err := common.Assert.IsNotNilToError(smsTemplatePo, "smsTemplatePo")
+	err := common.Assert.IsTrueToError(nil != smsTemplatePo, "nil != smsTemplatePo")
 	if nil != err {
 		return err
 	}

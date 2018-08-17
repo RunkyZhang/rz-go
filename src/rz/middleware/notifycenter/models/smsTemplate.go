@@ -13,6 +13,10 @@ type SmsTemplateDto struct {
 	UserCallbackUrls  []string                     `json:"userCallbackUrls"`
 	Pattern           string                       `json:"pattern"`
 	Type              enumerations.SmsTemplateType `json:"type"`
+	Sign              string                       `json:"sign"`
+	DahanSignCode     int                          `json:"dahanSignCode"`
+	TencentContext    string                       `json:"tencentContext"`
+	DahanContext      string                       `json:"dahanContext"`
 }
 
 type SmsTemplatePo struct {
@@ -25,6 +29,10 @@ type SmsTemplatePo struct {
 	UserCallbackUrls  string                       `gorm:"column:userCallbackUrls"`
 	Pattern           string                       `gorm:"column:pattern"`
 	Type              enumerations.SmsTemplateType `gorm:"column:type"`
+	Sign              string                       `gorm:"column:sign"`
+	DahanSignCode     int                          `gorm:"column:dahanSignCode"`
+	TencentContext    string                       `gorm:"column:tencentContext"`
+	DahanContext      string                       `gorm:"column:dahanContext"`
 }
 
 func SmsTemplateDtoToPo(smsTemplateDto *SmsTemplateDto) (*SmsTemplatePo) {
@@ -40,6 +48,10 @@ func SmsTemplateDtoToPo(smsTemplateDto *SmsTemplateDto) (*SmsTemplatePo) {
 	smsTemplatePo.Pattern = smsTemplateDto.Pattern
 	smsTemplatePo.UserCallbackUrls = strings.Join(smsTemplateDto.UserCallbackUrls, ",")
 	smsTemplatePo.Type = smsTemplateDto.Type
+	smsTemplatePo.Sign = smsTemplateDto.Sign
+	smsTemplatePo.DahanSignCode = smsTemplateDto.DahanSignCode
+	smsTemplatePo.TencentContext = smsTemplateDto.TencentContext
+	smsTemplatePo.DahanContext = smsTemplateDto.DahanContext
 
 	return smsTemplatePo
 }
@@ -59,6 +71,10 @@ func SmsTemplatePoToDto(smsTemplatePo *SmsTemplatePo) (*SmsTemplateDto) {
 		smsTemplateDto.UserCallbackUrls = strings.Split(smsTemplatePo.UserCallbackUrls, ",")
 	}
 	smsTemplateDto.Type = smsTemplatePo.Type
+	smsTemplateDto.Sign = smsTemplatePo.Sign
+	smsTemplateDto.DahanSignCode = smsTemplatePo.DahanSignCode
+	smsTemplateDto.TencentContext = smsTemplatePo.TencentContext
+	smsTemplateDto.DahanContext = smsTemplatePo.DahanContext
 
 	return smsTemplateDto
 }

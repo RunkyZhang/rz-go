@@ -11,7 +11,7 @@ import (
 )
 
 func VerifyMailMessageDto(mailMessageDto *models.MailMessageDto) (error) {
-	err := common.Assert.IsNotNilToError(mailMessageDto, "mailMessageDto")
+	err := common.Assert.IsTrueToError(nil != mailMessageDto, "nil != mailMessageDto")
 	if nil != err {
 		return err
 	}
@@ -29,7 +29,7 @@ func VerifyMailMessageDto(mailMessageDto *models.MailMessageDto) (error) {
 }
 
 func VerifySmsMessageDto(smsMessageDto *models.SmsMessageDto) (error) {
-	err := common.Assert.IsNotNilToError(smsMessageDto, "smsMessageDto")
+	err := common.Assert.IsTrueToError(nil != smsMessageDto, "nil != smsMessageDto")
 	if nil != err {
 		return err
 	}
@@ -51,7 +51,7 @@ func VerifySmsMessageDto(smsMessageDto *models.SmsMessageDto) (error) {
 }
 
 func VerifySmsTemplateDto(smsTemplateDto *models.SmsTemplateDto) (error) {
-	err := common.Assert.IsNotNilToError(smsTemplateDto, "smsTemplateDto")
+	err := common.Assert.IsTrueToError(nil != smsTemplateDto, "nil != smsTemplateDto")
 	if nil != err {
 		return err
 	}
@@ -60,7 +60,7 @@ func VerifySmsTemplateDto(smsTemplateDto *models.SmsTemplateDto) (error) {
 }
 
 func VerifyQuerySmsUserMessagesRequestDto(querySmsUserMessagesRequestDto *models.QuerySmsUserMessagesRequestDto) (error) {
-	err := common.Assert.IsNotNilToError(querySmsUserMessagesRequestDto, "querySmsUserMessagesRequestDto")
+	err := common.Assert.IsTrueToError(nil != querySmsUserMessagesRequestDto, "nil != querySmsUserMessagesRequestDto")
 	if nil != err {
 		return err
 	}
@@ -71,14 +71,14 @@ func VerifyQuerySmsUserMessagesRequestDto(querySmsUserMessagesRequestDto *models
 	}
 
 	if "" == querySmsUserMessagesRequestDto.NationCode {
-		querySmsUserMessagesRequestDto.NationCode = global.GetConfig().Sms.DefaultNationCode
+		querySmsUserMessagesRequestDto.NationCode = global.GetConfig().SmsTencent.DefaultNationCode
 	}
 
 	return nil
 }
 
 func VerifySystemAliasPermissionDto(verifySystemAliasPermissionDto *models.SystemAliasPermissionDto) (error) {
-	err := common.Assert.IsNotNilToError(verifySystemAliasPermissionDto, "verifySystemAliasPermissionDto")
+	err := common.Assert.IsTrueToError(nil != verifySystemAliasPermissionDto, "nil != verifySystemAliasPermissionDto")
 	if nil != err {
 		return err
 	}
@@ -91,7 +91,7 @@ func VerifySystemAliasPermissionDto(verifySystemAliasPermissionDto *models.Syste
 }
 
 func VerifyModifySystemAliasPermissionRequestDto(modifySystemAliasPermissionRequestDto *models.ModifySystemAliasPermissionRequestDto) (error) {
-	err := common.Assert.IsNotNilToError(modifySystemAliasPermissionRequestDto, "modifySystemAliasPermissionRequestDto")
+	err := common.Assert.IsTrueToError(nil != modifySystemAliasPermissionRequestDto, "nil != modifySystemAliasPermissionRequestDto")
 	if nil != err {
 		return err
 	}

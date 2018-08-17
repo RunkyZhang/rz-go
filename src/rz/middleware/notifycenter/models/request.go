@@ -49,9 +49,3 @@ type ModifySystemAliasPermissionRequestDto struct {
 	SmsHourFrequency   *int   `json:"smsHourFrequency,omitempty"`
 	SmsMinuteFrequency *int   `json:"smsMinuteFrequency,omitempty"`
 }
-
-type TakeTokenRequestDto struct {
-	SystemAlias     string `json:"systemAlias"`
-	IntervalSeconds int    `json:"intervalSeconds"`
-	Capacity        int    `json:"capacity"`
-}

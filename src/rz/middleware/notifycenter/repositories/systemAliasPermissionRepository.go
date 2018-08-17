@@ -20,7 +20,7 @@ type systemAliasPermissionRepository struct {
 }
 
 func (myself *systemAliasPermissionRepository) Insert(systemAliasPermissionPo *models.SystemAliasPermissionPo) (error) {
-	err := common.Assert.IsNotNilToError(systemAliasPermissionPo, "systemAliasPermissionPo")
+	err := common.Assert.IsTrueToError(nil != systemAliasPermissionPo, "nil != systemAliasPermissionPo")
 	if nil != err {
 		return err
 	}

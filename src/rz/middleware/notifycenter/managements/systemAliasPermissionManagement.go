@@ -24,11 +24,7 @@ type systemAliasPermissionManagement struct {
 }
 
 func (myself *systemAliasPermissionManagement) Add(systemAliasPermissionPo *models.SystemAliasPermissionPo) (error) {
-	err := common.Assert.IsNotNilToError(systemAliasPermissionPo, "systemAliasPermissionPo")
-	if nil != err {
-		return err
-	}
-	err = common.Assert.IsNotNilToError(systemAliasPermissionPo.PoBase, "systemAliasPermissionPo.PoBase")
+	err := common.Assert.IsTrueToError(nil != systemAliasPermissionPo, "nil != systemAliasPermissionPo")
 	if nil != err {
 		return err
 	}

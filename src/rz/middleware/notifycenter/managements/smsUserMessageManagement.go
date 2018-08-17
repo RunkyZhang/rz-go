@@ -22,15 +22,7 @@ type smsUserMessageManagement struct {
 }
 
 func (myself *smsUserMessageManagement) Add(smsUserMessagePo *models.SmsUserMessagePo) (error) {
-	err := common.Assert.IsNotNilToError(smsUserMessagePo, "smsUserMessagePo")
-	if nil != err {
-		return err
-	}
-	err = common.Assert.IsNotNilToError(smsUserMessagePo.PoBase, "smsUserMessagePo.PoBase")
-	if nil != err {
-		return err
-	}
-	err = common.Assert.IsNotNilToError(smsUserMessagePo.CallbackBasePo, "smsUserMessagePo.CallbackBasePo")
+	err := common.Assert.IsTrueToError(nil != smsUserMessagePo, "nil != smsUserMessagePo")
 	if nil != err {
 		return err
 	}

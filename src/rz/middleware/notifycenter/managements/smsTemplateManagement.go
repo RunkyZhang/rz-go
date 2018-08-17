@@ -24,11 +24,7 @@ type smsTemplateManagement struct {
 }
 
 func (myself *smsTemplateManagement) Add(smsTemplatePo *models.SmsTemplatePo) (error) {
-	err := common.Assert.IsNotNilToError(smsTemplatePo, "smsTemplatePo")
-	if nil != err {
-		return err
-	}
-	err = common.Assert.IsNotNilToError(smsTemplatePo.PoBase, "smsTemplatePo.PoBase")
+	err := common.Assert.IsTrueToError(nil != smsTemplatePo, "nil != smsTemplatePo")
 	if nil != err {
 		return err
 	}

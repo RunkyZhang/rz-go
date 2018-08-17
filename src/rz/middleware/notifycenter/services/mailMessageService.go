@@ -53,6 +53,7 @@ func (myself *mailMessageService) Send(mailMessageDto *models.MailMessageDto) (i
 			enumerations.Initial,
 			enumerations.Error,
 			exceptions.FailedEnqueueMessageId().AttachError(err).AttachMessage(mailMessagePo.Id).Error(),
+			"",
 			&finished,
 			&now,
 			mailMessagePo.CreatedTime.Year())

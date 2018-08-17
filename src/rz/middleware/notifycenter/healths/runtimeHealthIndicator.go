@@ -18,6 +18,7 @@ func (myself *RuntimeHealthIndicator) Indicate() (*common.HealthReport) {
 	}
 
 	healthReport.Detail["Version"] = global.Version
+	healthReport.Detail["AsyncJobWorker_QueueLength"] = global.AsyncJobWorker.QueueLength()
 
 	return healthReport
 }

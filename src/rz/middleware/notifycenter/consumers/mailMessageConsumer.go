@@ -4,7 +4,7 @@ import (
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/managements"
 	"rz/core/common"
-	"rz/middleware/notifycenter/channels"
+	"rz/middleware/notifycenter/provider"
 )
 
 var (
@@ -32,12 +32,13 @@ func (myself *mailMessageConsumer) send(messagePo interface{}) error {
 		return err
 	}
 
-	mailChannel, err := channels.ChooseMailChannel(mailMessagePo)
+	mailProvider, err := provider.ChooseMailProvider(mailMessagePo)
 	if nil != err {
 		return err
 	}
 
-	err = mailChannel.Do(mailMessagePo)
+	mailMessagePo.ProviderId = mailProvider.Id
+	err = mailProvider.Do(mailMessagePo)
 	if nil != err {
 		return err
 	}

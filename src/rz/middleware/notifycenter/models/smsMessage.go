@@ -10,7 +10,6 @@ type SmsMessageDto struct {
 	TemplateId      int      `json:"templateId"`
 	NationCode      string   `json:"nationCode"`
 	IdentifyingCode string   `json:"identifyingCode"`
-	ExternalId      string   `json:"externalId"`
 }
 
 type SmsMessagePo struct {
@@ -21,7 +20,6 @@ type SmsMessagePo struct {
 	TemplateId      int    `gorm:"column:templateId"`
 	NationCode      string `gorm:"column:nationCode"`
 	IdentifyingCode string `gorm:"column:identifyingCode"`
-	ExternalId      string `gorm:"column:externalId"`
 }
 
 func SmsMessageDtoToPo(smsMessageDto *SmsMessageDto) (*SmsMessagePo) {
@@ -59,7 +57,6 @@ func SmsMessagePoToDto(smsMessagePo *SmsMessagePo) (*SmsMessageDto) {
 	if "" != smsMessagePo.ExpireCallbackUrls {
 		smsMessageDto.ExpireCallbackUrls = strings.Split(smsMessagePo.ExpireCallbackUrls, ",")
 	}
-	smsMessageDto.ExternalId = smsMessagePo.ExternalId
 
 	return smsMessageDto
 }

@@ -11,11 +11,16 @@
   "databases": {
     "default": "ua_notifycenter:ekIxrgWsJ03u@tcp(10.0.34.44:3306)/notifycenter?parseTime=true&charset=utf8&loc=Local"
   },
-  "sms": {
+  "smsTencent": {
     "url": "https://yun.tim.qq.com/v5/tlssmssvr/sendmultisms2",
     "appKey": "0e602644340c447b2d9174195f178e4f",
     "appId": "1400025614",
     "defaultNationCode": "86"
+  },
+  "smsDahan": {
+    "url": "http://www.dh3t.com/json/sms/Submit",
+    "account": "dh56601",
+    "password": "89fd82a0fc66b1e7f4d4db4da67afd77"
   },
   "mail": {
     "host": "mail.gangtiequn.com",

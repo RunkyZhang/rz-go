@@ -11,7 +11,7 @@ type MessageRepositoryBase struct {
 	common.RepositoryBase
 }
 
-func (myself *MessageRepositoryBase) UpdateStatesById(id int64, state string, errorMessage string, finished *bool, finishedTime *time.Time) (int64, error) {
+func (myself *MessageRepositoryBase) UpdateStatesById(id int64, state string, errorMessage string, providerId string, finished *bool, finishedTime *time.Time) (int64, error) {
 	database, err := myself.GetShardDatabase(id)
 	if nil != err {
 		return 0, err
@@ -25,6 +25,10 @@ func (myself *MessageRepositoryBase) UpdateStatesById(id int64, state string, er
 	if "" != errorMessage {
 		setSql += ", `errorMessages`=CONCAT(`errorMessages`,?)"
 		parameters = append(parameters, errorMessage)
+	}
+	if "" != providerId {
+		setSql += ", `providerId`=?"
+		parameters = append(parameters, providerId)
 	}
 	if nil != finished {
 		setSql += ", `finished`=?"
@@ -57,7 +61,7 @@ func (myself *MessageRepositoryBase) UpdateDisableById(id int64, disable bool) (
 }
 
 func (myself *MessageRepositoryBase) selectByExpireTimeAndFinished(pos interface{}, year int) (error) {
-	err := common.Assert.IsNotNilToError(pos, "pos")
+	err := common.Assert.IsTrueToError(nil != pos, "nil != pos")
 	if nil != err {
 		return err
 	}
@@ -71,7 +75,7 @@ func (myself *MessageRepositoryBase) selectByExpireTimeAndFinished(pos interface
 }
 
 func (myself *MessageRepositoryBase) selectById(id int64, po interface{}) (error) {
-	err := common.Assert.IsNotNilToError(po, "po")
+	err := common.Assert.IsTrueToError(nil != po, "nil != po")
 	if nil != err {
 		return err
 	}
@@ -80,7 +84,7 @@ func (myself *MessageRepositoryBase) selectById(id int64, po interface{}) (error
 }
 
 func (myself *MessageRepositoryBase) selectByIds(ids []int64, pos interface{}, year int) (error) {
-	err := common.Assert.IsNotNilToError(pos, "pos")
+	err := common.Assert.IsTrueToError(nil != pos, "nil != pos")
 	if nil != err {
 		return err
 	}

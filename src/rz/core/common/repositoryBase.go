@@ -67,7 +67,7 @@ type RepositoryBase struct {
 }
 
 func (myself *RepositoryBase) Insert(po interface{}, shardParameters ...interface{}) (error) {
-	err := Assert.IsNotNilToError(po, "po")
+	err := Assert.IsTrueToError(nil != po, "nil != po")
 	if nil != err {
 		return err
 	}
@@ -81,7 +81,7 @@ func (myself *RepositoryBase) Insert(po interface{}, shardParameters ...interfac
 }
 
 func (myself *RepositoryBase) Update(po interface{}, shardParameters ...interface{}) (error) {
-	err := Assert.IsNotNilToError(po, "po")
+	err := Assert.IsTrueToError(nil != po, "nil != po")
 	if nil != err {
 		return err
 	}
@@ -95,7 +95,7 @@ func (myself *RepositoryBase) Update(po interface{}, shardParameters ...interfac
 }
 
 func (myself *RepositoryBase) SelectById(id interface{}, po interface{}, shardParameters ...interface{}) (error) {
-	err := Assert.IsNotNilToError(po, "po")
+	err := Assert.IsTrueToError(nil != po, "nil != po")
 	if nil != err {
 		return err
 	}
@@ -109,7 +109,7 @@ func (myself *RepositoryBase) SelectById(id interface{}, po interface{}, shardPa
 }
 
 func (myself *RepositoryBase) SelectByIds(ids interface{}, pos interface{}, shardParameters ...interface{}) (error) {
-	err := Assert.IsNotNilToError(pos, "po")
+	err := Assert.IsTrueToError(nil != pos, "nil != pos")
 	if nil != err {
 		return err
 	}
@@ -123,7 +123,7 @@ func (myself *RepositoryBase) SelectByIds(ids interface{}, pos interface{}, shar
 }
 
 func (myself *RepositoryBase) SelectAll(pos interface{}, shardParameters ...interface{}) (error) {
-	err := Assert.IsNotNilToError(pos, "pos")
+	err := Assert.IsTrueToError(nil != pos, "nil != pos")
 	if nil != err {
 		return err
 	}

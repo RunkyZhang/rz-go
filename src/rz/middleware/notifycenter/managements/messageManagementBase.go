@@ -19,8 +19,8 @@ type MessageManagementBase struct {
 	messageRepositoryBase repositories.MessageRepositoryBase
 }
 
-func (myself *MessageManagementBase) ModifyStates(id int64, state string, errorMessage string, finished *bool, finishedTime *time.Time, year int) (int64, error) {
-	return myself.messageRepositoryBase.UpdateStatesById(id, state, errorMessage, finished, finishedTime)
+func (myself *MessageManagementBase) ModifyStates(id int64, state string, errorMessage string, providerId string, finished *bool, finishedTime *time.Time, year int) (int64, error) {
+	return myself.messageRepositoryBase.UpdateStatesById(id, state, errorMessage, providerId, finished, finishedTime)
 }
 
 func (myself *MessageManagementBase) Disable(id int64) (int64, error) {
@@ -123,6 +123,7 @@ type MessageFlowJobParameter struct {
 	MessageId             int64
 	MessageState          enumerations.MessageState
 	ErrorMessage          string
+	ProviderId            string
 	Finished              *bool
 	FinishedTime          *time.Time
 	Year                  int
@@ -134,6 +135,7 @@ func ModifyMessageFlowAsync(
 	currentMessageState enumerations.MessageState,
 	messageState enumerations.MessageState,
 	errorMessage string,
+	providerId string,
 	finished *bool,
 	finishedTime *time.Time,
 	year int) {
@@ -145,6 +147,7 @@ func ModifyMessageFlowAsync(
 		MessageId:             messageId,
 		MessageState:          messageState,
 		ErrorMessage:          errorMessage,
+		ProviderId:            providerId,
 		Finished:              finished,
 		FinishedTime:          finishedTime,
 		Year:                  year,
@@ -167,7 +170,7 @@ func modifyMessageFlow(parameter interface{}) (error) {
 	if nil != err {
 		return err
 	}
-	err = common.Assert.IsNotNilToError(messageFlowJobParameter.MessageManagementBase, "messageFlowJobParameter.messageManagementBase")
+	err = common.Assert.IsTrueToError(nil != messageFlowJobParameter.MessageManagementBase, "nil != messageFlowJobParameter.MessageManagementBase")
 	if nil != err {
 		return err
 	}
@@ -176,6 +179,7 @@ func modifyMessageFlow(parameter interface{}) (error) {
 		messageFlowJobParameter.MessageId,
 		enumerations.MessageStateToString(messageFlowJobParameter.MessageState),
 		messageFlowJobParameter.ErrorMessage,
+		messageFlowJobParameter.ProviderId,
 		messageFlowJobParameter.Finished,
 		messageFlowJobParameter.FinishedTime,
 		messageFlowJobParameter.Year)

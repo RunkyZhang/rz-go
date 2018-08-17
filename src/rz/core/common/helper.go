@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"sort"
 	"net"
+	"crypto/md5"
+	"encoding/hex"
 )
 
 func IsStringBlank(value string) (bool) {
@@ -98,4 +100,12 @@ func GetIpV4s() ([]string, error) {
 	}
 
 	return ipV4s, nil
+}
+
+func Md5(value string) (string) {
+	hash := md5.New()
+	hash.Write([]byte(value))
+	buffer := hash.Sum(nil)
+
+	return hex.EncodeToString(buffer)
 }

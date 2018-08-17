@@ -72,6 +72,7 @@ func (myself *smsMessageService) Send(smsMessageDto *models.SmsMessageDto) (int6
 			enumerations.Initial,
 			enumerations.Error,
 			exceptions.FailedEnqueueMessageId().AttachError(err).AttachMessage(smsMessagePo.Id).Error(),
+			"",
 			&finished,
 			&now,
 			smsMessagePo.CreatedTime.Year())
@@ -83,7 +84,7 @@ func (myself *smsMessageService) Send(smsMessageDto *models.SmsMessageDto) (int6
 }
 
 func (myself *smsMessageService) QueryByIds(queryMessagesByIdsRequestDto *models.QueryMessagesByIdsRequestDto) ([]*models.SmsMessageDto, error) {
-	err := common.Assert.IsNotNilToError(queryMessagesByIdsRequestDto, "queryMessagesByIdsRequestDto")
+	err := common.Assert.IsTrueToError(nil != queryMessagesByIdsRequestDto, "nil != queryMessagesByIdsRequestDto")
 	if nil != err {
 		return nil, err
 	}
@@ -111,7 +112,6 @@ func (myself *smsMessageService) QueryByIds(queryMessagesByIdsRequestDto *models
 		}
 		idGroup, _ := idGroups[year]
 		idGroups[year] = append(idGroup, id)
-		fmt.Println(idGroup)
 	}
 
 	var smsMessagePos []*models.SmsMessagePo

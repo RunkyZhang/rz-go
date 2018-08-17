@@ -6,6 +6,7 @@ import (
 	"errors"
 	"sync"
 	"os"
+	"strings"
 
 	"rz/core/common"
 )
@@ -19,7 +20,8 @@ type Configuration struct {
 	ConsumingInterval int               `json:"consumingInterval"`
 	Web               web               `json:"web"`
 	Redis             redis             `json:"redis"`
-	Sms               sms               `json:"sms"`
+	SmsTencent        smsTencent        `json:"smsTencent"`
+	SmsDahan          smsDahan          `json:"smsDahan"`
 	Mail              mail              `json:"mail"`
 	QYWeixin          qyWeixin          `json:"qyWeixin"`
 	Databases         map[string]string `json:"databases"`
@@ -36,11 +38,17 @@ type redis struct {
 	Master     string `json:"master"`
 }
 
-type sms struct {
+type smsTencent struct {
 	Url               string `json:"url"`
 	AppKey            string `json:"appKey"`
 	AppId             string `json:"appId"`
 	DefaultNationCode string `json:"defaultNationCode"`
+}
+
+type smsDahan struct {
+	Url      string `json:"url"`
+	Account  string `json:"account"`
+	Password string `json:"password"`
 }
 
 type mail struct {
@@ -71,8 +79,10 @@ func GetConfig() (*Configuration) {
 	}
 
 	filePath := Arguments[ArgumentNameConfig]
-	environmentId := os.Getenv("CONFIGENV")
-	filePath = fmt.Sprintf(filePath, getConfigFileSuffix(environmentId))
+	if strings.Contains(filePath, "%s") {
+		environmentId := os.Getenv("CONFIGENV")
+		filePath = fmt.Sprintf(filePath, getConfigFileSuffix(environmentId))
+	}
 
 	if !common.IsExistPath(filePath) {
 		panic(errors.New(fmt.Sprintf("Cannot find config file path(%s)", filePath)))
@@ -107,9 +117,9 @@ func getConfigFileSuffix(environmentId string) (string) {
 		return "_MIT"
 	} else if "60" == environmentId {
 		return "_STG"
+	} else {
+		return "_DEV"
 	}
-
-	return "_DEV"
 }
 
 func RefreshConfig() {

@@ -21,7 +21,7 @@ func init() {
 }
 
 func (myself *mailMessageRepository) Insert(mailMessagePo *models.MailMessagePo) (error) {
-	err := common.Assert.IsNotNilToError(mailMessagePo, "mailMessagePo")
+	err := common.Assert.IsTrueToError(nil != mailMessagePo, "nil != mailMessagePo")
 	if nil != err {
 		return err
 	}

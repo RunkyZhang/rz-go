@@ -102,16 +102,17 @@ func (myself *logging) log(level string, err interface{}, format interface{}, pa
 		}
 	}()
 
-	//formatMessage := ""
-	//if nil == err {
-	//	formatMessage = fmt.Sprintf("[%s][%s]", level, fmt.Sprint(format))
-	//} else {
-	//	formatMessage = fmt.Sprintf("[%s][%s][error: %s]", level, fmt.Sprint(format), fmt.Sprint(err))
-	//}
+	formatMessage := ""
+	if nil == err {
+		formatMessage = fmt.Sprintf("[%s][%s]", level, fmt.Sprint(format))
+	} else {
+		formatMessage = fmt.Sprintf("[%s][%s][error: %s]", level, fmt.Sprint(format), fmt.Sprint(err))
+	}
 
-	//if myself.ok {
-	//	myself.logger.Printf(formatMessage, parameters...)
-	//} else {
-	//	log.Printf(formatMessage, parameters...)
-	//}
+	if myself.ok {
+		myself.logger.Printf(formatMessage, parameters...)
+	} else {
+		message := fmt.Sprintf(formatMessage, parameters...)
+		log.Printf(message)
+	}
 }

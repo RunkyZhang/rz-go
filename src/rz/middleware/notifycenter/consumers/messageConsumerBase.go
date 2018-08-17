@@ -97,6 +97,7 @@ func (myself *messageConsumerBase) run(parameter interface{}) (error) {
 			enumerations.Sent,
 			messageState,
 			errorMessage,
+			callbackBasePo.ProviderId,
 			&finished,
 			&now,
 			poBase.CreatedTime.Year())
@@ -121,6 +122,7 @@ func (myself *messageConsumerBase) run(parameter interface{}) (error) {
 				enumerations.FinishedSent,
 				enumerations.FinishedSent,
 				errorMessage,
+				"",
 				nil,
 				nil,
 				poBase.CreatedTime.Year())
@@ -131,15 +133,15 @@ func (myself *messageConsumerBase) run(parameter interface{}) (error) {
 }
 
 func (myself *messageConsumerBase) consume(messagePo interface{}, messageId int64, poBase *models.PoBase, callbackBasePo *models.CallbackBasePo) (error) {
-	err := common.Assert.IsNotNilToError(messagePo, "messagePo")
+	err := common.Assert.IsTrueToError(nil != messagePo, "nil != messagePo")
 	if nil != err {
 		return err
 	}
-	err = common.Assert.IsNotNilToError(poBase, "poBase")
+	err = common.Assert.IsTrueToError(nil != poBase, "nil != poBase")
 	if nil != err {
 		return err
 	}
-	err = common.Assert.IsNotNilToError(callbackBasePo, "callbackBasePo")
+	err = common.Assert.IsTrueToError(nil != callbackBasePo, "nil != callbackBasePo")
 	if nil != err {
 		return err
 	}
@@ -149,6 +151,7 @@ func (myself *messageConsumerBase) consume(messagePo interface{}, messageId int6
 		messageId,
 		enumerations.Consuming,
 		enumerations.Consuming,
+		"",
 		"",
 		nil,
 		nil,
@@ -214,6 +217,7 @@ func (myself *messageConsumerBase) expireRun(parameter interface{}) (error) {
 			enumerations.ExpireSent,
 			messageState,
 			errorMessage,
+			callbackBasePo.ProviderId,
 			nil,
 			nil,
 			poBase.CreatedTime.Year())
@@ -223,15 +227,15 @@ func (myself *messageConsumerBase) expireRun(parameter interface{}) (error) {
 }
 
 func (myself *messageConsumerBase) expireConsume(messagePo interface{}, messageId int64, poBase *models.PoBase, callbackBasePo *models.CallbackBasePo) (error) {
-	err := common.Assert.IsNotNilToError(messagePo, "messagePo")
+	err := common.Assert.IsTrueToError(nil != messagePo, "nil != messagePo")
 	if nil != err {
 		return err
 	}
-	err = common.Assert.IsNotNilToError(poBase, "poBase")
+	err = common.Assert.IsTrueToError(nil != poBase, "nil != poBase")
 	if nil != err {
 		return err
 	}
-	err = common.Assert.IsNotNilToError(callbackBasePo, "callbackBasePo")
+	err = common.Assert.IsTrueToError(nil != callbackBasePo, "nil != callbackBasePo")
 	if nil != err {
 		return err
 	}
@@ -241,6 +245,7 @@ func (myself *messageConsumerBase) expireConsume(messagePo interface{}, messageI
 		messageId,
 		enumerations.ExpireConsuming,
 		enumerations.ExpireConsuming,
+		"",
 		"",
 		nil,
 		nil,

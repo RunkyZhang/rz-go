@@ -1,4 +1,4 @@
-package channels
+package provider
 
 import (
 	"regexp"
@@ -14,26 +14,26 @@ import (
 )
 
 var (
-	SmsUserDefaultChannel *smsUserDefaultChannel
+	SmsUserDefaultProvider *smsUserDefaultProvider
 )
 
 func init() {
-	SmsUserDefaultChannel = &smsUserDefaultChannel{
+	SmsUserDefaultProvider = &smsUserDefaultProvider{
 		regularExpressions: make(map[string]*regexp.Regexp),
 	}
-	SmsUserDefaultChannel.smsUserDoFunc = SmsUserDefaultChannel.do
-	SmsUserDefaultChannel.Id = 0
+	SmsUserDefaultProvider.smsUserDoFunc = SmsUserDefaultProvider.do
+	SmsUserDefaultProvider.Id = "smsUserDefaultProvider"
 
-	SmsUserChannels[SmsUserDefaultChannel.Id] = &SmsUserDefaultChannel.smsUserChannelBase
+	smsUserProviders[SmsUserDefaultProvider.Id] = &SmsUserDefaultProvider.smsUserProviderBase
 }
 
-type smsUserDefaultChannel struct {
-	smsUserChannelBase
+type smsUserDefaultProvider struct {
+	smsUserProviderBase
 
 	regularExpressions map[string]*regexp.Regexp
 }
 
-func (myself *smsUserDefaultChannel) do(smsUserMessagePo *models.SmsUserMessagePo) (error) {
+func (myself *smsUserDefaultProvider) do(smsUserMessagePo *models.SmsUserMessagePo) (error) {
 	smsTemplatePo, err := managements.SmsTemplateManagement.GetByTemplateId(smsUserMessagePo.TemplateId)
 	if nil != err {
 		return exceptions.TemplateIdNotExist().AttachError(err).AttachMessage(smsUserMessagePo.TemplateId)

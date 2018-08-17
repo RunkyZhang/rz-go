@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	Version                            = "2018-06-28-11:55"
+	Version                            = "2018-08-01-11:55"
 	AsyncJobWorker                     = common.NewAsyncJobWorker(5)
 	WebService                         = common.NewWebService(GetConfig().Web.Listen)
 	HttpClient                         = common.NewHttpClient(nil)

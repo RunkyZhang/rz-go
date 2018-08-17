@@ -12,12 +12,6 @@ var (
 type assert struct {
 }
 
-func (*assert) IsNotNilToPanic(value interface{}, name string) {
-	if nil == value {
-		panic(errors.New(fmt.Sprintf("The parameter(%s) is nil", name)))
-	}
-}
-
 func (*assert) IsNilErrorToPanic(err error, message string) {
 	if nil != err {
 		if "" == message {
@@ -26,14 +20,6 @@ func (*assert) IsNilErrorToPanic(err error, message string) {
 			panic(errors.New(fmt.Sprintf("The err(%s) is nil. message: %s", err.Error(), message)))
 		}
 	}
-}
-
-func (*assert) IsNotNilToError(value interface{}, name string) (error) {
-	if nil == value {
-		return errors.New(fmt.Sprintf("The parameter(%s) is nil", name))
-	}
-
-	return nil
 }
 
 func (*assert) IsNotBlankToError(value string, name string) (error) {

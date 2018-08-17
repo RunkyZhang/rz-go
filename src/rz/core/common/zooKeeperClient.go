@@ -17,7 +17,8 @@ func NewZooKeeperClient(addresses []string, timeout time.Duration) (*ZooKeeperCl
 }
 
 type zNode struct {
-	State *zk.Stat
+	zk.Stat
+
 	Path  string
 	Value string
 }
@@ -54,7 +55,7 @@ func (myself *ZooKeeperClient) Get(path string, eventCallback zk.EventCallback) 
 		}
 
 		zNode := &zNode{}
-		zNode.State = state
+		zNode.Stat = *state
 		zNode.Value = string(buffer)
 
 		return zNode, nil
@@ -66,7 +67,7 @@ func (myself *ZooKeeperClient) Get(path string, eventCallback zk.EventCallback) 
 	}
 
 	zNode := &zNode{}
-	zNode.State = state
+	zNode.Stat = *state
 	zNode.Value = string(buffer)
 
 	go func() {

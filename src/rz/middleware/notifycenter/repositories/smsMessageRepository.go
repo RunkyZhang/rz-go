@@ -23,7 +23,7 @@ func init() {
 }
 
 func (myself *smsMessageRepository) Insert(smsMessagePo *models.SmsMessagePo) (error) {
-	err := common.Assert.IsNotNilToError(smsMessagePo, "smsMessagePo")
+	err := common.Assert.IsTrueToError(nil != smsMessagePo, "nil != smsMessagePo")
 	if nil != err {
 		return err
 	}

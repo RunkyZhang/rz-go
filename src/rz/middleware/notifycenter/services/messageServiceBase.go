@@ -14,7 +14,7 @@ type MessageServiceBase struct {
 }
 
 func (myself *MessageServiceBase) Disable(disableMessageRequestDto *models.DisableMessageRequestDto) (bool, error) {
-	err := common.Assert.IsNotNilToError(disableMessageRequestDto, "disableMessageRequestDto")
+	err := common.Assert.IsTrueToError(nil != disableMessageRequestDto, "nil != disableMessageRequestDto")
 	if nil != err {
 		return false, err
 	}

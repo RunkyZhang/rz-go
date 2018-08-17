@@ -20,6 +20,7 @@ type SmsUserMessageDto struct {
 	FinishedTime  int64  `json:"finishedTime,string"`
 	ErrorMessages string `json:"errorMessages"`
 	States        string `json:"states"`
+	ProviderId    string `json:"providerId"`
 	CreatedTime   int64  `json:"createdTime,string"`
 	UpdatedTime   int64  `json:"updatedTime,string"`
 }
@@ -79,6 +80,7 @@ func SmsUserMessagePoToDto(smsUserMessagePo *SmsUserMessagePo) (*SmsUserMessageD
 	smsUserMessageDto.FinishedTime = smsUserMessagePo.FinishedTime.Unix()
 	smsUserMessageDto.ErrorMessages = smsUserMessagePo.ErrorMessages
 	smsUserMessageDto.States = smsUserMessagePo.States
+	smsUserMessageDto.ProviderId = smsUserMessagePo.ProviderId
 	smsUserMessageDto.CreatedTime = smsUserMessagePo.CreatedTime.Unix()
 	smsUserMessageDto.UpdatedTime = smsUserMessagePo.UpdatedTime.Unix()
 

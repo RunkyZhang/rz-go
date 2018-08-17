@@ -10,7 +10,7 @@ import (
 )
 
 func ConvertToMailMessageDto(body []byte) (interface{}, error) {
-	err := common.Assert.IsNotNilToError(body, "body")
+	err := common.Assert.IsTrueToError(nil != body, "nil != body")
 	if nil != err {
 		return nil, err
 	}
@@ -20,7 +20,7 @@ func ConvertToMailMessageDto(body []byte) (interface{}, error) {
 }
 
 func ConvertToSmsMessageDto(body []byte) (interface{}, error) {
-	err := common.Assert.IsNotNilToError(body, "body")
+	err := common.Assert.IsTrueToError(nil != body, "nil != body")
 	if nil != err {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func ConvertToSmsMessageDto(body []byte) (interface{}, error) {
 }
 
 func ConvertToQueryMessagesByIdsRequestDto(body []byte) (interface{}, error) {
-	err := common.Assert.IsNotNilToError(body, "body")
+	err := common.Assert.IsTrueToError(nil != body, "nil != body")
 	if nil != err {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func ConvertToQueryMessagesByIdsRequestDto(body []byte) (interface{}, error) {
 }
 
 func ConvertToDisableMessageRequestDto(body []byte) (interface{}, error) {
-	err := common.Assert.IsNotNilToError(body, "body")
+	err := common.Assert.IsTrueToError(nil != body, "nil != body")
 	if nil != err {
 		return nil, err
 	}
@@ -49,18 +49,28 @@ func ConvertToDisableMessageRequestDto(body []byte) (interface{}, error) {
 	return convertToDto(body, &dto)
 }
 
-func ConvertToSmsCallbackMessageDto(body []byte) (interface{}, error) {
-	err := common.Assert.IsNotNilToError(body, "body")
+func ConvertToTencentSmsUserCallbackRequestDto(body []byte) (interface{}, error) {
+	err := common.Assert.IsTrueToError(nil != body, "nil != body")
 	if nil != err {
 		return nil, err
 	}
 
-	var dto external.SmsUserCallbackMessageRequestExternalDto
+	var dto external.TencentSmsUserCallbackRequestDto
+	return convertToDto(body, &dto)
+}
+
+func ConvertToDahanSmsUserCallbackRequestDto(body []byte) (interface{}, error) {
+	err := common.Assert.IsTrueToError(nil != body, "nil != body")
+	if nil != err {
+		return nil, err
+	}
+
+	var dto external.DahanSmsUserCallbackRequestDto
 	return convertToDto(body, &dto)
 }
 
 func ConvertToSmsTemplateDto(body []byte) (interface{}, error) {
-	err := common.Assert.IsNotNilToError(body, "body")
+	err := common.Assert.IsTrueToError(nil != body, "nil != body")
 	if nil != err {
 		return nil, err
 	}
@@ -70,7 +80,7 @@ func ConvertToSmsTemplateDto(body []byte) (interface{}, error) {
 }
 
 func ConvertToQuerySmsUserMessagesRequestDto(body []byte) (interface{}, error) {
-	err := common.Assert.IsNotNilToError(body, "body")
+	err := common.Assert.IsTrueToError(nil != body, "nil != body")
 	if nil != err {
 		return nil, err
 	}
@@ -80,7 +90,7 @@ func ConvertToQuerySmsUserMessagesRequestDto(body []byte) (interface{}, error) {
 }
 
 func ConvertToSystemAliasPermissionDto(body []byte) (interface{}, error) {
-	err := common.Assert.IsNotNilToError(body, "body")
+	err := common.Assert.IsTrueToError(nil != body, "nil != body")
 	if nil != err {
 		return nil, err
 	}
@@ -90,7 +100,7 @@ func ConvertToSystemAliasPermissionDto(body []byte) (interface{}, error) {
 }
 
 func ConvertToModifySystemAliasPermissionRequestDto(body []byte) (interface{}, error) {
-	err := common.Assert.IsNotNilToError(body, "body")
+	err := common.Assert.IsTrueToError(nil != body, "nil != body")
 	if nil != err {
 		return nil, err
 	}
@@ -98,18 +108,6 @@ func ConvertToModifySystemAliasPermissionRequestDto(body []byte) (interface{}, e
 	var dto models.ModifySystemAliasPermissionRequestDto
 	return convertToDto(body, &dto)
 }
-
-func ConvertToTakeTokenRequestDto(body []byte) (interface{}, error) {
-	err := common.Assert.IsNotNilToError(body, "body")
-	if nil != err {
-		return nil, err
-	}
-
-	var dto models.TakeTokenRequestDto
-	return convertToDto(body, &dto)
-}
-
-
 
 func convertToDto(body []byte, messageDto interface{}) (interface{}, error) {
 	err := json.Unmarshal(body, &messageDto)

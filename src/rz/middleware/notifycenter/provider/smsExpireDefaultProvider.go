@@ -1,4 +1,4 @@
-package channels
+package provider
 
 import (
 	"time"
@@ -13,23 +13,23 @@ import (
 )
 
 var (
-	SmsExpireDefaultChannel *smsExpireDefaultChannel
+	SmsExpireDefaultProvider *smsExpireDefaultProvider
 )
 
 func init() {
-	SmsExpireDefaultChannel = &smsExpireDefaultChannel{}
-	SmsExpireDefaultChannel.smsExpireDoFunc = SmsExpireDefaultChannel.do
-	SmsExpireDefaultChannel.Id = 0
+	SmsExpireDefaultProvider = &smsExpireDefaultProvider{}
+	SmsExpireDefaultProvider.smsExpireDoFunc = SmsExpireDefaultProvider.do
+	SmsExpireDefaultProvider.Id = "smsExpireDefaultProvider"
 
-	SmsExpireChannels[SmsExpireDefaultChannel.Id] = &SmsExpireDefaultChannel.smsExpireChannelBase
+	smsExpireProviders[SmsExpireDefaultProvider.Id] = &SmsExpireDefaultProvider.smsExpireProviderBase
 }
 
-type smsExpireDefaultChannel struct {
-	smsExpireChannelBase
+type smsExpireDefaultProvider struct {
+	smsExpireProviderBase
 }
 
-func (myself *smsExpireDefaultChannel) do(smsMessagePo *models.SmsMessagePo) (error) {
-	err := common.Assert.IsNotNilToError(smsMessagePo, "smsMessagePo")
+func (myself *smsExpireDefaultProvider) do(smsMessagePo *models.SmsMessagePo) (error) {
+	err := common.Assert.IsTrueToError(nil != smsMessagePo, "nil != smsMessagePo")
 	if nil != err {
 		return err
 	}

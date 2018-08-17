@@ -1,13 +1,10 @@
 package consumers
 
 import (
-	"fmt"
-	"errors"
-	"rz/middleware/notifycenter/models/external"
 	"rz/middleware/notifycenter/models"
 	"rz/core/common"
 	"rz/middleware/notifycenter/managements"
-	"rz/middleware/notifycenter/channels"
+	"rz/middleware/notifycenter/provider"
 )
 
 var (
@@ -36,32 +33,20 @@ func (myself *smsMessageConsumer) send(messagePo interface{}) (error) {
 	if nil != err {
 		return err
 	}
-
-	smsChannel, err := channels.ChooseSmsChannel(smsMessagePo)
+	smsTemplatePo, err := managements.SmsTemplateManagement.GetByTemplateId(smsMessagePo.TemplateId)
 	if nil != err {
 		return err
 	}
 
-	smsMessageResponseExternalDto := &external.SmsMessageResponseExternalDto{}
-	err = smsChannel.Do(smsMessagePo, smsMessageResponseExternalDto)
+	smsProvider, err := provider.ChooseSmsProvider(smsMessagePo)
 	if nil != err {
 		return err
 	}
 
-	if 0 != smsMessageResponseExternalDto.ErrorCode {
-		message := fmt.Sprintf(
-			"ErrorInfo: %s; ActionStatus: %s; ErrorCode: %d",
-			smsMessageResponseExternalDto.ErrorInfo,
-			smsMessageResponseExternalDto.ActionStatus,
-			smsMessageResponseExternalDto.ErrorCode)
-		return errors.New(message)
-	}
-	if 0 != smsMessageResponseExternalDto.Result {
-		message := fmt.Sprintf(
-			"Errmsg: %s; Result: %d",
-			smsMessageResponseExternalDto.Errmsg,
-			smsMessageResponseExternalDto.Result)
-		return errors.New(message)
+	smsMessagePo.ProviderId = smsProvider.Id
+	err = smsProvider.Do(smsMessagePo, smsTemplatePo)
+	if nil != err {
+		return err
 	}
 
 	return nil
@@ -92,12 +77,13 @@ func (myself *smsMessageConsumer) expireSend(messagePo interface{}) (error) {
 		return err
 	}
 
-	smsExpireChannel, err := channels.ChooseSmsExpireChannel(smsMessagePo)
+	smsExpireProvider, err := provider.ChooseSmsExpireProvider(smsMessagePo)
 	if nil != err {
 		return err
 	}
 
-	err = smsExpireChannel.Do(smsMessagePo)
+	smsMessagePo.ProviderId += "+" + smsExpireProvider.Id
+	err = smsExpireProvider.Do(smsMessagePo)
 	if nil != err {
 		return err
 	}

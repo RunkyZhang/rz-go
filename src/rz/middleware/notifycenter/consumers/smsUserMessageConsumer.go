@@ -4,7 +4,7 @@ import (
 	"rz/middleware/notifycenter/managements"
 	"rz/middleware/notifycenter/models"
 	"rz/core/common"
-	"rz/middleware/notifycenter/channels"
+	"rz/middleware/notifycenter/provider"
 )
 
 var (
@@ -32,12 +32,13 @@ func (myself *smsUserMessageConsumer) send(messagePo interface{}) (error) {
 		return err
 	}
 
-	smsUserChannel, err := channels.ChooseSmsUserChannel(smsUserMessagePo)
+	smsUserProvider, err := provider.ChooseSmsUserProvider(smsUserMessagePo)
 	if nil != err {
 		return err
 	}
 
-	err = smsUserChannel.Do(smsUserMessagePo)
+	smsUserMessagePo.ProviderId = smsUserProvider.Id
+	err = smsUserProvider.Do(smsUserMessagePo)
 	if nil != err {
 		return err
 	}

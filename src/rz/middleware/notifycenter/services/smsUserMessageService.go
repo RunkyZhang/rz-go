@@ -22,30 +22,111 @@ type smsUserMessageService struct {
 	MessageServiceBase
 }
 
-func (myself *smsUserMessageService) Callback(smsUserCallbackMessageRequestExternalDto *external.SmsUserCallbackMessageRequestExternalDto) (*external.SmsUserCallbackMessageResponseExternalDto) {
-	err := common.Assert.IsNotNilToError(smsUserCallbackMessageRequestExternalDto, "smsUserCallbackMessageRequestExternalDto")
+func (myself *smsUserMessageService) TencentCallback(tencentSmsUserCallbackRequestDto *external.TencentSmsUserCallbackRequestDto) (*external.TencentSmsUserCallbackResponseDto) {
+	err := common.Assert.IsTrueToError(nil != tencentSmsUserCallbackRequestDto, "nil != tencentSmsUserCallbackRequestDto")
 	if nil != err {
-		return &external.SmsUserCallbackMessageResponseExternalDto{
+		return &external.TencentSmsUserCallbackResponseDto{
 			Result: 1,
-			Errmsg: "invalid request body",
+			Errmsg: err.Error(),
 		}
 	}
-	extend, err := common.StringToInt32(smsUserCallbackMessageRequestExternalDto.Extend)
+	extend, err := common.StringToInt32(tencentSmsUserCallbackRequestDto.Extend)
 	if nil != err {
-		return &external.SmsUserCallbackMessageResponseExternalDto{
+		return &external.TencentSmsUserCallbackResponseDto{
 			Result: 1,
-			Errmsg: "invalid extend",
+			Errmsg: err.Error(),
 		}
 	}
 
+	err = myself.callback(
+		tencentSmsUserCallbackRequestDto.Mobile,
+		tencentSmsUserCallbackRequestDto.Text,
+		extend,
+		tencentSmsUserCallbackRequestDto.Time,
+		tencentSmsUserCallbackRequestDto.Nationcode,
+		tencentSmsUserCallbackRequestDto.Sign)
+	if nil != err {
+		return &external.TencentSmsUserCallbackResponseDto{
+			Result: 1,
+			Errmsg: err.Error(),
+		}
+	}
+
+	return &external.TencentSmsUserCallbackResponseDto{
+		Result: 0,
+		Errmsg: "OK",
+	}
+}
+
+func (myself *smsUserMessageService) DahanCallbacks(dahanSmsUserCallbackRequestDto *external.DahanSmsUserCallbackRequestDto) (*external.DahanSmsUserCallbackResponseDto) {
+	err := common.Assert.IsTrueToError(nil != dahanSmsUserCallbackRequestDto, "nil != dahanSmsUserCallbackRequestDto")
+	if nil != err {
+		return &external.DahanSmsUserCallbackResponseDto{
+			Status: err.Error(),
+		}
+	}
+
+	if nil != dahanSmsUserCallbackRequestDto.Delivers {
+		for _, deliver := range dahanSmsUserCallbackRequestDto.Delivers {
+			err = myself.dahanCallback(deliver)
+			if nil != err {
+				common.GetLogging().Error(err, "Failed to save callback message")
+			}
+		}
+	}
+
+	return &external.DahanSmsUserCallbackResponseDto{
+		Status: "success",
+	}
+}
+
+func (myself *smsUserMessageService) dahanCallback(dahanSmsUserCallbackDeliverRequestDto *external.DahanSmsUserCallbackDeliverRequestDto) (error) {
+	err := common.Assert.IsTrueToError(nil != dahanSmsUserCallbackDeliverRequestDto, "nil != dahanSmsUserCallbackDeliverRequestDto")
+	if nil != err {
+		return err
+	}
+	err = common.Assert.IsTrueToError(5 <= len(dahanSmsUserCallbackDeliverRequestDto.SubCode), "5 <= len(dahanSmsUserCallbackDeliverRequestDto.SubCode")
+	if nil != err {
+		return err
+	}
+	extend := -1
+	sign := dahanSmsUserCallbackDeliverRequestDto.SubCode[0:4]
+	if 5 < len(dahanSmsUserCallbackDeliverRequestDto.SubCode) {
+		extend, err = common.StringToInt32(dahanSmsUserCallbackDeliverRequestDto.SubCode[5:])
+		if nil != err {
+			return err
+		}
+	}
+	dateTime, err := time.Parse("2006-01-02 15:04:05", dahanSmsUserCallbackDeliverRequestDto.DeliverTime)
+	if nil != err {
+		return err
+	}
+
+	// {"result":"0","desc":"成功","delivers":[{"phone":"13818530040","content":"刚刚","subcode":"566013333","delivertime":"2018-08-15 14:10:08"}]}
+	err = myself.callback(
+		dahanSmsUserCallbackDeliverRequestDto.Phone,
+		dahanSmsUserCallbackDeliverRequestDto.Content,
+		extend,
+		dateTime.Unix(),
+		"86",
+		sign)
+	if nil != err {
+		return err
+	}
+
+	return nil
+}
+
+func (myself *smsUserMessageService) callback(phoneNumber string, context string, extend int, dateTime int64, nationCode string, sign string) (error) {
 	smsUserMessagePo := &models.SmsUserMessagePo{
-		Content:     smsUserCallbackMessageRequestExternalDto.Text,
-		Sign:        smsUserCallbackMessageRequestExternalDto.Sign,
-		Time:        smsUserCallbackMessageRequestExternalDto.Time,
-		NationCode:  smsUserCallbackMessageRequestExternalDto.Nationcode,
-		PhoneNumber: smsUserCallbackMessageRequestExternalDto.Mobile,
+		Content:     context,
+		Sign:        sign,
+		Time:        dateTime,
+		NationCode:  nationCode,
+		PhoneNumber: phoneNumber,
 		Extend:      extend,
 	}
+
 	smsUserMessagePo.ExpireTime = time.Now().Add(7 * 24 * time.Hour)
 	smsTemplatePo, err := managements.SmsTemplateManagement.GetByExtend(extend)
 	if nil != err {
@@ -57,18 +138,12 @@ func (myself *smsUserMessageService) Callback(smsUserCallbackMessageRequestExter
 	smsUserMessagePo.CreatedTime = time.Now()
 	smsUserMessagePo.Id, err = managements.SmsUserMessageManagement.GenerateId(smsUserMessagePo.CreatedTime.Year())
 	if nil != err {
-		return &external.SmsUserCallbackMessageResponseExternalDto{
-			Result: 1,
-			Errmsg: exceptions.FailedGenerateMessageId().AttachError(err).Error(),
-		}
+		return exceptions.FailedGenerateMessageId().AttachError(err)
 	}
 
 	err = managements.SmsUserMessageManagement.Add(smsUserMessagePo)
 	if nil != err {
-		return &external.SmsUserCallbackMessageResponseExternalDto{
-			Result: 1,
-			Errmsg: exceptions.FailedAddSmsUserMessage().AttachError(err).Error(),
-		}
+		return exceptions.FailedAddSmsUserMessage().AttachError(err)
 	}
 
 	if false == smsUserMessagePo.Finished {
@@ -82,21 +157,16 @@ func (myself *smsUserMessageService) Callback(smsUserCallbackMessageRequestExter
 				enumerations.Initial,
 				enumerations.Error,
 				exceptions.FailedEnqueueMessageId().AttachError(err).AttachMessage(smsUserMessagePo.Id).Error(),
+				"",
 				&finished,
 				&now,
 				smsUserMessagePo.CreatedTime.Year())
 
-			return &external.SmsUserCallbackMessageResponseExternalDto{
-				Result: 1,
-				Errmsg: "Server error",
-			}
+			return exceptions.InternalServerError().AttachError(err)
 		}
 	}
 
-	return &external.SmsUserCallbackMessageResponseExternalDto{
-		Result: 0,
-		Errmsg: "OK",
-	}
+	return nil
 }
 
 func (myself *smsUserMessageService) Query(querySmsUserMessagesRequestDto *models.QuerySmsUserMessagesRequestDto) ([]*models.SmsUserMessageDto, error) {

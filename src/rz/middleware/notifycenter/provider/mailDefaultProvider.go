@@ -1,4 +1,4 @@
-package channels
+package provider
 
 import (
 	"rz/middleware/notifycenter/global"
@@ -9,11 +9,11 @@ import (
 )
 
 var (
-	MailDefaultChannel *mailDefaultChannel
+	MailDefaultProvider *mailDefaultProvider
 )
 
 func init() {
-	MailDefaultChannel = &mailDefaultChannel{
+	MailDefaultProvider = &mailDefaultProvider{
 		Host:        global.GetConfig().Mail.Host,
 		Port:        global.GetConfig().Mail.Port,
 		UserName:    global.GetConfig().Mail.UserName,
@@ -21,23 +21,23 @@ func init() {
 		From:        global.GetConfig().Mail.From,
 		ContentType: global.GetConfig().Mail.ContentType,
 	}
-	MailDefaultChannel.dialer = gomail.NewDialer(MailDefaultChannel.Host, MailDefaultChannel.Port, MailDefaultChannel.UserName, MailDefaultChannel.password)
-	MailDefaultChannel.dialer.Auth = &unencryptedAuth{
+	MailDefaultProvider.dialer = gomail.NewDialer(MailDefaultProvider.Host, MailDefaultProvider.Port, MailDefaultProvider.UserName, MailDefaultProvider.password)
+	MailDefaultProvider.dialer.Auth = &unencryptedAuth{
 		smtp.PlainAuth(
 			"",
-			MailDefaultChannel.UserName,
-			MailDefaultChannel.password,
-			MailDefaultChannel.Host,
+			MailDefaultProvider.UserName,
+			MailDefaultProvider.password,
+			MailDefaultProvider.Host,
 		),
 	}
-	MailDefaultChannel.mailDoFunc = MailDefaultChannel.do
-	MailDefaultChannel.Id = 0
+	MailDefaultProvider.mailDoFunc = MailDefaultProvider.do
+	MailDefaultProvider.Id = "mailDefaultProvider"
 
-	MailChannels[MailDefaultChannel.Id] = &MailDefaultChannel.mailChannelBase
+	mailProviders[MailDefaultProvider.Id] = &MailDefaultProvider.mailProviderBase
 }
 
-type mailDefaultChannel struct {
-	mailChannelBase
+type mailDefaultProvider struct {
+	mailProviderBase
 
 	Host        string
 	Port        int
@@ -49,7 +49,7 @@ type mailDefaultChannel struct {
 	dialer *gomail.Dialer
 }
 
-func (myself *mailDefaultChannel) do(mailMessagePo *models.MailMessagePo) (error) {
+func (myself *mailDefaultProvider) do(mailMessagePo *models.MailMessagePo) (error) {
 	tos := strings.Split(mailMessagePo.Tos, ",")
 
 	message := gomail.NewMessage()

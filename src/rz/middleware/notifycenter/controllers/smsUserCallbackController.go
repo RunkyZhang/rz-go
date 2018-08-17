@@ -12,8 +12,20 @@ var (
 		SmsUserCallbackControllerPack: &common.ControllerPack{
 			Pattern:          "/message/sms-user-callback",
 			Method:           "POST",
-			ControllerFunc:   smsUserCallback,
-			ConvertToDtoFunc: ConvertToSmsCallbackMessageDto,
+			ControllerFunc:   tencentSmsUserCallback,
+			ConvertToDtoFunc: ConvertToTencentSmsUserCallbackRequestDto,
+		},
+		TencentSmsUserCallbackControllerPack: &common.ControllerPack{
+			Pattern:          "/message/tencent-user-sms-callback",
+			Method:           "POST",
+			ControllerFunc:   tencentSmsUserCallback,
+			ConvertToDtoFunc: ConvertToTencentSmsUserCallbackRequestDto,
+		},
+		DahanSmsUserCallbackControllerPack: &common.ControllerPack{
+			Pattern:          "/message/dahan-user-sms-callback",
+			Method:           "POST",
+			ControllerFunc:   dahanSmsUserCallback,
+			ConvertToDtoFunc: ConvertToDahanSmsUserCallbackRequestDto,
 		},
 	}
 )
@@ -21,15 +33,27 @@ var (
 type smsUserCallbackController struct {
 	ControllerBase
 
-	SmsUserCallbackControllerPack *common.ControllerPack
+	SmsUserCallbackControllerPack        *common.ControllerPack
+	TencentSmsUserCallbackControllerPack *common.ControllerPack
+	DahanSmsUserCallbackControllerPack   *common.ControllerPack
 }
 
-func smsUserCallback(dto interface{}) (interface{}, error) {
-	smsUserCallbackMessageRequestExternalDto, ok := dto.(*external.SmsUserCallbackMessageRequestExternalDto)
-	err := common.Assert.IsTrueToError(ok, "dto.(*external.SmsUserCallbackMessageRequestExternalDto)")
+func tencentSmsUserCallback(dto interface{}) (interface{}, error) {
+	tencentSmsUserCallbackRequestDto, ok := dto.(*external.TencentSmsUserCallbackRequestDto)
+	err := common.Assert.IsTrueToError(ok, "dto.(*external.TencentSmsUserCallbackRequestDto)")
 	if nil != err {
 		return nil, err
 	}
 
-	return services.SmsUserMessageService.Callback(smsUserCallbackMessageRequestExternalDto), nil
+	return services.SmsUserMessageService.TencentCallback(tencentSmsUserCallbackRequestDto), nil
+}
+
+func dahanSmsUserCallback(dto interface{}) (interface{}, error) {
+	dahanSmsUserCallbackRequestDto, ok := dto.(*external.DahanSmsUserCallbackRequestDto)
+	err := common.Assert.IsTrueToError(ok, "dto.(*external.DahanSmsUserCallbackRequestDto)")
+	if nil != err {
+		return nil, err
+	}
+
+	return services.SmsUserMessageService.DahanCallbacks(dahanSmsUserCallbackRequestDto), nil
 }

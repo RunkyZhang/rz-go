@@ -23,7 +23,7 @@ type smsUserMessageRepository struct {
 }
 
 func (myself *smsUserMessageRepository) Insert(smsUserMessagePo *models.SmsUserMessagePo) (error) {
-	err := common.Assert.IsNotNilToError(smsUserMessagePo, "smsUserMessagePo")
+	err := common.Assert.IsTrueToError(nil != smsUserMessagePo, "nil != smsUserMessagePo")
 	if nil != err {
 		return err
 	}

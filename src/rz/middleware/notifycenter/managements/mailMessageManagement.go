@@ -22,15 +22,7 @@ func init() {
 }
 
 func (myself *mailMessageManagement) Add(mailMessagePo *models.MailMessagePo) (error) {
-	err := common.Assert.IsNotNilToError(mailMessagePo, "mailMessagePo")
-	if nil != err {
-		return err
-	}
-	err = common.Assert.IsNotNilToError(mailMessagePo.PoBase, "mailMessagePo.PoBase")
-	if nil != err {
-		return err
-	}
-	err = common.Assert.IsNotNilToError(mailMessagePo.CallbackBasePo, "mailMessagePo.CallbackBasePo")
+	err := common.Assert.IsTrueToError(nil != mailMessagePo, "nil != mailMessagePo")
 	if nil != err {
 		return err
 	}

@@ -25,6 +25,7 @@ type MessageBaseDto struct {
 	FinishedTime         int64    `json:"finishedTime,string"`
 	States               string   `json:"states"`
 	ErrorMessages        string   `json:"errorMessages"`
+	ProviderId           string   `json:"providerId"`
 	CreatedTime          int64    `json:"createdTime,string"`
 	UpdatedTime          int64    `json:"updatedTime,string"`
 }
@@ -73,6 +74,7 @@ func MessageBasePoToDto(messageBasePo *MessageBasePo) (*MessageBaseDto) {
 	}
 	messageBaseDto.Id = messageBasePo.Id
 	messageBaseDto.SendChannel = messageBasePo.SendChannel
+	messageBaseDto.ProviderId = messageBasePo.ProviderId
 	messageBaseDto.Disable = messageBasePo.Disable
 	messageBaseDto.Finished = messageBasePo.Finished
 	messageBaseDto.FinishedTime = messageBasePo.FinishedTime.Unix()
