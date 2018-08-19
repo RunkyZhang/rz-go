@@ -14,6 +14,7 @@ import (
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/models/external"
 	"errors"
+	"rz/middleware/notifycenter/managements"
 )
 
 var (
@@ -21,14 +22,24 @@ var (
 )
 
 func init() {
-	SmsTencentProvider = &smsTencentProvider{
-		Url:               global.GetConfig().SmsTencent.Url,
-		AppId:             global.GetConfig().SmsTencent.AppId,
-		AppKey:            global.GetConfig().SmsTencent.AppKey,
-		DefaultNationCode: global.GetConfig().SmsTencent.DefaultNationCode,
-	}
+	SmsTencentProvider = &smsTencentProvider{}
 	SmsTencentProvider.smsDoFunc = SmsTencentProvider.do
 	SmsTencentProvider.Id = "smsTencentProvider"
+	var err error
+	SmsTencentProvider.smsProviderPo, err = managements.SmsProviderManagement.GetById(SmsTencentProvider.Id)
+	common.Assert.IsNilErrorToPanic(err, "Failed to get [SmsProviderPo]")
+	SmsTencentProvider.Url = SmsTencentProvider.smsProviderPo.Url1
+	keyValues := make(map[string]string)
+	err = json.Unmarshal([]byte(SmsTencentProvider.smsProviderPo.PassportJson), keyValues)
+	var ok bool
+	SmsTencentProvider.AppId, ok = keyValues["appId"]
+	if !ok {
+		common.Assert.IsTrueToPanic(ok, "map has not [appId]")
+	}
+	SmsTencentProvider.AppKey, ok = keyValues["appKey"]
+	if !ok {
+		common.Assert.IsTrueToPanic(ok, "map has not [appKey]")
+	}
 
 	smsProviders[SmsTencentProvider.Id] = &SmsTencentProvider.smsProviderBase
 }
@@ -36,10 +47,9 @@ func init() {
 type smsTencentProvider struct {
 	smsProviderBase
 
-	Url               string
-	AppKey            string
-	AppId             string
-	DefaultNationCode string
+	Url    string
+	AppKey string
+	AppId  string
 }
 
 func (myself *smsTencentProvider) do(smsMessagePo *models.SmsMessagePo, smsTemplatePo *models.SmsTemplatePo) (error) {
@@ -116,7 +126,7 @@ func (myself *smsTencentProvider) buildTencentPhoneNumberPackDtos(smsMessagePo *
 
 	nationCode := smsMessagePo.NationCode
 	if "" == smsMessagePo.NationCode {
-		nationCode = myself.DefaultNationCode
+		nationCode = global.DefaultNationCode
 	}
 
 	if "" != smsMessagePo.Tos {

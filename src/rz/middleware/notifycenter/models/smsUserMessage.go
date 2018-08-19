@@ -5,15 +5,16 @@ import (
 )
 
 type SmsUserMessageDto struct {
-	Id           int64  `json:"id,string"`
-	NationCode   string `json:"nationCode"`
-	PhoneNumber  string `json:"phoneNumber"`
-	TemplateId   int    `json:"templateId"`
-	Extend       int    `json:"extend"`
-	Content      string `json:"content"`
-	Sign         string `json:"sign"`
-	Time         int64  `json:"time,string"`
-	SmsMessageId int64  `json:"time,string"`
+	Id             int64  `json:"id,string"`
+	NationCode     string `json:"nationCode"`
+	PhoneNumber    string `json:"phoneNumber"`
+	TemplateId     int    `json:"templateId"`
+	Extend         int    `json:"extend"`
+	Content        string `json:"content"`
+	Sign           string `json:"sign"`
+	Time           int64  `json:"time,string"`
+	SmsMessageId   int64  `json:"time,string"`
+	FromProviderId string `json:"fromProviderId"`
 
 	Disable       bool   `json:"disable"`
 	Finished      bool   `json:"finished"`
@@ -29,15 +30,16 @@ type SmsUserMessagePo struct {
 	PoBase
 	CallbackBasePo
 
-	Id           int64  `gorm:"column:id;primary_key"`
-	NationCode   string `gorm:"column:nationCode"`
-	PhoneNumber  string `gorm:"column:phoneNumber"`
-	TemplateId   int    `gorm:"column:templateId"`
-	Extend       int    `gorm:"column:extend"`
-	Content      string `gorm:"column:content"`
-	Sign         string `gorm:"column:sign"`
-	Time         int64  `gorm:"column:time"`
-	SmsMessageId int64  `gorm:"column:smsMessageId"`
+	Id             int64  `gorm:"column:id;primary_key"`
+	NationCode     string `gorm:"column:nationCode"`
+	PhoneNumber    string `gorm:"column:phoneNumber"`
+	TemplateId     int    `gorm:"column:templateId"`
+	Extend         int    `gorm:"column:extend"`
+	Content        string `gorm:"column:content"`
+	Sign           string `gorm:"column:sign"`
+	Time           int64  `gorm:"column:time"`
+	SmsMessageId   int64  `gorm:"column:smsMessageId"`
+	FromProviderId string `gorm:"column:fromProviderId"`
 }
 
 func SmsUserMessageDtoToPo(smsUserMessageDto *SmsUserMessageDto) (*SmsUserMessagePo) {
@@ -54,6 +56,7 @@ func SmsUserMessageDtoToPo(smsUserMessageDto *SmsUserMessageDto) (*SmsUserMessag
 	smsUserMessagePo.Sign = smsUserMessageDto.Sign
 	smsUserMessagePo.Time = smsUserMessageDto.Time
 	smsUserMessagePo.SmsMessageId = smsUserMessageDto.SmsMessageId
+	smsUserMessagePo.FromProviderId = smsUserMessageDto.FromProviderId
 	smsUserMessagePo.Finished = smsUserMessageDto.Finished
 	smsUserMessagePo.FinishedTime = time.Unix(smsUserMessageDto.FinishedTime, 0)
 	smsUserMessagePo.ErrorMessages = smsUserMessageDto.ErrorMessages
@@ -75,6 +78,7 @@ func SmsUserMessagePoToDto(smsUserMessagePo *SmsUserMessagePo) (*SmsUserMessageD
 	smsUserMessageDto.Sign = smsUserMessagePo.Sign
 	smsUserMessageDto.Time = smsUserMessagePo.Time
 	smsUserMessageDto.SmsMessageId = smsUserMessagePo.SmsMessageId
+	smsUserMessageDto.FromProviderId = smsUserMessagePo.FromProviderId
 	smsUserMessageDto.Disable = smsUserMessagePo.Disable
 	smsUserMessageDto.Finished = smsUserMessagePo.Finished
 	smsUserMessageDto.FinishedTime = smsUserMessagePo.FinishedTime.Unix()

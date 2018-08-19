@@ -5,6 +5,7 @@ import (
 	"rz/core/common"
 	"rz/middleware/notifycenter/managements"
 	"rz/middleware/notifycenter/provider"
+	"rz/middleware/notifycenter/exceptions"
 )
 
 var (
@@ -38,15 +39,22 @@ func (myself *smsMessageConsumer) send(messagePo interface{}) (error) {
 		return err
 	}
 
-	smsProvider, err := provider.ChooseSmsProvider(smsMessagePo)
-	if nil != err {
-		return err
-	}
+	var excludedIds []string
+	errorMessages := ""
+	for ; nil != err; {
+		smsProvider, err := provider.ChooseSmsProvider(smsMessagePo, excludedIds)
+		if nil != err {
+			return exceptions.FailedChooseSmsChannel().AttachMessage(smsMessagePo.Id)
+		}
 
-	smsMessagePo.ProviderId = smsProvider.Id
-	err = smsProvider.Do(smsMessagePo, smsTemplatePo)
-	if nil != err {
-		return err
+		smsMessagePo.ProviderId += smsProvider.Id
+		err = smsProvider.Do(smsMessagePo, smsTemplatePo)
+		if nil == err {
+			break
+		} else {
+			common.GetLogging().Warn()
+			errorMessages += err.Error()
+		}
 	}
 
 	return nil

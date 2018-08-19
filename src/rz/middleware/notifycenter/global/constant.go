@@ -7,4 +7,5 @@ const (
 	RedisKeyExpireMessageIds       = RedisKeyMessage + "Expire_Ids_"
 	RedisKeyMessageAutoIncrementId = RedisKeyMessage + "AutoIncrementId"
 	AdminSystemAlias               = "WangErMaZi"
+	DefaultNationCode              = "86"
 )

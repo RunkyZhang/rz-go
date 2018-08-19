@@ -47,6 +47,10 @@ func VerifySmsMessageDto(smsMessageDto *models.SmsMessageDto) (error) {
 		}
 	}
 
+	if 0 == smsMessageDto.ContentType {
+		smsMessageDto.ContentType = 1
+	}
+
 	return nil
 }
 

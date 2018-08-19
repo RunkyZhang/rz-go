@@ -7,7 +7,7 @@ import (
 type SendChannel int
 
 const (
-	Mail        SendChannel = iota
+	Mail SendChannel = iota
 	Sms
 	QYWeixin
 	Weixin
@@ -39,7 +39,7 @@ func SendChannelToString(sendChannel SendChannel) (string, error) {
 type ToType int
 
 const (
-	Auto        ToType = iota
+	Auto ToType = iota
 	PhoneNumber
 	MailAddress
 	UserId
@@ -48,14 +48,14 @@ const (
 type QYWeixinMessageType int
 
 const (
-	Text     QYWeixinMessageType = iota
+	Text QYWeixinMessageType = iota
 	TextCard
 )
 
 type MessageState int
 
 const (
-	Initial               MessageState = iota
+	Initial MessageState = iota
 	Consuming
 	Sent
 	FinishedSent
@@ -90,6 +90,13 @@ func MessageStateToString(messageState MessageState) (string) {
 type SmsTemplateType int
 
 const (
-	Pattern         SmsTemplateType = iota
+	Pattern SmsTemplateType = iota
 	IdentifyingCode
+)
+
+type SmsContextType int
+
+const (
+	Business      SmsContextType = 1
+	Advertisement SmsContextType = 2
 )

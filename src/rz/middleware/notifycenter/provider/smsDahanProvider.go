@@ -2,14 +2,16 @@ package provider
 
 import (
 	"fmt"
+	"encoding/json"
+	"time"
+	"strings"
+	"errors"
+
+	"rz/core/common"
 	"rz/middleware/notifycenter/global"
 	"rz/middleware/notifycenter/models"
-	"rz/middleware/notifycenter/managements"
 	"rz/middleware/notifycenter/models/external"
-	"rz/core/common"
-	"strings"
-	"encoding/json"
-	"errors"
+	"rz/middleware/notifycenter/managements"
 )
 
 var (
@@ -17,13 +19,24 @@ var (
 )
 
 func init() {
-	SmsDahanProvider = &smsDahanProvider{
-		Url:      global.GetConfig().SmsDahan.Url,
-		Account:  global.GetConfig().SmsDahan.Account,
-		Password: global.GetConfig().SmsDahan.Password,
-	}
+	SmsDahanProvider = &smsDahanProvider{}
 	SmsDahanProvider.smsDoFunc = SmsDahanProvider.do
 	SmsDahanProvider.Id = "smsDahanProvider"
+	var err error
+	SmsDahanProvider.smsProviderPo, err = managements.SmsProviderManagement.GetById(SmsDahanProvider.Id)
+	common.Assert.IsNilErrorToPanic(err, "Failed to get [SmsProviderPo]")
+	SmsDahanProvider.Url = SmsDahanProvider.smsProviderPo.Url1
+	keyValues := make(map[string]string)
+	err = json.Unmarshal([]byte(SmsDahanProvider.smsProviderPo.PassportJson), keyValues)
+	var ok bool
+	SmsDahanProvider.Account, ok = keyValues["account"]
+	if !ok {
+		common.Assert.IsTrueToPanic(ok, "map has not [account]")
+	}
+	SmsDahanProvider.Password, ok = keyValues["password"]
+	if !ok {
+		common.Assert.IsTrueToPanic(ok, "map has not [password]")
+	}
 
 	smsProviders[SmsDahanProvider.Id] = &SmsDahanProvider.smsProviderBase
 }
@@ -37,21 +50,7 @@ type smsDahanProvider struct {
 }
 
 func (myself *smsDahanProvider) do(smsMessagePo *models.SmsMessagePo, smsTemplatePo *models.SmsTemplatePo) (error) {
-	smsTemplatePo, err := managements.SmsTemplateManagement.GetByTemplateId(smsMessagePo.TemplateId)
-	if nil != err {
-		return err
-	}
-
-	dahanSmsMessageRequestDto := external.DahanSmsMessageRequestDto{
-		Account:  myself.Account,
-		Password: myself.Password,
-		MsgId:    common.Int64ToString(smsMessagePo.Id),
-		Content:  smsMessagePo.Content,
-		Sign:     fmt.Sprintf("【%s】", smsTemplatePo.Sign),
-		SubCode:  fmt.Sprintf("%d%d", smsTemplatePo.DahanSignCode, smsTemplatePo.Extend),
-		SendTime: 201808161630,
-		Phones:   myself.buildPhoneNumbers(smsMessagePo.Tos, smsMessagePo.NationCode),
-	}
+	dahanSmsMessageRequestDto := myself.buildDahanSmsMessageRequestDto(smsMessagePo, smsTemplatePo)
 
 	bytes, err := global.HttpClient.Post(myself.Url, dahanSmsMessageRequestDto)
 	if nil != err {
@@ -66,8 +65,9 @@ func (myself *smsDahanProvider) do(smsMessagePo *models.SmsMessagePo, smsTemplat
 
 	if "0" != dahanSmsMessageResponseDto.Result {
 		message := fmt.Sprintf(
-			"Result: %s; Desc: %s; FailPhones: %s",
+			"Result: %s; MsgId: %s; Desc: %s; FailPhones: %s",
 			dahanSmsMessageResponseDto.Result,
+			dahanSmsMessageResponseDto.MsgId,
 			dahanSmsMessageResponseDto.Desc,
 			dahanSmsMessageResponseDto.FailPhones)
 		return errors.New(message)
@@ -76,14 +76,34 @@ func (myself *smsDahanProvider) do(smsMessagePo *models.SmsMessagePo, smsTemplat
 	return nil
 }
 
-func (myself *smsDahanProvider) buildPhoneNumbers(tos string, nationCode string) (string) {
+func (myself *smsDahanProvider) buildDahanSmsMessageRequestDto(smsMessagePo *models.SmsMessagePo, smsTemplatePo *models.SmsTemplatePo) (*external.DahanSmsMessageRequestDto) {
+	dahanSmsMessageRequestDto := &external.DahanSmsMessageRequestDto{}
+	dahanSmsMessageRequestDto.Password = myself.Password
+	dahanSmsMessageRequestDto.Account = myself.Account
+	dahanSmsMessageRequestDto.Content = smsMessagePo.Content
+	dahanSmsMessageRequestDto.MsgId = common.Int64ToString(smsMessagePo.Id)
+	dahanSmsMessageRequestDto.Sign = fmt.Sprintf("【%s】", smsTemplatePo.Sign)
+	dahanSmsMessageRequestDto.SendTime = time.Now().Unix()
+	dahanSmsMessageRequestDto.SubCode = fmt.Sprintf("%d%d", smsTemplatePo.DahanSignCode, smsTemplatePo.Extend)
+	dahanSmsMessageRequestDto.Phones = myself.buildPhoneNumbers(smsMessagePo)
+
+	return dahanSmsMessageRequestDto
+}
+
+func (myself *smsDahanProvider) buildPhoneNumbers(smsMessagePo *models.SmsMessagePo) (string) {
+	nationCode := smsMessagePo.NationCode
+	if "" == smsMessagePo.NationCode {
+		nationCode = global.DefaultNationCode
+	}
+
 	value := ""
-	if "" != tos {
-		phoneNumbers := strings.Split(tos, ",")
+	if "" != smsMessagePo.Tos {
+		phoneNumbers := strings.Split(smsMessagePo.Tos, ",")
 		for _, phoneNumber := range phoneNumbers {
 			value += fmt.Sprintf("+%s%s,", nationCode, phoneNumber)
 		}
+		value = value[0:(len(value) - 2)]
 	}
 
-	return strings.TrimRight(value, ",")
+	return value
 }

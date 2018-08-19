@@ -16,6 +16,7 @@ type MessageBaseDto struct {
 	Extra        string                   `json:"extra"`
 	SystemAlias  string                   `json:"systemAlias"`
 	SendChannel  enumerations.SendChannel `json:"sendChannel"`
+	ContentType  int                      `json:"contentType"`
 
 	FinishedCallbackUrls []string `json:"finishedCallbackUrls"`
 	ExpireCallbackUrls   []string `json:"expireCallbackUrls"`
@@ -42,6 +43,7 @@ type MessageBasePo struct {
 	Extra        string                   `gorm:"column:extra"`
 	SystemAlias  string                   `gorm:"column:systemAlias"`
 	SendChannel  enumerations.SendChannel `gorm:"column:sendChannel"`
+	ContentType  int                      `gorm:"column:contentType"`
 }
 
 func MessageBaseDtoToPo(messageBaseDto *MessageBaseDto) (*MessageBasePo) {
