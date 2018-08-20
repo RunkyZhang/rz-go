@@ -16,7 +16,7 @@ func init() {
 }
 
 type smsTemplateRepository struct {
-	common.RepositoryBase
+	repositoryBase
 }
 
 func (myself *smsTemplateRepository) Insert(smsTemplatePo *models.SmsTemplatePo) (error) {

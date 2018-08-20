@@ -4,8 +4,8 @@ import (
 	"time"
 	"strings"
 
-	"rz/middleware/notifycenter/models"
 	"rz/core/common"
+	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/exceptions"
 	"rz/middleware/notifycenter/global"
 )
@@ -15,12 +15,10 @@ func VerifyMailMessageDto(mailMessageDto *models.MailMessageDto) (error) {
 	if nil != err {
 		return err
 	}
-
 	err = verifyMessageDto(&mailMessageDto.MessageBaseDto)
 	if nil != err {
 		return err
 	}
-
 	if common.IsStringBlank(mailMessageDto.Subject) {
 		return exceptions.SubjectBlank()
 	}
@@ -33,22 +31,16 @@ func VerifySmsMessageDto(smsMessageDto *models.SmsMessageDto) (error) {
 	if nil != err {
 		return err
 	}
-
 	err = verifyMessageDto(&smsMessageDto.MessageBaseDto)
 	if nil != err {
 		return err
 	}
-
 	if nil != smsMessageDto.Parameters {
 		for _, value := range smsMessageDto.Parameters {
 			if strings.Contains(value, ",") {
 				return exceptions.SmsParameterContainComma().AttachMessage(value)
 			}
 		}
-	}
-
-	if 0 == smsMessageDto.ContentType {
-		smsMessageDto.ContentType = 1
 	}
 
 	return nil
@@ -59,6 +51,39 @@ func VerifySmsTemplateDto(smsTemplateDto *models.SmsTemplateDto) (error) {
 	if nil != err {
 		return err
 	}
+	err = common.Assert.IsTrueToError("" != smsTemplateDto.Sign, "'' != smsTemplateDto.Sign")
+	if nil != err {
+		return err
+	}
+
+	if 0 >= smsTemplateDto.ContentType {
+		smsTemplateDto.ContentType = 1
+	}
+
+	return nil
+}
+
+func VerifySmsProviderDto(smsProviderDto *models.SmsProviderDto) (error) {
+	err := common.Assert.IsTrueToError(nil != smsProviderDto, "nil != smsProviderDto")
+	if nil != err {
+		return err
+	}
+	err = common.Assert.IsTrueToError("" != smsProviderDto.Id, "'' != smsProviderDto.Id")
+	if nil != err {
+		return err
+	}
+	err = common.Assert.IsTrueToError("" != smsProviderDto.Name, "'' != smsProviderDto.Name")
+	if nil != err {
+		return err
+	}
+	err = common.Assert.IsTrueToError("" != smsProviderDto.Url1, "'' != smsProviderDto.Url1")
+	if nil != err {
+		return err
+	}
+
+	if 0 >= smsProviderDto.Weighted {
+		smsProviderDto.Weighted = 1
+	}
 
 	return nil
 }
@@ -68,12 +93,10 @@ func VerifyQuerySmsUserMessagesRequestDto(querySmsUserMessagesRequestDto *models
 	if nil != err {
 		return err
 	}
-
 	if 0 >= querySmsUserMessagesRequestDto.SmsMessageId && "" == querySmsUserMessagesRequestDto.Content &&
 		0 >= querySmsUserMessagesRequestDto.TemplateId && "" == querySmsUserMessagesRequestDto.PhoneNumber {
 		return exceptions.NullQueryParameter()
 	}
-
 	if "" == querySmsUserMessagesRequestDto.NationCode {
 		querySmsUserMessagesRequestDto.NationCode = global.GetConfig().SmsTencent.DefaultNationCode
 	}
@@ -86,7 +109,6 @@ func VerifySystemAliasPermissionDto(verifySystemAliasPermissionDto *models.Syste
 	if nil != err {
 		return err
 	}
-
 	if "" == verifySystemAliasPermissionDto.SystemAlias {
 		return exceptions.SystemAliasBlank()
 	}
@@ -99,11 +121,9 @@ func VerifyModifySystemAliasPermissionRequestDto(modifySystemAliasPermissionRequ
 	if nil != err {
 		return err
 	}
-
 	if "" == modifySystemAliasPermissionRequestDto.SystemAlias {
 		return exceptions.SystemAliasBlank()
 	}
-
 	if nil == modifySystemAliasPermissionRequestDto.SmsPermission &&
 		nil == modifySystemAliasPermissionRequestDto.MailPermission &&
 		nil == modifySystemAliasPermissionRequestDto.SmsDayFrequency &&

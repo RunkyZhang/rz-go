@@ -16,7 +16,7 @@ func init() {
 }
 
 type systemAliasPermissionRepository struct {
-	common.RepositoryBase
+	repositoryBase
 }
 
 func (myself *systemAliasPermissionRepository) Insert(systemAliasPermissionPo *models.SystemAliasPermissionPo) (error) {

@@ -3,7 +3,6 @@ package provider
 import (
 	"fmt"
 	"encoding/json"
-	"time"
 	"strings"
 	"errors"
 
@@ -22,12 +21,11 @@ func init() {
 	SmsDahanProvider = &smsDahanProvider{}
 	SmsDahanProvider.smsDoFunc = SmsDahanProvider.do
 	SmsDahanProvider.Id = "smsDahanProvider"
-	var err error
-	SmsDahanProvider.smsProviderPo, err = managements.SmsProviderManagement.GetById(SmsDahanProvider.Id)
+	smsProviderPo, err := managements.SmsProviderManagement.GetById(SmsDahanProvider.Id)
 	common.Assert.IsNilErrorToPanic(err, "Failed to get [SmsProviderPo]")
-	SmsDahanProvider.Url = SmsDahanProvider.smsProviderPo.Url1
+	SmsDahanProvider.Url = smsProviderPo.Url1
 	keyValues := make(map[string]string)
-	err = json.Unmarshal([]byte(SmsDahanProvider.smsProviderPo.PassportJson), keyValues)
+	err = json.Unmarshal([]byte(smsProviderPo.PassportJson), &keyValues)
 	var ok bool
 	SmsDahanProvider.Account, ok = keyValues["account"]
 	if !ok {
@@ -83,7 +81,7 @@ func (myself *smsDahanProvider) buildDahanSmsMessageRequestDto(smsMessagePo *mod
 	dahanSmsMessageRequestDto.Content = smsMessagePo.Content
 	dahanSmsMessageRequestDto.MsgId = common.Int64ToString(smsMessagePo.Id)
 	dahanSmsMessageRequestDto.Sign = fmt.Sprintf("【%s】", smsTemplatePo.Sign)
-	dahanSmsMessageRequestDto.SendTime = time.Now().Unix()
+	dahanSmsMessageRequestDto.SendTime = 201808161630
 	dahanSmsMessageRequestDto.SubCode = fmt.Sprintf("%d%d", smsTemplatePo.DahanSignCode, smsTemplatePo.Extend)
 	dahanSmsMessageRequestDto.Phones = myself.buildPhoneNumbers(smsMessagePo)
 
@@ -102,7 +100,7 @@ func (myself *smsDahanProvider) buildPhoneNumbers(smsMessagePo *models.SmsMessag
 		for _, phoneNumber := range phoneNumbers {
 			value += fmt.Sprintf("+%s%s,", nationCode, phoneNumber)
 		}
-		value = value[0:(len(value) - 2)]
+		value = value[0:(len(value) - 1)]
 	}
 
 	return value

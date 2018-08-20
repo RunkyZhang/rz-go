@@ -14,6 +14,7 @@ type SmsTemplateDto struct {
 	Pattern           string                       `json:"pattern"`
 	Type              enumerations.SmsTemplateType `json:"type"`
 	Sign              string                       `json:"sign"`
+	ContentType       int                          `json:"contentType"`
 	DahanSignCode     int                          `json:"dahanSignCode"`
 	TencentContext    string                       `json:"tencentContext"`
 	DahanContext      string                       `json:"dahanContext"`
@@ -30,6 +31,7 @@ type SmsTemplatePo struct {
 	Pattern           string                       `gorm:"column:pattern"`
 	Type              enumerations.SmsTemplateType `gorm:"column:type"`
 	Sign              string                       `gorm:"column:sign"`
+	ContentType       int                          `gorm:"column:contentType"`
 	DahanSignCode     int                          `gorm:"column:dahanSignCode"`
 	TencentContext    string                       `gorm:"column:tencentContext"`
 	DahanContext      string                       `gorm:"column:dahanContext"`
@@ -49,6 +51,7 @@ func SmsTemplateDtoToPo(smsTemplateDto *SmsTemplateDto) (*SmsTemplatePo) {
 	smsTemplatePo.UserCallbackUrls = strings.Join(smsTemplateDto.UserCallbackUrls, ",")
 	smsTemplatePo.Type = smsTemplateDto.Type
 	smsTemplatePo.Sign = smsTemplateDto.Sign
+	smsTemplatePo.ContentType = smsTemplateDto.ContentType
 	smsTemplatePo.DahanSignCode = smsTemplateDto.DahanSignCode
 	smsTemplatePo.TencentContext = smsTemplateDto.TencentContext
 	smsTemplatePo.DahanContext = smsTemplateDto.DahanContext
@@ -72,6 +75,7 @@ func SmsTemplatePoToDto(smsTemplatePo *SmsTemplatePo) (*SmsTemplateDto) {
 	}
 	smsTemplateDto.Type = smsTemplatePo.Type
 	smsTemplateDto.Sign = smsTemplatePo.Sign
+	smsTemplateDto.ContentType = smsTemplatePo.ContentType
 	smsTemplateDto.DahanSignCode = smsTemplatePo.DahanSignCode
 	smsTemplateDto.TencentContext = smsTemplatePo.TencentContext
 	smsTemplateDto.DahanContext = smsTemplatePo.DahanContext

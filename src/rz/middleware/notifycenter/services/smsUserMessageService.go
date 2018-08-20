@@ -8,6 +8,7 @@ import (
 	"rz/middleware/notifycenter/exceptions"
 	"rz/middleware/notifycenter/enumerations"
 	"time"
+	"rz/middleware/notifycenter/provider"
 )
 
 var (
@@ -44,7 +45,8 @@ func (myself *smsUserMessageService) TencentCallback(tencentSmsUserCallbackReque
 		extend,
 		tencentSmsUserCallbackRequestDto.Time,
 		tencentSmsUserCallbackRequestDto.Nationcode,
-		tencentSmsUserCallbackRequestDto.Sign)
+		tencentSmsUserCallbackRequestDto.Sign,
+		provider.SmsTencentProvider.Id)
 	if nil != err {
 		return &external.TencentSmsUserCallbackResponseDto{
 			Result: 1,
@@ -70,7 +72,7 @@ func (myself *smsUserMessageService) DahanCallbacks(dahanSmsUserCallbackRequestD
 		for _, deliver := range dahanSmsUserCallbackRequestDto.Delivers {
 			err = myself.dahanCallback(deliver)
 			if nil != err {
-				common.GetLogging().Error(err, "Failed to save callback message")
+				common.GetLogging().Warn(err, "Failed to save callback message")
 			}
 		}
 	}
@@ -109,7 +111,8 @@ func (myself *smsUserMessageService) dahanCallback(dahanSmsUserCallbackDeliverRe
 		extend,
 		dateTime.Unix(),
 		"86",
-		sign)
+		sign,
+		provider.SmsDahanProvider.Id)
 	if nil != err {
 		return err
 	}
@@ -117,14 +120,15 @@ func (myself *smsUserMessageService) dahanCallback(dahanSmsUserCallbackDeliverRe
 	return nil
 }
 
-func (myself *smsUserMessageService) callback(phoneNumber string, context string, extend int, dateTime int64, nationCode string, sign string) (error) {
+func (myself *smsUserMessageService) callback(phoneNumber string, context string, extend int, dateTime int64, nationCode string, sign string, fromProviderId string) (error) {
 	smsUserMessagePo := &models.SmsUserMessagePo{
-		Content:     context,
-		Sign:        sign,
-		Time:        dateTime,
-		NationCode:  nationCode,
-		PhoneNumber: phoneNumber,
-		Extend:      extend,
+		Content:        context,
+		Sign:           sign,
+		Time:           dateTime,
+		NationCode:     nationCode,
+		PhoneNumber:    phoneNumber,
+		Extend:         extend,
+		FromProviderId: fromProviderId,
 	}
 
 	smsUserMessagePo.ExpireTime = time.Now().Add(7 * 24 * time.Hour)

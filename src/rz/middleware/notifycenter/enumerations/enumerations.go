@@ -94,9 +94,7 @@ const (
 	IdentifyingCode
 )
 
-type SmsContextType int
-
 const (
-	Business      SmsContextType = 1
-	Advertisement SmsContextType = 2
+	SmsContextTypeBusiness      = 1
+	SmsContextTypeAdvertisement = 2
 )

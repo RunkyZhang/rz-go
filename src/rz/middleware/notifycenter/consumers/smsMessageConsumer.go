@@ -5,7 +5,9 @@ import (
 	"rz/core/common"
 	"rz/middleware/notifycenter/managements"
 	"rz/middleware/notifycenter/provider"
-	"rz/middleware/notifycenter/exceptions"
+	"errors"
+	"fmt"
+	"rz/middleware/notifycenter/enumerations"
 )
 
 var (
@@ -39,22 +41,42 @@ func (myself *smsMessageConsumer) send(messagePo interface{}) (error) {
 		return err
 	}
 
-	var excludedIds []string
+	var excludedProviderIds []string
 	errorMessages := ""
-	for ; nil != err; {
-		smsProvider, err := provider.ChooseSmsProvider(smsMessagePo, excludedIds)
+	for ; ; {
+		smsProvider, err := provider.ChooseSmsProvider(smsMessagePo, smsTemplatePo, excludedProviderIds)
 		if nil != err {
-			return exceptions.FailedChooseSmsChannel().AttachMessage(smsMessagePo.Id)
+			errorMessage := fmt.Sprintf("The Message(%d) cannot be send by all [SmsProvider]; error: %s", smsMessagePo.Id, err.Error())
+			common.GetLogging().Warn(err, errorMessage)
+			errorMessages += fmt.Sprintf("[%s]", errorMessage)
+			break
 		}
 
-		smsMessagePo.ProviderId += smsProvider.Id
+		if "" == smsMessagePo.ProviderId {
+			smsMessagePo.ProviderId += smsProvider.Id
+		} else {
+			smsMessagePo.ProviderId += "+" + smsProvider.Id
+		}
 		err = smsProvider.Do(smsMessagePo, smsTemplatePo)
 		if nil == err {
+			errorMessages = ""
 			break
 		} else {
-			common.GetLogging().Warn()
-			errorMessages += err.Error()
+			excludedProviderIds = append(excludedProviderIds, smsProvider.Id)
+
+			errorMessage := fmt.Sprintf("Failed to send the message(%d) with [SmsProvider](%s); error: %s", smsMessagePo.Id, smsProvider.Id, err.Error())
+			common.GetLogging().Warn(err, errorMessage)
+			errorMessages += fmt.Sprintf("[%s]", errorMessage)
 		}
+
+		// Advertisement message only send one time
+		if enumerations.SmsContextTypeAdvertisement == smsTemplatePo.ContentType {
+			break
+		}
+	}
+
+	if "" != errorMessages {
+		return errors.New(errorMessages[0:(len(errorMessages) - 1)])
 	}
 
 	return nil

@@ -50,4 +50,5 @@ var (
 	NotSendMailPermission        = func() (*common.BusinessError) { return common.NewBusinessError("No send mail permission", 30041) }
 	NullModifyParameter          = func() (*common.BusinessError) { return common.NewBusinessError("Null modify parameter", 30042) }
 	SystemAliasNotExist          = func() (*common.BusinessError) { return common.NewBusinessError("[SystemAlias] is not exist", 30043) }
+	FailedSendSmsMessage         = func() (*common.BusinessError) { return common.NewBusinessError("Failed to send Sms message", 30044) }
 )

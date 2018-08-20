@@ -62,7 +62,7 @@ func (myself *smsProviderManagement) GetAll() (map[string]*models.SmsProviderPo,
 			if nil == err {
 				myself.lastRefreshTime = time.Now().Unix()
 			} else {
-				common.GetLogging().Error(err, "Failed to get all [SmsProviderPo]")
+				common.GetLogging().Warn(err, "Failed to get all [SmsProviderPo]")
 			}
 		}()
 	}

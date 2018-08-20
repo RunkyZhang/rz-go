@@ -76,7 +76,7 @@ func (myself *smsTemplateManagement) GetAll() (map[int]*models.SmsTemplatePo, er
 			if nil == err {
 				myself.lastRefreshTime = time.Now().Unix()
 			} else {
-				common.GetLogging().Error(err, "Failed to get all [SmsTemplatePo]")
+				common.GetLogging().Warn(err, "Failed to get all [SmsTemplatePo]")
 			}
 		}()
 	}

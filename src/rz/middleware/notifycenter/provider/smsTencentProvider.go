@@ -25,12 +25,11 @@ func init() {
 	SmsTencentProvider = &smsTencentProvider{}
 	SmsTencentProvider.smsDoFunc = SmsTencentProvider.do
 	SmsTencentProvider.Id = "smsTencentProvider"
-	var err error
-	SmsTencentProvider.smsProviderPo, err = managements.SmsProviderManagement.GetById(SmsTencentProvider.Id)
+	smsProviderPo, err := managements.SmsProviderManagement.GetById(SmsTencentProvider.Id)
 	common.Assert.IsNilErrorToPanic(err, "Failed to get [SmsProviderPo]")
-	SmsTencentProvider.Url = SmsTencentProvider.smsProviderPo.Url1
+	SmsTencentProvider.Url = smsProviderPo.Url1
 	keyValues := make(map[string]string)
-	err = json.Unmarshal([]byte(SmsTencentProvider.smsProviderPo.PassportJson), keyValues)
+	err = json.Unmarshal([]byte(smsProviderPo.PassportJson), &keyValues)
 	var ok bool
 	SmsTencentProvider.AppId, ok = keyValues["appId"]
 	if !ok {

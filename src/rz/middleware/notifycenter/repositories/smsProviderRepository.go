@@ -15,7 +15,7 @@ func init() {
 }
 
 type smsProviderRepository struct {
-	common.RepositoryBase
+	repositoryBase
 }
 
 func (myself *smsProviderRepository) Insert(smsProviderPo *models.SmsProviderPo) (error) {

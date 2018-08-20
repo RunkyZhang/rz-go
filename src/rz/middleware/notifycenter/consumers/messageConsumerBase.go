@@ -65,7 +65,7 @@ func (myself *messageConsumerBase) run(parameter interface{}) (error) {
 	for _, messageId := range messageIds {
 		affectedCount, err := myself.messageManagementBase.RemoveId(messageId)
 		if nil != err {
-			common.GetLogging().Error(err, "Failed to remove message(%d)", messageId)
+			common.GetLogging().Warn(err, "Failed to remove message(%d)", messageId)
 			continue
 		}
 		// 0 mean: the other consumer remove it, ignore
@@ -85,7 +85,7 @@ func (myself *messageConsumerBase) run(parameter interface{}) (error) {
 			messageState = enumerations.Sent
 			errorMessage = ""
 		} else {
-			common.GetLogging().Error(flagError, "Failed to consume message(%d)", messageId)
+			common.GetLogging().Warn(flagError, "Failed to consume message(%d)", messageId)
 			messageState = enumerations.Error
 			errorMessage = flagError.Error()
 		}
@@ -187,7 +187,7 @@ func (myself *messageConsumerBase) expireRun(parameter interface{}) (error) {
 	for _, messageId := range messageIds {
 		affectedCount, err := myself.messageManagementBase.RemoveExpireId(messageId)
 		if nil != err {
-			common.GetLogging().Error(err, "Failed to remove expire message(%d)", messageId)
+			common.GetLogging().Warn(err, "Failed to remove expire message(%d)", messageId)
 			continue
 		}
 		// 0 mean: the other consumer remove it, ignore
@@ -207,7 +207,7 @@ func (myself *messageConsumerBase) expireRun(parameter interface{}) (error) {
 			messageState = enumerations.ExpireSent
 			errorMessage = ""
 		} else {
-			common.GetLogging().Error(flagError, "Failed to consume expire message(%d)", messageId)
+			common.GetLogging().Warn(flagError, "Failed to consume expire message(%d)", messageId)
 			messageState = enumerations.ExpireError
 			errorMessage = flagError.Error()
 		}

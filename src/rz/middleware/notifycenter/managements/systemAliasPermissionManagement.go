@@ -65,7 +65,7 @@ func (myself *systemAliasPermissionManagement) GetAll() (map[string]*models.Syst
 			if nil == err {
 				myself.lastRefreshTime = time.Now().Unix()
 			} else {
-				common.GetLogging().Error(err, "Failed to get all [SystemAliasPermissionPo]")
+				common.GetLogging().Warn(err, "Failed to get all [SystemAliasPermissionPo]")
 			}
 		}()
 	}

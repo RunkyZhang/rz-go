@@ -109,6 +109,16 @@ func ConvertToModifySystemAliasPermissionRequestDto(body []byte) (interface{}, e
 	return convertToDto(body, &dto)
 }
 
+func ConvertToSmsProviderDto(body []byte) (interface{}, error) {
+	err := common.Assert.IsTrueToError(nil != body, "nil != body")
+	if nil != err {
+		return nil, err
+	}
+
+	var dto models.SmsProviderDto
+	return convertToDto(body, &dto)
+}
+
 func convertToDto(body []byte, messageDto interface{}) (interface{}, error) {
 	err := json.Unmarshal(body, &messageDto)
 	if nil != err {

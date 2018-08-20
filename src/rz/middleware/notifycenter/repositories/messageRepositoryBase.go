@@ -8,7 +8,7 @@ import (
 )
 
 type MessageRepositoryBase struct {
-	common.RepositoryBase
+	repositoryBase
 }
 
 func (myself *MessageRepositoryBase) UpdateStatesById(id int64, state string, errorMessage string, providerId string, finished *bool, finishedTime *time.Time) (int64, error) {

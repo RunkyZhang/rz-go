@@ -6,7 +6,7 @@ type SmsProviderDto struct {
 	ContentTypes       int    `json:"contentTypes"`
 	PassportJson       string `json:"passportJson"`
 	Priority           int    `json:"priority"`
-	Weighted           string `json:"weighted"`
+	Weighted           int    `json:"weighted"`
 	Description        string `json:"description"`
 	Url1               string `json:"url1"`
 	Url2               string `json:"url2"`
@@ -25,7 +25,7 @@ type SmsProviderPo struct {
 	ContentTypes       int    `gorm:"column:contentTypes"`
 	PassportJson       string `gorm:"column:passportJson"`
 	Priority           int    `gorm:"column:priority"`
-	Weighted           string `gorm:"column:weighted"`
+	Weighted           int    `gorm:"column:weighted"`
 	Description        string `gorm:"column:description"`
 	Url1               string `gorm:"column:url1"`
 	Url2               string `gorm:"column:url2"`
