@@ -11,7 +11,7 @@ type MessageRepositoryBase struct {
 	repositoryBase
 }
 
-func (myself *MessageRepositoryBase) UpdateStatesById(id int64, state string, errorMessage string, providerId string, finished *bool, finishedTime *time.Time) (int64, error) {
+func (myself *MessageRepositoryBase) UpdateStatesById(id int64, state string, errorMessage string, providerIds string, finished *bool, finishedTime *time.Time) (int64, error) {
 	database, err := myself.GetShardDatabase(id)
 	if nil != err {
 		return 0, err
@@ -26,9 +26,9 @@ func (myself *MessageRepositoryBase) UpdateStatesById(id int64, state string, er
 		setSql += ", `errorMessages`=CONCAT(`errorMessages`,?)"
 		parameters = append(parameters, errorMessage)
 	}
-	if "" != providerId {
-		setSql += ", `providerId`=?"
-		parameters = append(parameters, providerId)
+	if "" != providerIds {
+		setSql += ", `providerIds`=?"
+		parameters = append(parameters, providerIds)
 	}
 	if nil != finished {
 		setSql += ", `finished`=?"

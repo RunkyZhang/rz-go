@@ -37,7 +37,7 @@ func (myself *smsUserMessageConsumer) send(messagePo interface{}) (error) {
 		return err
 	}
 
-	smsUserMessagePo.ProviderId = smsUserProvider.Id
+	smsUserMessagePo.ProviderIds = smsUserProvider.Id
 	err = smsUserProvider.Do(smsUserMessagePo)
 	if nil != err {
 		return err

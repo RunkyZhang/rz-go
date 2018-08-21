@@ -1,14 +1,17 @@
 package services
 
 import (
+	"time"
+	"fmt"
+
+	"rz/core/common"
 	"rz/middleware/notifycenter/models/external"
 	"rz/middleware/notifycenter/managements"
-	"rz/core/common"
 	"rz/middleware/notifycenter/models"
 	"rz/middleware/notifycenter/exceptions"
 	"rz/middleware/notifycenter/enumerations"
-	"time"
 	"rz/middleware/notifycenter/provider"
+	"rz/middleware/notifycenter/global"
 )
 
 var (
@@ -92,7 +95,7 @@ func (myself *smsUserMessageService) dahanCallback(dahanSmsUserCallbackDeliverRe
 		return err
 	}
 	extend := -1
-	sign := dahanSmsUserCallbackDeliverRequestDto.SubCode[0:4]
+	sign := dahanSmsUserCallbackDeliverRequestDto.SubCode[0:5]
 	if 5 < len(dahanSmsUserCallbackDeliverRequestDto.SubCode) {
 		extend, err = common.StringToInt32(dahanSmsUserCallbackDeliverRequestDto.SubCode[5:])
 		if nil != err {
@@ -110,7 +113,7 @@ func (myself *smsUserMessageService) dahanCallback(dahanSmsUserCallbackDeliverRe
 		dahanSmsUserCallbackDeliverRequestDto.Content,
 		extend,
 		dateTime.Unix(),
-		"86",
+		global.DefaultNationCode,
 		sign,
 		provider.SmsDahanProvider.Id)
 	if nil != err {
@@ -142,12 +145,28 @@ func (myself *smsUserMessageService) callback(phoneNumber string, context string
 	smsUserMessagePo.CreatedTime = time.Now()
 	smsUserMessagePo.Id, err = managements.SmsUserMessageManagement.GenerateId(smsUserMessagePo.CreatedTime.Year())
 	if nil != err {
-		return exceptions.FailedGenerateMessageId().AttachError(err)
+		message := fmt.Sprintf(
+			"PhoneNumber: %s;Content: %s;Time:%d;Sign:%s;Extend:%d;FromProviderId:%s",
+			smsUserMessagePo.PhoneNumber,
+			smsUserMessagePo.Content,
+			smsUserMessagePo.Time,
+			smsUserMessagePo.Sign,
+			smsUserMessagePo.Extend,
+			smsUserMessagePo.FromProviderId)
+		return exceptions.FailedGenerateMessageId().AttachError(err).AttachMessage(message)
 	}
 
 	err = managements.SmsUserMessageManagement.Add(smsUserMessagePo)
 	if nil != err {
-		return exceptions.FailedAddSmsUserMessage().AttachError(err)
+		message := fmt.Sprintf(
+			"PhoneNumber: %s;Content: %s;Time:%d;Sign:%s;Extend:%d;FromProviderId:%s",
+			smsUserMessagePo.PhoneNumber,
+			smsUserMessagePo.Content,
+			smsUserMessagePo.Time,
+			smsUserMessagePo.Sign,
+			smsUserMessagePo.Extend,
+			smsUserMessagePo.FromProviderId)
+		return exceptions.FailedAddSmsUserMessage().AttachError(err).AttachMessage(message)
 	}
 
 	if false == smsUserMessagePo.Finished {
@@ -166,7 +185,7 @@ func (myself *smsUserMessageService) callback(phoneNumber string, context string
 				&now,
 				smsUserMessagePo.CreatedTime.Year())
 
-			return exceptions.InternalServerError().AttachError(err)
+			return exceptions.FailedEnqueueMessageId().AttachError(err).AttachMessage(smsUserMessagePo.Id)
 		}
 	}
 

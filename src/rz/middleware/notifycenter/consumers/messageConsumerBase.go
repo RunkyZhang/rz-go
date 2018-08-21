@@ -97,7 +97,7 @@ func (myself *messageConsumerBase) run(parameter interface{}) (error) {
 			enumerations.Sent,
 			messageState,
 			errorMessage,
-			callbackBasePo.ProviderId,
+			callbackBasePo.ProviderIds,
 			&finished,
 			&now,
 			poBase.CreatedTime.Year())
@@ -217,7 +217,7 @@ func (myself *messageConsumerBase) expireRun(parameter interface{}) (error) {
 			enumerations.ExpireSent,
 			messageState,
 			errorMessage,
-			callbackBasePo.ProviderId,
+			callbackBasePo.ProviderIds,
 			nil,
 			nil,
 			poBase.CreatedTime.Year())

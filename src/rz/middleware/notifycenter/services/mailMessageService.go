@@ -58,7 +58,7 @@ func (myself *mailMessageService) Send(mailMessageDto *models.MailMessageDto) (i
 			&now,
 			mailMessagePo.CreatedTime.Year())
 
-		return 0, err
+		return 0, exceptions.FailedEnqueueMessageId().AttachError(err).AttachMessage(mailMessagePo.Id)
 	}
 
 	return mailMessagePo.Id, nil

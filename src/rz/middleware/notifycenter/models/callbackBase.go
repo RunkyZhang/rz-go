@@ -11,5 +11,5 @@ type CallbackBasePo struct {
 	States               string    `gorm:"column:states"`
 	ErrorMessages        string    `gorm:"column:errorMessages"`
 	ExpireTime           time.Time `gorm:"column:expireTime"`
-	ProviderId           string    `gorm:"column:providerId"`
+	ProviderIds          string    `gorm:"column:providerIds"`
 }

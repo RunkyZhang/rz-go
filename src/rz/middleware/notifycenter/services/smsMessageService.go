@@ -77,7 +77,7 @@ func (myself *smsMessageService) Send(smsMessageDto *models.SmsMessageDto) (int6
 			&now,
 			smsMessagePo.CreatedTime.Year())
 
-		return 0, err
+		return 0, exceptions.FailedEnqueueMessageId().AttachError(err).AttachMessage(smsMessagePo.Id)
 	}
 
 	return smsMessagePo.Id, err

@@ -37,7 +37,7 @@ func (myself *mailMessageConsumer) send(messagePo interface{}) error {
 		return err
 	}
 
-	mailMessagePo.ProviderId = mailProvider.Id
+	mailMessagePo.ProviderIds = mailProvider.Id
 	err = mailProvider.Do(mailMessagePo)
 	if nil != err {
 		return err

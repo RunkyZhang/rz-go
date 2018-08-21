@@ -52,10 +52,10 @@ func (myself *smsMessageConsumer) send(messagePo interface{}) (error) {
 			break
 		}
 
-		if "" == smsMessagePo.ProviderId {
-			smsMessagePo.ProviderId += smsProvider.Id
+		if "" == smsMessagePo.ProviderIds {
+			smsMessagePo.ProviderIds += smsProvider.Id
 		} else {
-			smsMessagePo.ProviderId += "+" + smsProvider.Id
+			smsMessagePo.ProviderIds += "+" + smsProvider.Id
 		}
 		err = smsProvider.Do(smsMessagePo, smsTemplatePo)
 		if nil == err {
@@ -112,7 +112,7 @@ func (myself *smsMessageConsumer) expireSend(messagePo interface{}) (error) {
 		return err
 	}
 
-	smsMessagePo.ProviderId += "+" + smsExpireProvider.Id
+	smsMessagePo.ProviderIds += "+" + smsExpireProvider.Id
 	err = smsExpireProvider.Do(smsMessagePo)
 	if nil != err {
 		return err
