@@ -3,22 +3,32 @@ package main
 import (
 	"flag"
 	"fmt"
-	"path/filepath"
 	"strings"
+
+	"github.rz.com/file-sync/domain"
 )
 
 func main() {
-	fmt.Println(filepath.Dir("D:\\opt\\report.exe"))
-
-	flag.String("sourcePath", "D:/codes", "source path")
-	flag.String("targetPath", "D:/test", "target path")
+	flag.String("sourceDirectoryPath", "D:\\Pictrues\\Photo\\Myself\\Mystery\\string\\object\\char\\bool\\DeepMystery", "source directory path")
+	flag.String("targetDirectoryPath", "E:\\Pictrues\\Photo\\Myself\\Mystery\\string\\object\\char\\bool\\DeepMystery", "target directory path")
 	flag.Parse()
 
-	sourcePath := flag.Lookup("sourcePath").Value.String()
-	targetPath := flag.Lookup("targetPath").Value.String()
+	sourceDirectoryPath := flag.Lookup("sourceDirectoryPath").Value.String()
+	targetDirectoryPath := flag.Lookup("targetDirectoryPath").Value.String()
 
-	sourcePath = strings.Replace(sourcePath, "/", "\\", -1)
-	targetPath = strings.Replace(targetPath, "/", "\\", -1)
+	sourceDirectoryPath = strings.Replace(sourceDirectoryPath, "/", "\\", -1)
+	targetDirectoryPath = strings.Replace(targetDirectoryPath, "/", "\\", -1)
+
+	fileSyncer, err := domain.NewFileSyncer(sourceDirectoryPath, targetDirectoryPath)
+	if nil != err {
+		panic(err)
+	}
+
+	if err := fileSyncer.FindOut(); nil != err {
+		panic(err)
+	}
+
+	fileSyncer.Sync(domain.SyncModeCommon)
 
 	fmt.Println("done.")
 }
