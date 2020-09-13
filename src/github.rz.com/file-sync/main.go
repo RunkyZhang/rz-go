@@ -9,8 +9,8 @@ import (
 )
 
 func main() {
-	flag.String("sourceDirectoryPath", "D:\\Pictrues\\Photo\\Myself\\Mystery\\string\\object\\char\\bool\\DeepMystery", "source directory path")
-	flag.String("targetDirectoryPath", "E:\\Pictrues\\Photo\\Myself\\Mystery\\string\\object\\char\\bool\\DeepMystery", "target directory path")
+	flag.String("sourceDirectoryPath", "D:\\Pictrues", "source directory path")
+	flag.String("targetDirectoryPath", "E:\\Pictrues", "target directory path")
 	flag.Parse()
 
 	sourceDirectoryPath := flag.Lookup("sourceDirectoryPath").Value.String()
