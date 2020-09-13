@@ -127,6 +127,9 @@ func (f *fileSyncer) findOut(path string) (map[string]*FileMeta, error) {
 			fmt.Printf("failed to get file(%s); err: %s\n", path, err.Error())
 			return nil
 		}
+		if strings.HasSuffix(path, "\\Thumbs.db") {
+			return nil
+		}
 
 		fileMeta := &FileMeta{
 			Path:        path,
